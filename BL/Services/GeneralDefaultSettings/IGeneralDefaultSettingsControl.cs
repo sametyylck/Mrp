@@ -10,6 +10,6 @@ namespace BL.Services.GeneralDefaultSettings
 {
     public interface IGeneralDefaultSettingsControl
     {
-        Task<string> Update(GeneralSettingsDTO.GeneralDefaultSettings T, int CompanyId);
+        Task<List<string>> Update(GeneralSettingsDTO.GeneralDefaultSettings T, int CompanyId);
     }
 }

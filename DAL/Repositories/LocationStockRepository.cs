@@ -36,8 +36,8 @@ namespace DAL.Repositories
             prm.Add("@CompanyId", CompanyId);
             prm.Add("@ItemId", ItemId);
             prm.Add("@IsActive", true);
-            return await _db.QuerySingleAsync<int>($"Insert into LocationStock (Tip,LocationId,ItemId,StockCount,CompanyId,IsActive) OUTPUT INSERTED.[id] values (@Tip,@LocationId,@ItemId,@StockCount,@CompanyId,@IsActive)", prm);
-           
+            int id= await _db.QuerySingleAsync<int>($"Insert into LocationStock (Tip,LocationId,ItemId,StockCount,CompanyId,IsActive)  OUTPUT INSERTED.[id] values (@Tip,@LocationId,@ItemId,@StockCount,@CompanyId,@IsActive)", prm);
+            return id;
         }
     }
 }

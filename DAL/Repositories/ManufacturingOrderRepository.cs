@@ -563,7 +563,7 @@ namespace DAL.Repositories
             Items.[Name],Categories.            [Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.ProductionDeadline,ManufacturingOrder.[Status]) x
             where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND ISNULL(Availability,0) like '%{T.Availability}%' and ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
             ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-            ISNULL(ProductDeadline,'') like '%{T.ProductDeadline}%' and ISNULL(Status,'') like '%{T.Status}%' 
+             ISNULL(Status,'') like '%{T.Status}%' 
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;
                         ";
             }
@@ -589,7 +589,7 @@ namespace DAL.Repositories
             Items.[Name],Categories.            [Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.ProductionDeadline,ManufacturingOrder.[Status]) x
             where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND ISNULL(Availability,0) like '%{T.Availability}%' and ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
             ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-            ISNULL(ProductDeadline,'') like '%{T.ProductDeadline}%' and ISNULL(Status,'') like '%{T.Status}%' 
+           ISNULL(Status,'') like '%{T.Status}%' 
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;
                         ";
             }
@@ -634,7 +634,7 @@ namespace DAL.Repositories
             Items.[Name], Categories.[Name], ManufacturingOrder.PlannedQuantity, ManufacturingOrder.ProductionDeadline, ManufacturingOrder.[Status]) x
             where ISNULL(PlannedTime, 0) like '%{T.PlannedTime}%' AND ISNULL(Availability, 0) like '%{T.Availability}%' and ISNULL(Name, '') Like '%{T.Name}%' AND    ISNULL(Customer, '') like '%{T.Customer}%' and
             ISNULL(ItemName, '') like '%{T.ItemName}%' and ISNULL(CategoryName, '') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity, '') like '%{T.PlannedQuantity}%' and
-            ISNULL(ProductDeadline, '') like '%{T.ProductDeadline}%' and ISNULL(Status, '') like '%{T.Status}%') as kayitsayisi";
+            ISNULL(Status, '') like '%{T.Status}%') as kayitsayisi";
             }
             else
             {
@@ -662,7 +662,7 @@ namespace DAL.Repositories
             Items.[Name], Categories.[Name], ManufacturingOrder.PlannedQuantity, ManufacturingOrder.ProductionDeadline, ManufacturingOrder.[Status]) x
             where ISNULL(PlannedTime, 0) like '%{T.PlannedTime}%' AND ISNULL(Availability, 0) like '%{T.Availability}%' and ISNULL(Name, '') Like '%{T.Name}%' AND    ISNULL(Customer, '') like '%{T.Customer}%' and
             ISNULL(ItemName, '') like '%{T.ItemName}%' and ISNULL(CategoryName, '') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity, '') like '%{T.PlannedQuantity}%' and
-            ISNULL(ProductDeadline, '') like '%{T.ProductDeadline}%' and ISNULL(Status, '') like '%{T.Status}%') as kayitsayisi";
+            ISNULL(Status, '') like '%{T.Status}%') as kayitsayisi";
             }
             var kayitsayisi = await _db.QueryAsync<int>(sql, prm);
             return kayitsayisi.First();

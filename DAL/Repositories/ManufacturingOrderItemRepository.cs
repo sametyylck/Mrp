@@ -231,7 +231,7 @@ namespace DAL.Repositories
             var newCost = T.Quantity * DefaultPrice;
             param.Add("@Cost", newCost);
 
-            float? rezerve = _control.Count(T.ItemId, CompanyId, T.LocationId);
+            float? rezerve = await _control.Count(T.ItemId, CompanyId, T.LocationId);
 
             if (rezerve >= 0)
             {
@@ -320,7 +320,7 @@ namespace DAL.Repositories
             float DefaultPrice = sorgu.First().DefaultPrice;
             var newCost = T.Quantity * DefaultPrice;
 
-            float? rezerve = _control.Count(T.ItemId, CompanyId, T.LocationId);
+            float? rezerve = await _control.Count(T.ItemId, CompanyId, T.LocationId);
             string sqld = $@"select ISNULL(RezerveCount,0) from Rezerve where ManufacturingOrderId=@OrderId and ItemId=@ItemId and LocationId=@LocationId and ManufacturingOrderItemId=@id and Status=1";
             var rezervestockCount = await _db.QueryAsync<float>(sqld, param);
             string sqlb = $@"select ISNULL(SUM(Quantity),0) from Orders 
@@ -461,7 +461,8 @@ namespace DAL.Repositories
                 and OrdersItem.ItemId = @ItemId where Orders.CompanyId = @CompanyId
                 and DeliveryId = 1 and Orders.SalesOrderId is null and Orders.ManufacturingOrderId is null and Orders.IsActive=1";
                 var expected = await _db.QueryFirstAsync<int>(sqlb, param);
-                param.Add("@LocationStockId", sorgu.First().LocationStockId);
+                param.Add("@LocationStockId", 
+                sorgu.First().LocationStockId);
 
 
                 if (sorgu.First().LocationStockId == 0)
@@ -471,7 +472,7 @@ namespace DAL.Repositories
                 }
                 else
                 {
-                    int? rezerve = _control.Count(item.MaterialId, CompanyId, LocationId);
+                    int? rezerve = await _control.Count(item.MaterialId, CompanyId, LocationId);
                     if (SalesOrderId != 0)
                     {
                         string sqld = $@"select ISNULL(RezerveCount,0) from Rezerve where SalesOrderId=@SalesOrderId and SalesOrderItemId=@SalesOrderItemId and ItemId=@ItemId and LocationId=@LocationId and Status=1";
@@ -804,7 +805,7 @@ namespace DAL.Repositories
                 param.Add("@LocationStockId", sorgu.First().LocationStockId);
 
 
-                float? LocationStock = _control.Count(item.MaterialId, CompanyId, T.LocationId);
+                float? LocationStock = await _control.Count(item.MaterialId, CompanyId, T.LocationId);
                 var Count = await _db.QueryAsync<int>($"Select ISNULL(Rezerve.RezerveCount,0)as Count from Rezerve where CompanyId=@CompanyId and ItemId=@ItemId and ManufacturingOrderId=@OrderId and ManufacturingOrderItemId=@ManufacturingOrderItemId and Rezerve.Status=1 and Rezerve.LocationId=@LocationId", param);
                 float? RezerveCounts = 0;
                 float? deger;

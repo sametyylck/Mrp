@@ -10,8 +10,8 @@ namespace BL.Services.Items
 {
     public interface IItemsControl
     {
-        Task<string> Insert(ItemsInsert T, int CompanyId);
-        Task<string> Delete(ItemsDelete T, int CompanyId);
+        Task<List<string>> Insert(ItemsInsert T, int CompanyId);
+        Task<List<string>> Delete(ItemsDelete T, int CompanyId);
 
     }
 }

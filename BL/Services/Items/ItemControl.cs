@@ -24,28 +24,31 @@ namespace BL.Services.Items
             _db = db;
         }
 
-        public async Task<string> Delete(ItemsDelete T, int CompanyId)
+        public async Task<List<string>> Delete(ItemsDelete T, int CompanyId)
         {
+            List<string> hatalar = new();
             string sql = $"select(Select id from Items where id={T.id} and CompanyId = {CompanyId})as id,(Select Tip from Items where id={T.id} and CompanyId = {CompanyId})as Tip";
             var kontrol = await _db.QueryAsync<PurchaseOrderDTO.PurchaseOrderLogsList>(sql);
             if (kontrol.First().id == null)
             {
-                return("Boyle bir id yok");
+                hatalar.Add("Boyle bir id yok");
             }
             if (T.Tip==kontrol.First().Tip)
             {
-                return ("true");
+                return hatalar;
             }
             else
             {
-                return ("Tip uyusmazlıgi hatasi");
+                hatalar.Add("Tip uyusmazlıgi hatasi");
+                return hatalar;
             }
 
 
         }
 
-        public async Task<string> Insert(ItemsInsert T, int CompanyId)
+        public async Task<List<string>> Insert(ItemsInsert T, int CompanyId)
         {
+            List<string> hatalar = new();
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@MeasureId", T.MeasureId);
             prm.Add("@CategoryId", T.CategoryId);
@@ -69,7 +72,7 @@ namespace BL.Services.Items
                     {
                         if (contactid == null)
                         {
-                            return ("ContactId bulunamadı");
+                            hatalar.Add("ContactId bulunamadı");
                         }
                     }
                   
@@ -81,7 +84,7 @@ namespace BL.Services.Items
            
                 if (measureid == null)
                 {
-                    return ("measureid bulunamadi");
+                    hatalar.Add("measureid bulunamadi");
                 }
                 if (T.CategoryId !=0)
                 {
@@ -89,20 +92,20 @@ namespace BL.Services.Items
                     {
                         if (categoryid == null)
                         {
-                            return ("Categoryid bulunamadı");
+                            hatalar.Add("Categoryid bulunamadı");
                         }
                         else
                         {
-                            return ("true");
+                            return hatalar;
                         }
                     }
               
                 }
-                return ("true");
-            
+                return hatalar;
 
             }
-            return ("Tip hatası");
+            hatalar.Add("Tip hatası");
+            return hatalar;
         }
 
     }

@@ -1,4 +1,5 @@
-﻿using DAL.Contracts;
+﻿using BL.Extensions;
+using DAL.Contracts;
 using DAL.DTO;
 using DAL.Models;
 using Dapper;
@@ -17,11 +18,13 @@ namespace Api.Controllers
         private readonly IUserService _user;
         private readonly IDbConnection _db;
         private readonly IStockRepository _stock;
-        public StockController(IUserService user, IStockRepository stock, IDbConnection db)
+        private readonly IPermissionControl _izinkontrol;
+        public StockController(IUserService user, IStockRepository stock, IDbConnection db, IPermissionControl izinkontrol)
         {
             _user = user;
             _stock = stock;
             _db = db;
+            _izinkontrol = izinkontrol;
         }
         [Route("MaterialList")]
         [HttpPost, Authorize]
@@ -29,6 +32,14 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             DynamicParameters prm = new DynamicParameters();
             var list = await _stock.MaterialList(T, CompanyId,KAYITSAYISI,SAYFA);
             var count = await _stock.MaterialCount(T, CompanyId);
@@ -42,6 +53,14 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             DynamicParameters prm = new DynamicParameters();
             var list = await _stock.ProductList(T, CompanyId, KAYITSAYISI, SAYFA);
             var count = await _stock.ProductCount(T, CompanyId);
@@ -55,6 +74,14 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             DynamicParameters prm = new DynamicParameters();
             var list = await _stock.AllItemsList(T, CompanyId, KAYITSAYISI, SAYFA);
             var count = await _stock.AllItemsCount(T, CompanyId);

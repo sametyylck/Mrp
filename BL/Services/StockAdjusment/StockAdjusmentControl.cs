@@ -1,4 +1,5 @@
 ﻿using DAL.DTO;
+using DAL.StockControl;
 using Dapper;
 using System;
 using System.Collections.Generic;
@@ -14,14 +15,17 @@ namespace BL.Services.StockAdjusment
     public class StockAdjusmentControl : IStockAdjusmentControl
     {
         private readonly IDbConnection _db;
+        private readonly IStockControl _control;
 
-        public StockAdjusmentControl(IDbConnection db)
+        public StockAdjusmentControl(IDbConnection db, IStockControl control)
         {
             _db = db;
+            _control = control;
         }
 
-        public async Task<string> DeleteItems(StockAdjusmentItemDelete T, int CompanyId)
+        public async Task<List<string>> DeleteItems(StockAdjusmentItemDelete T, int CompanyId)
         {
+            List<string> hatalar = new();
             var list = await _db.QueryAsync<StockAdjusmentUpdateItems>($@"select
              (Select id  From StockAdjusmentItems where CompanyId = {CompanyId} and id={T.id} and  StockAdjusmentId={T.StockAdjusmentId})as id,
 
@@ -31,24 +35,28 @@ namespace BL.Services.StockAdjusment
             ");
             if (list.First().StockAdjusmentId == null)
             {
-                return ("StockAdjusmentId,Boyle bir id yok");
+                hatalar.Add("StockAdjusmentId,Boyle bir id yok");
             }
             if (list.First().id == null)
             {
-                return ("id ve StockAdjusmentId eslesmiyor");
+                hatalar.Add("id ve StockAdjusmentId eslesmiyor");
             }
             if (list.First().ItemId == 0)
             {
-                return ("Boyle bir ItemId yok");
+                hatalar.Add("Boyle bir ItemId yok");
+                return hatalar;
+
             }
             else
             {
-                return ("true");
+                return hatalar;
             }
         }
 
-        public async Task<string> Insert(StockAdjusmentInsert T, int CompanyId)
+        public async Task<List<string>> Insert(StockAdjusmentInsert T, int CompanyId)
         {
+            List<string> hatalar = new();
+
             var list = await _db.QueryAsync<StockAdjusmentInsert>($@"select
              (Select id  From StockTakes where CompanyId = {CompanyId} and id={T.StockTakesId})as StockTakesId,
             (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId
@@ -59,7 +67,7 @@ namespace BL.Services.StockAdjusment
                 {
                     if (list.First().StockTakesId == null)
                     {
-                        return ("Boyle bir id bulunamadı");
+                        hatalar.Add("Boyle bir id bulunamadı");
                     }
                 }
                
@@ -67,16 +75,22 @@ namespace BL.Services.StockAdjusment
      
             if (list.First().LocationId == null)
             {
-                return ("Boyle bir Location bulunamadı");
+                hatalar.Add("Boyle bir Location bulunamadı");
+                return hatalar;
+
             }
             else
             {
-                return ("true");
+                return hatalar;
+
             }
         }
 
-        public async Task<string> InsertItem(StockAdjusmentInsertItem T, int CompanyId)
+        public async Task<List<string>> InsertItem(StockAdjusmentInsertItem T, int CompanyId)
         {
+            List<string> hatalar = new();
+
+            var stokcount = await _control.Count(T.ItemId, CompanyId, T.LocationId);
             var list = await _db.QueryAsync<StockAdjusmentInsertItem>($@"select
              (Select id  From Items where CompanyId = {CompanyId} and id={T.ItemId} and IsActive=1)as ItemId,
              (Select id  From StockAdjusment where CompanyId = {CompanyId} and id={T.StockAdjusmentId} and IsActive=1)as StockAdjusmentId,
@@ -85,25 +99,41 @@ namespace BL.Services.StockAdjusment
             ");
             if (list.First().ItemId == null)
             {
-                return ("ItemId,Boyle bir id bulunamadı");
+                hatalar.Add("ItemId,Boyle bir id bulunamadı");
             }
             if (list.First().StockAdjusmentId == null)
             {
-                return ("StockAdjusmentId,Boyle bir id bulunamadı");
+                hatalar.Add("StockAdjusmentId,Boyle bir id bulunamadı");
             }
             if (list.First().LocationId == null)
             {
-                return ("LocationId,Boyle bir Location bulunamadı");
+                hatalar.Add("LocationId,Boyle bir Location bulunamadı");
             }
+            if (T.Adjusment<0 && stokcount > 0)
+            {
+                if (T.Adjusment+stokcount<0)
+                {
+                    hatalar.Add("Yeterli stok bulunamamştır.");
+
+                }
+                hatalar.Add("true");
+                return hatalar;
+
+            }
+
             else
             {
-                return ("true");
+                hatalar.Add("true");
+                return hatalar;
+
             }
 
         }
 
-        public async Task<string> Update(StockAdjusmentUpdate T, int CompanyId)
+        public async Task<List<string>> Update(StockAdjusmentUpdate T, int CompanyId)
         {
+            List<string> hatalar = new();
+
             var list = await _db.QueryAsync<StockAdjusmentUpdate>($@"select
              (Select id  From StockAdjusment where CompanyId = {CompanyId} and id={T.id} and IsActive=1)as id,
 
@@ -111,21 +141,34 @@ namespace BL.Services.StockAdjusment
             ");
             if (list.First().id==null)
             {
-                return ("id,boyle bir id yok");
+                hatalar.Add("id,boyle bir id yok");
             }
             if (list.First().LocationId == null)
             {
-                return ("LocationId,Boyle bir Location bulunamadı");
+                hatalar.Add("LocationId,Boyle bir Location bulunamadı");
+                return hatalar;
+
             }
             else
             {
-                return ("true");
+                return hatalar;
+
             }
 
         }
 
-        public async Task<string> UpdateStockAdjusment(StockAdjusmentUpdateItems T, int CompanyId)
+        public async Task<List<string>> UpdateStockAdjusment(StockAdjusmentUpdateItems T, int CompanyId)
         {
+            List<string> hatalar = new();
+
+            string sql1 = $@"Select Adjusment from StockAdjusmentItems where id={T.id} and CompanyId={CompanyId}";
+            var sorgu2 = await _db.QueryAsync<float>(sql1);
+            float adjusment = sorgu2.First();
+            var adjusmentcount = T.Adjusment - adjusment;
+            var liste = await _db.QueryAsync<StockAdjusmentUpdate>($@"
+            Select LocationId  From StockAdjusment where CompanyId = {CompanyId} and id = {T.StockAdjusmentId}
+            ");
+            var stokcount = await _control.Count(T.ItemId, CompanyId, liste.First().LocationId);
             var list = await _db.QueryAsync<StockAdjusmentUpdateItems>($@"select
              (Select id  From StockAdjusmentItems where CompanyId = {CompanyId} and id={T.id} and  StockAdjusmentId={T.StockAdjusmentId})as id,
 
@@ -135,19 +178,30 @@ namespace BL.Services.StockAdjusment
             ");
             if (list.First().StockAdjusmentId==null)
             {
-                return ("StockAdjusmentId,Boyle bir id yok");
+                hatalar.Add("StockAdjusmentId,Boyle bir id yok");
             }
             if (list.First().id==null)
             {
-                return ("id ve StockAdjusmentId eslesmiyor");
+                hatalar.Add("id ve StockAdjusmentId eslesmiyor");
             }
             if (list.First().ItemId==null)
             {
-                return ("Boyle bir ItemId yok");
+                hatalar.Add("Boyle bir ItemId yok");
+            }
+            if (adjusmentcount < 0 && stokcount > 0)
+            {
+                if (adjusmentcount + stokcount < 0)
+                {
+                    hatalar.Add("Yeterli stok bulunamamştır.");
+
+                }
+                return hatalar;
+
             }
             else
             {
-                return ("true");
+                return hatalar;
+
             }
         }
     }

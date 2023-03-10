@@ -1,4 +1,5 @@
-﻿using BL.Services.IdControl;
+﻿using BL.Extensions;
+using BL.Services.IdControl;
 using DAL.Contracts;
 using DAL.DTO;
 using DAL.Models;
@@ -21,33 +22,43 @@ namespace Api.Controllers
     [ApiController]
     public class SettingLocationsController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IUserService _user;
         private readonly ILocationsRepository _location;
         private readonly IDbConnection _db;
         private readonly IValidator<IdControl> _Idcontrol;
         private readonly IValidator<LocationsDTO> _LocationDTO;
         private readonly IValidator<LocationsInsert> _LocationInsert;
         private readonly IIDControl _idcontrol;
+        private readonly IPermissionControl _izinkontrol;
 
 
 
 
-        public SettingLocationsController(ILocationsRepository location, IUserService userService, IDbConnection db, IValidator<IdControl> ıdcontrol, IValidator<LocationsInsert> locationInsert, IValidator<LocationsDTO> locationDTO, IIDControl idcontrol)
+        public SettingLocationsController(ILocationsRepository location, IUserService userService, IDbConnection db, IValidator<IdControl> ıdcontrol, IValidator<LocationsInsert> locationInsert, IValidator<LocationsDTO> locationDTO, IIDControl idcontrol, IPermissionControl izinkontrol)
         {
             _location = location;
-            _userService = userService;
+            _user = userService;
             _db = db;
             _Idcontrol = ıdcontrol;
             _LocationInsert = locationInsert;
             _LocationDTO = locationDTO;
             _idcontrol = idcontrol;
+            _izinkontrol = izinkontrol;
         }
         [Route("List")]
         [HttpGet, Authorize]
         public async Task<ActionResult<LocationsDTO>> List()
         {
-            List<int> user = _userService.CompanyId();
+            List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             var list = await _location.List(CompanyId);
             return Ok(list);
         }
@@ -56,12 +67,19 @@ namespace Api.Controllers
         [HttpPost, Authorize]
         public async Task<ActionResult<LocationsDTO>> Insert(LocationsInsert T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _LocationInsert.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _userService.CompanyId();
-                int CompanyId = user[0];
-
                 int id = await _location.Insert(T, CompanyId);
                 DynamicParameters param = new DynamicParameters();
                 param.Add("@CompanyId", CompanyId);
@@ -81,13 +99,21 @@ namespace Api.Controllers
         [HttpPost, Authorize]
         public async Task<ActionResult<LocationsDTO>> Update(LocationsDTO T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _LocationDTO.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _userService.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _idcontrol.GetControl("Locations", T.id, CompanyId);
-                if (hata == "true")
+                var hata = await _idcontrol.GetControl("Locations", T.id, CompanyId);
+                if (hata.Count() == 0)
                 {
                     await _location.Update(T, CompanyId);
                     return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
@@ -109,14 +135,21 @@ namespace Api.Controllers
         [HttpDelete, Authorize]
         public async Task<ActionResult<LocationsDTO>> Delete(IdControl T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _Idcontrol.ValidateAsync(T);
             if (result.IsValid)
             {
-
-                List<int> user = _userService.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _idcontrol.GetControl("Locations", T.id, CompanyId);
-                if (hata == "true")
+                var hata = await _idcontrol.GetControl("Locations", T.id, CompanyId);
+                if (hata.Count() == 0)
                 {
                     await _location.Delete(T, CompanyId);
                     return Ok("Silme İşlemi Başarıyla Gerçekleşti");

@@ -18,35 +18,58 @@ namespace DAL.Repositories
     public class OrdersRepository : IOrdersRepository
     {
         IDbConnection _db;
-        public OrdersRepository(IDbConnection db)
+        private readonly IUretimRepository _uretim;
+        public OrdersRepository(IDbConnection db, IUretimRepository uretim)
         {
             _db = db;
+            _uretim = uretim;
         }
 
-        public async Task Delete(Delete T, int CompanyId, int user)
+        public async Task Delete(List<Delete> A, int CompanyId, int user)
         {
-            DynamicParameters prm = new DynamicParameters();
-            prm.Add("@id", T.id);
-            prm.Add("@Tip", T.Tip);
-            prm.Add("@CompanyId", CompanyId);
-            prm.Add("@IsActive", false);
-            prm.Add("@DateTime", DateTime.Now);
-            prm.Add("@User", user);
-
-            string sql = $"select OrdersItem.id,ItemId from OrdersItem left join Orders on Orders.id=OrdersItem.OrdersId where OrdersItem.CompanyId=@CompanyId and Orders.Tip='PurchaseOrder' and Orders.id=@id";
-            var idcontrol = await _db.QueryAsync<PurchaseOrder>(sql, prm);
-            foreach (var item in idcontrol)
+            foreach (var T in A)
             {
-                DeleteItems A = new DeleteItems();
-                A.id = item.id;
-                A.ItemId = (int)item.ItemId;
-                A.OrdersId = T.id;
-                await DeleteItems(A, CompanyId);
+                DynamicParameters prm = new DynamicParameters();
+                prm.Add("@id", T.id);
+                prm.Add("@Tip", T.Tip);
+                prm.Add("@CompanyId", CompanyId);
+                prm.Add("@IsActive", false);
+                prm.Add("@DateTime", DateTime.Now);
+                prm.Add("@User", user);
+
+                string sql = $"select Orders.ManufacturingOrderId,Orders.ManufacturingOrderItemId,OrdersItem.id,ItemId from OrdersItem left join Orders on Orders.id=OrdersItem.OrdersId where OrdersItem.CompanyId=@CompanyId and Orders.Tip='PurchaseOrder' and Orders.id=@id";
+                var idcontrol = await _db.QueryAsync<PurchaseOrder>(sql, prm);
+                foreach (var item in idcontrol)
+                {
+                    DeleteItems B = new DeleteItems();
+                    B.id = item.id;
+                    B.ItemId = (int)item.ItemId;
+                    B.OrdersId = T.id;
+                    await DeleteItems(B, CompanyId);
+                }
+                var manuorderid = idcontrol.First().ManufacturingOrderId;
+                var manuorderitemid = idcontrol.First().ManufacturingOrderItemId;
+
+                string sql1 = $@"Select m.LocationId,mi.ItemId,mi.PlannedQuantity from ManufacturingOrder m 
+                left join ManufacturingOrderItems mi on mi.OrderId=m.id
+                where m.id={manuorderid} and mi.id={manuorderitemid} and m.CompanyId={CompanyId}";
+                var manufacturing = await _db.QueryAsync<PurchaseOrder>(sql1, prm);
+                await _db.ExecuteAsync($"Delete from Orders where id = @id and CompanyId = @CompanyId and Tip=@Tip", prm);
+                foreach (var item in manufacturing)
+                {
+                    UretimIngredientsUpdate clas = new();
+                    clas.id = manuorderitemid;
+                    clas.OrderId = manuorderid;
+                    clas.Quantity = item.Quantity;
+                    clas.LocationId=item.LocationId;
+                    clas.ItemId = item.ItemId;
+                    await _uretim.IngredientsUpdate(clas, CompanyId);
+                }
+
+
+
             }
-
-
-
-            await _db.ExecuteAsync($"Update Orders Set IsActive=@IsActive,DeleteDate=@DateTime,DeletedUser=@User where id = @id and CompanyId = @CompanyId and Tip=@Tip", prm);
+          
         }
 
         public async Task DeleteItems(DeleteItems T, int CompanyId)
@@ -66,6 +89,11 @@ namespace DAL.Repositories
             prm.Add("@CompanyId", CompanyId);
 
             var list = await _db.QueryAsync<PurchaseDetails>($"Select Orders.id,Orders.Tip,Orders.ContactId,Contacts.DisplayName as SupplierName,Orders.ExpectedDate,Orders.CreateDate,Orders.OrderName, Orders.LocationId,Locations.LocationName, Orders.Info,Orders.CompanyId,Orders.DeliveryId From Orders left join Contacts on Contacts.id = Orders.ContactId left join Locations on Locations.id=Orders.LocationId left join OrdersItem on OrdersItem.OrdersId = Orders.id  where Orders.CompanyId = @CompanyId and Orders.id = @id Group By Orders.id, Orders.Tip, Orders.ContactId, Contacts.DisplayName, Orders.ExpectedDate, Orders.CreateDate,Orders.OrderName, Orders.LocationId, Orders.Info,Orders.CompanyId,Locations.LocationName,Orders.DeliveryId", prm);
+            foreach (var item in list)
+            {
+                var list2 = await _db.QueryAsync<PurchaseOrdersItemDetails>($"  Select OrdersItem.id as id,OrdersItem.ItemId ,Items.Name as ItemName, OrdersItem.Quantity, OrdersItem.PricePerUnit, OrdersItem.TaxId, Tax.TaxName, OrdersItem.TaxValue, OrdersItem.TotalAll, OrdersItem.TotalPrice, OrdersItem.PlusTax , OrdersItem.OrdersId, OrdersItem.MeasureId, Measure.Name as MeasureName from OrdersItem  left join Items on Items.id = OrdersItem.ItemId  left    join Tax on Tax.id = OrdersItem.TaxId left  join Measure on Measure.id = OrdersItem.MeasureId  where OrdersItem.CompanyId = @CompanyId and OrdersItem.OrdersId = @id", prm);
+                item.detay = list2;
+            }
             return list;
         }
 
@@ -116,16 +144,6 @@ namespace DAL.Repositories
 
             return await _db.QuerySingleAsync<int>($"Insert into OrdersItem (ItemId,Quantity,PricePerUnit,TaxId,TaxValue,OrdersId,TotalPrice,PlusTax,TotalAll,CompanyId,MeasureId) OUTPUT INSERTED.[id] values (@ItemId,@Quantity,@PricePerUnit,@TaxId,@TaxValue,@OrdersId,@TotalPrice,@PlusTax,@TotalAll,@CompanyId,@MeasureId)", new { ItemId = T.ItemId, Quantity = T.Quantity, PricePerUnit = PriceUnit, TaxId = T.TaxId, TaxValue = TaxRate, OrdersId = OrdersId, TotalPrice = TotalPrice, PlusTax = PlusTax, TotalAll = TotalAll, CompanyId = CompanyId, MeasureId = T.MeasureId });
 
-        }
-
-        public async Task<IEnumerable<PurchaseOrdersItemDetails>> PurchaseOrderDetailsItem(int id, int CompanyId)
-        {
-            DynamicParameters prm = new DynamicParameters();
-            prm.Add("@id", id);
-            prm.Add("@CompanyId", CompanyId);
-
-            var list = await _db.QueryAsync<PurchaseOrdersItemDetails>($"  Select OrdersItem.id as id,OrdersItem.ItemId ,Items.Name as ItemName, OrdersItem.Quantity, OrdersItem.PricePerUnit, OrdersItem.TaxId, Tax.TaxName, OrdersItem.TaxValue, OrdersItem.TotalAll, OrdersItem.TotalPrice, OrdersItem.PlusTax , OrdersItem.OrdersId, OrdersItem.MeasureId, Measure.Name as MeasureName from OrdersItem  left join Items on Items.id = OrdersItem.ItemId  left    join Tax on Tax.id = OrdersItem.TaxId left  join Measure on Measure.id = OrdersItem.MeasureId  where OrdersItem.CompanyId = @CompanyId and OrdersItem.OrdersId = @id", prm);
-            return list.ToList();
         }
 
         public async Task Update(PurchaseOrderUpdate T, int CompanyId)

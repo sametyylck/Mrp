@@ -1,4 +1,5 @@
-﻿using BL.Services.IdControl;
+﻿using BL.Extensions;
+using BL.Services.IdControl;
 using DAL.Contracts;
 using DAL.DTO;
 using DAL.Models;
@@ -26,9 +27,10 @@ namespace Api.Controllers
         private readonly IValidator<OperationsUpdate> _OperationsUpdate;
         private readonly IValidator<IdControl> _delete;
         private readonly IIDControl _idcontrol;
+        private readonly IPermissionControl _izinkontrol;
 
 
-        public SettingOperationsController(IUserService user, IOperationsRepository operationsRepository, IDbConnection db, IValidator<OperationsInsert> operationsInsert, IValidator<OperationsUpdate> operationsUpdate, IValidator<IdControl> delete, IIDControl idcontrol)
+        public SettingOperationsController(IUserService user, IOperationsRepository operationsRepository, IDbConnection db, IValidator<OperationsInsert> operationsInsert, IValidator<OperationsUpdate> operationsUpdate, IValidator<IdControl> delete, IIDControl idcontrol, IPermissionControl izinkontrol)
         {
             _user = user;
             _operationsRepository = operationsRepository;
@@ -37,6 +39,7 @@ namespace Api.Controllers
             _OperationsUpdate = operationsUpdate;
             _delete = delete;
             _idcontrol = idcontrol;
+            _izinkontrol = izinkontrol;
         }
         [Route("List")]
         [HttpGet, Authorize]
@@ -44,6 +47,14 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             var list = await _operationsRepository.List(CompanyId);
 
             return Ok(list);
@@ -53,11 +64,19 @@ namespace Api.Controllers
         [HttpPost, Authorize]
         public async Task<ActionResult<OperitaonsDTO>> Insert(OperationsInsert T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _OperationsInsert.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
                 int id = await _operationsRepository.Insert(T, CompanyId);
                 string sql = $"Select * From Operations where CompanyId = {CompanyId} and id = {id}";
                 var eklenen = await _db.QueryAsync<OperitaonsDTO>(sql);
@@ -81,14 +100,21 @@ namespace Api.Controllers
         [HttpPut, Authorize]
         public async Task<ActionResult<OperitaonsDTO>> Update(OperationsUpdate T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _OperationsUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-             
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _idcontrol.GetControl("Operations", T.id, CompanyId);
-                if (hata=="true")
+                var hata = await _idcontrol.GetControl("Operations", T.id, CompanyId);
+                if (hata.Count()==0)
                 {
                     await _operationsRepository.Update(T, CompanyId);
                     return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
@@ -113,15 +139,22 @@ namespace Api.Controllers
         [HttpDelete, Authorize]
         public async Task<ActionResult<OperitaonsDTO>> Delete(IdControl T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _delete.ValidateAsync(T);
             if (result.IsValid)
             {
-
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
                 string tablo = "Operations";
-                string hata=await _idcontrol.GetControl(tablo, T.id, CompanyId);
-                if (hata=="true")
+                var hata=await _idcontrol.GetControl(tablo, T.id, CompanyId);
+                if (hata.Count() == 0)
                 {
                     await _operationsRepository.Delete(T, CompanyId);
                     return Ok("Silme İşlemi Başarıyla Gerçekleşti");

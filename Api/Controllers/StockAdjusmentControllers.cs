@@ -1,4 +1,5 @@
-﻿using BL.Services.IdControl;
+﻿using BL.Extensions;
+using BL.Services.IdControl;
 using BL.Services.StockAdjusment;
 using DAL.Contracts;
 using DAL.DTO;
@@ -36,8 +37,9 @@ namespace Api.Controllers
         private readonly IValidator<IdControl> _delete;
         private readonly IStockAdjusmentControl _stockadjusmentcontrol;
         private readonly IIDControl _control;
+        private readonly IPermissionControl _izinkontrol;
 
-        public StockAdjusmentControllers(IUserService user, IDbConnection db, IStockAdjusmentRepository adjusment, IValidator<StockAdjusmentItemDelete> stockAdjusmentItemDelete, IValidator<StockAdjusmentInsertItem> stockAdjusmentInsertItem, IValidator<StockAdjusmentInsert> stockAdjusmentInsert, IValidator<StockAdjusmentUpdate> stockAdjusmentUpdate, IValidator<StockAdjusmentUpdateItems> stockAdjusmentUpdateItem, IValidator<IdControl> delete, IStockAdjusmentControl stockadjusmentcontrol, IIDControl control)
+        public StockAdjusmentControllers(IUserService user, IDbConnection db, IStockAdjusmentRepository adjusment, IValidator<StockAdjusmentItemDelete> stockAdjusmentItemDelete, IValidator<StockAdjusmentInsertItem> stockAdjusmentInsertItem, IValidator<StockAdjusmentInsert> stockAdjusmentInsert, IValidator<StockAdjusmentUpdate> stockAdjusmentUpdate, IValidator<StockAdjusmentUpdateItems> stockAdjusmentUpdateItem, IValidator<IdControl> delete, IStockAdjusmentControl stockadjusmentcontrol, IIDControl control, IPermissionControl izinkontrol)
         {
             _user = user;
             _db = db;
@@ -50,20 +52,28 @@ namespace Api.Controllers
             _delete = delete;
             _stockadjusmentcontrol = stockadjusmentcontrol;
             _control = control;
+            _izinkontrol = izinkontrol;
         }
 
         [Route("Insert")]
         [HttpPost, Authorize]
         public async Task<ActionResult<StockAdjusmentAll>> Insert(StockAdjusmentInsert T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _StockAdjusmentInsert.ValidateAsync(T);
             if (result.IsValid)
             {
-
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _stockadjusmentcontrol.Insert(T, CompanyId);
-                if (hata == "true")
+                var hata = await _stockadjusmentcontrol.Insert(T, CompanyId);
+                if (hata.Count()==0)
                 {
                     int id = await _adjusment.Insert(T, CompanyId);
                     DynamicParameters param2 = new DynamicParameters();
@@ -93,17 +103,25 @@ namespace Api.Controllers
         [HttpPost, Authorize]
         public async Task<ActionResult<StockAdjusmentAll>> InsertStockAdjusmentItems(StockAdjusmentInsertItem T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
 
             ValidationResult result = await _StockAdjusmentInsertItem.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                int User = user[1];
-                string hata = await _stockadjusmentcontrol.InsertItem(T, CompanyId);
-                if (hata == "true")
+
+                var hata = await _stockadjusmentcontrol.InsertItem(T, CompanyId);
+                if (hata.Count() == 0)
                 {
-                    int id = await _adjusment.InsertItem(T, T.StockAdjusmentId, CompanyId, User);
+                    int id = await _adjusment.InsertItem(T, T.StockAdjusmentId, CompanyId, UserId);
 
                     DynamicParameters param2 = new DynamicParameters();
                     param2.Add("@CompanyId", CompanyId);
@@ -131,13 +149,22 @@ namespace Api.Controllers
         [HttpPut, Authorize]
         public async Task<ActionResult<StockAdjusmentClas>> Update(StockAdjusmentUpdate T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _StockAdjusmentUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _stockadjusmentcontrol.Update(T, CompanyId);
-                if (hata == "true")
+
+                var hata = await _stockadjusmentcontrol.Update(T, CompanyId);
+                if (hata.Count() == 0)
                 {
                     DynamicParameters param1 = new DynamicParameters();
                     param1.Add("@CompanyId", CompanyId);
@@ -168,14 +195,22 @@ namespace Api.Controllers
         [HttpPut, Authorize]
         public async Task<ActionResult<StockAdjusmentItems>> UpdateStockAdjusmentItem(StockAdjusmentUpdateItems T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _StockAdjusmentUpdateItem.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                int UserId = user[1];
-                string hata = await _stockadjusmentcontrol.UpdateStockAdjusment(T, CompanyId);
-                if (hata == "true")
+           
+                var hata = await _stockadjusmentcontrol.UpdateStockAdjusment(T, CompanyId);
+                if (hata.Count() == 0)
                 {
                     DynamicParameters param2 = new DynamicParameters();
                     param2.Add("@id", T.id);
@@ -204,16 +239,23 @@ namespace Api.Controllers
         [HttpDelete, Authorize]
         public async Task<ActionResult<StockAdjusmentItemDelete>> DeleteItems(StockAdjusmentItemDelete T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeSilme, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _StockAdjusmentItemDelete.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                int User = user[1];
-                string hata = await _stockadjusmentcontrol.DeleteItems(T, CompanyId);
-                if (hata == "true")
+                var hata = await _stockadjusmentcontrol.DeleteItems(T, CompanyId);
+                if (hata.Count() == 0)
                 {
-                    await _adjusment.DeleteItems(T, CompanyId, User);
+                    await _adjusment.DeleteItems(T, CompanyId, UserId);
                     return Ok("Silme İşlemi Başarıyla Gerçekleşti");
                 }
                 else
@@ -236,14 +278,22 @@ namespace Api.Controllers
         [HttpDelete, Authorize]
         public async Task<ActionResult<Delete>> Delete(IdControl T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeSilme, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _delete.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                int UserId = user[1];
-                string hata = await _control.GetControl("StockAdjusment", T.id, CompanyId);
-                if (hata == "true")
+               
+                var hata = await _control.GetControl("StockAdjusment", T.id, CompanyId);
+                if (hata.Count() == 0)
                 {
                     await _adjusment.Delete(T, CompanyId, UserId);
                     return Ok("Silme İşlemi Başarıyla Gerçekleşti");
@@ -270,20 +320,16 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeGoruntule, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             DynamicParameters prm = new DynamicParameters();
             var list = await _adjusment.Detail(CompanyId, id);
-            return Ok(list);
-
-        }
-
-        [Route("StockAdjusmentDetailsItem")]
-        [HttpGet, Authorize]
-        public async Task<ActionResult<StockAdjusmentItems>> StockAdjusmentDetailsItem(int id)
-        {
-            List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
-            DynamicParameters prm = new DynamicParameters();
-            var list = await _adjusment.ItemDetail(id, CompanyId);
             return Ok(list);
 
         }
@@ -294,6 +340,14 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeGoruntule, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             DynamicParameters prm = new DynamicParameters();
             var list = await _adjusment.List(T, CompanyId, KAYITSAYISI, SAYFA);
             var count = await _adjusment.Count(T, CompanyId);

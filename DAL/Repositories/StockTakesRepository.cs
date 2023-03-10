@@ -1,5 +1,6 @@
 ﻿using DAL.Contracts;
 using DAL.DTO;
+using DAL.StockControl;
 using Dapper;
 using System;
 using System.Collections.Generic;
@@ -16,15 +17,17 @@ namespace DAL.Repositories
     {
         IDbConnection _db;
         IStockAdjusmentRepository _adjusment;
+        private readonly IStockControl _control;
 
 
-        public StockTakesRepository(IDbConnection db, IStockAdjusmentRepository adjusment)
+        public StockTakesRepository(IDbConnection db, IStockAdjusmentRepository adjusment, IStockControl control)
         {
             _db = db;
             _adjusment = adjusment;
+            _control = control;
         }
 
-        public async Task Delete(IdControl T, int CompanyId,int User)
+        public async Task Delete(IdControl T, int CompanyId, int User)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
@@ -33,7 +36,7 @@ namespace DAL.Repositories
 
             prm.Add("@CompanyId", CompanyId);
             prm.Add("@IsActive", false);
-           await _db.ExecuteAsync($"Update StockTakes Set IsActive=@IsActive,DeleteDate=@Date,DeletedUser=@User where id = @id and CompanyId = @CompanyId ", prm);
+            await _db.ExecuteAsync($"Update StockTakes Set IsActive=@IsActive,DeleteDate=@Date,DeletedUser=@User where id = @id and CompanyId = @CompanyId ", prm);
             await _db.ExecuteAsync($"delete from StockTakesItem where StockTakesId=@id and CompanyId=@CompanyId", prm);
 
         }
@@ -44,7 +47,7 @@ namespace DAL.Repositories
             prm.Add("@id", T.id);
             prm.Add("@ItemId", T.ItemId);
             prm.Add("@CompanyId", CompanyId);
-          await  _db.ExecuteAsync($"Delete from StockTakesItem where  ItemId=@ItemId and id = @id and CompanyId = @CompanyId ", prm);
+            await _db.ExecuteAsync($"Delete from StockTakesItem where  ItemId=@ItemId and id = @id and CompanyId = @CompanyId ", prm);
         }
 
         public async Task<IEnumerable<StockTakes>> Detail(int CompanyId, int id)
@@ -53,7 +56,7 @@ namespace DAL.Repositories
             prm.Add("@CompanyId", CompanyId);
             prm.Add("@id", id);
             string sql = $@"select * from StockTakes where CompanyId=@CompanyId and id=@id";
-            var details =await _db.QueryAsync<StockTakes>(sql, prm);
+            var details = await _db.QueryAsync<StockTakes>(sql, prm);
             return details.ToList();
         }
 
@@ -84,7 +87,7 @@ namespace DAL.Repositories
                 prm.Add("@StockTakesId", item.StockTakesId);
                 prm.Add("@ItemId", item.ItemId);
                 prm.Add("@Notes", item.Notes);
-               await _db.QuerySingleAsync<int>($"Insert into StockTakesItem(ItemId,Note,StockTakesId,CompanyId) OUTPUT INSERTED.[id] values (@ItemId,@Notes,@StockTakesId,@CompanyId)", prm);
+                await _db.QuerySingleAsync<int>($"Insert into StockTakesItem(ItemId,Note,StockTakesId,CompanyId) OUTPUT INSERTED.[id] values (@ItemId,@Notes,@StockTakesId,@CompanyId)", prm);
             }
             return 1;
         }
@@ -98,7 +101,7 @@ namespace DAL.Repositories
 			left join Items on Items.id=ItemId
 			left join Categories on Categories.id=Items.CategoryId
             where StockTakesItem.StockTakesId=@id ";
-            var ItemsDetail = await  _db.QueryAsync<StockTakeItems>(sql, prm);
+            var ItemsDetail = await _db.QueryAsync<StockTakeItems>(sql, prm);
             return ItemsDetail.ToList();
         }
 
@@ -106,7 +109,7 @@ namespace DAL.Repositories
         {
             DynamicParameters param = new();
             param.Add("@CompanyId", CompanyId);
-            var  kayitsayisi =await _db.QueryFirstAsync<int>($@" select Count(*) as kayitsayisi from(
+            var kayitsayisi = await _db.QueryFirstAsync<int>($@" select Count(*) as kayitsayisi from(
             select x.* from (
             select StockTakes.id,StockTake,StockTakes.Reason,StockTakes.LocationId,Locations.LocationName,CreatedDate,CompletedDate,StockAdjusmentId,StockAdjusment.Name,Status from StockTakes
             left join Locations on Locations.id=StockTakes.LocationId
@@ -118,7 +121,7 @@ namespace DAL.Repositories
             return kayitsayisi;
         }
 
-        public async Task StockTakesDone(StockTakesDone T, int CompanyId,int UserId)
+        public async Task StockTakesDone(StockTakesDone T, int CompanyId, int UserId)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
@@ -126,9 +129,13 @@ namespace DAL.Repositories
             prm.Add("@Status", T.Status);
 
             string sql = $@"select Status from StockTakes where CompanyId={CompanyId} and id={T.id}";
-            var Status =await _db.QueryFirstAsync<int>(sql);
+            var Status = await _db.QueryFirstAsync<int>(sql);
+
+            string sql2 = $@"select * from StockTakesItem where CompanyId={CompanyId} and StockTakesId={T.id}";
+            var itemlist = await _db.QueryAsync<StockTakeInsertItems>(sql2);
+
             int eskiStatus = Status;
-           var Locations =await _db.QueryFirstAsync<int>($"select id from Locations where  CompanyId={CompanyId} and Tip='SettingsLocation'");
+            var Locations = await _db.QueryFirstAsync<int>($"select id from Locations where  CompanyId={CompanyId} and Tip='SettingsLocation'");
             prm.Add("@LocationId", Locations);
 
             if (eskiStatus == 0)
@@ -136,7 +143,7 @@ namespace DAL.Repositories
                 if (T.Status == 1)
                 {
 
-                    await _db.ExecuteAsync($"Update StockTakes Set Status=@Status where id = {T.id} and CompanyId = {CompanyId}");
+                    await _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId}");
                 }
             }
             else if (eskiStatus == 1)
@@ -144,15 +151,18 @@ namespace DAL.Repositories
                 if (T.Status == 2)
                 {
 
-                    var degerler =await _db.QueryAsync<StockTakeItems>($@"select * from StockTakesItem where CompanyId={CompanyId} and StockTakesId={T.id}");
+                    var degerler = await _db.QueryAsync<StockTakeItems>($@"select * from StockTakesItem where CompanyId={CompanyId} and StockTakesId={T.id}");
                     foreach (var item in degerler)
                     {
-                        var Discrepancy = item.CountedQuantity - item.InStock;
+                        var stokdeger = await _control.Count(item.ItemId, CompanyId, Locations);
+                        var Discrepancy = item.CountedQuantity - stokdeger;
                         string sqlquery = $@"Update StockTakesItem Set Discrepancy={Discrepancy}  where id = {item.id} and CompanyId = {CompanyId}";
-                         await  _db.ExecuteAsync(sqlquery);
+                        await _db.ExecuteAsync(sqlquery);
                     }
 
-                  await  _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId} ");
+
+
+                    await _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId} ");
 
                 }
                 else if (T.Status == 3)
@@ -161,40 +171,37 @@ namespace DAL.Repositories
                     prm.Add("@CompanyId", CompanyId);
                     prm.Add("@Status", T.Status);
                     string sqlsorgu = $@"select * from StockTakesItem where StockTakesItem.CompanyId={CompanyId} and StockTakesItem.StockTakesId={T.id}";
-                    var degerler =await _db.QueryAsync<StockTakeItems>(sqlsorgu, prm);
+                    var degerler = await _db.QueryAsync<StockTakeItems>(sqlsorgu, prm);
                     StockAdjusmentInsert stockAdjusmentAll = new StockAdjusmentInsert();
                     stockAdjusmentAll.Date = DateTime.Now;
                     stockAdjusmentAll.Name = "ST";
                     stockAdjusmentAll.Reason = "STK";
                     stockAdjusmentAll.LocationId = Locations;
                     stockAdjusmentAll.StockTakesId = T.id;
-                    int id =await _adjusment.Insert(stockAdjusmentAll,CompanyId);
+                    int id = await _adjusment.Insert(stockAdjusmentAll, CompanyId);
                     foreach (var item in degerler)
                     {
-                        var Discrepancys = item.CountedQuantity - item.InStock;
-                        _db.Execute($"Update StockTakesItem Set Discrepancy={Discrepancys} where id = {item.id} and CompanyId = {CompanyId} ");
-                        if (Discrepancys == null)
-                        {
+                        var stokdeger = await _control.Count(item.ItemId, CompanyId, Locations);
 
-                        }
-                        else
-                        {
-                            StockAdjusmentInsertItem A = new StockAdjusmentInsertItem();
-                            A.ItemId = item.ItemId;
-                            A.LocationId = Locations;
-                            A.Adjusment = (float)item.Discrepancy;
-                           
-                          await _adjusment.InsertItem(A, id, CompanyId,UserId);
-                        }
+                        var Discrepancys = item.CountedQuantity - stokdeger;
+                        _db.Execute($"Update StockTakesItem Set Discrepancy={Discrepancys} where id = {item.id} and CompanyId = {CompanyId} ");
+
+                        StockAdjusmentInsertItem A = new StockAdjusmentInsertItem();
+                        A.ItemId = item.ItemId;
+                        A.LocationId = Locations;
+                        A.Adjusment = (float)item.Discrepancy;
+
+                        await _adjusment.InsertItem(A, id, CompanyId, UserId);
+
 
 
                     }
-                   await _db.QueryAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId} ");
+                    await _db.QueryAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId} ");
 
                 }
                 else
                 {
-                 await  _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId}");
+                    await _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId}");
                 }
 
             }
@@ -205,11 +212,11 @@ namespace DAL.Repositories
                     prm.Add("@id", T.id);
                     prm.Add("@CompanyId", CompanyId);
                     prm.Add("@Status", T.Status);
-                    await   _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId} ");
+                    await _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId} ");
                     string sqlsorgu = $@"  select ItemId,Discrepancy,Min(Discrepancy) as [Control] from StockTakesItem where StockTakesItem.CompanyId={CompanyId} and StockTakesItem.StockTakesId={T.id}  Group by ItemId,Discrepancy";
-                    var degerler =await _db.QueryAsync<StockTakeItems>(sqlsorgu);
+                    var degerler = await _db.QueryAsync<StockTakeItems>(sqlsorgu);
                     string mindiscrepanyc = $@"    select Min(Discrepancy) as Discrepancy  from StockTakesItem where StockTakesItem.CompanyId={CompanyId} and StockTakesItem.StockTakesId={T.id} ";
-                    var discrepancy =await _db.QueryAsync<StockTakeItems>(mindiscrepanyc);
+                    var discrepancy = await _db.QueryAsync<StockTakeItems>(mindiscrepanyc);
 
                     if (discrepancy.First().Discrepancy != null)
                     {
@@ -221,34 +228,29 @@ namespace DAL.Repositories
                         stockAdjusmentAll.StockTakesId = T.id;
 
 
-                        int id =await _adjusment.Insert(stockAdjusmentAll, CompanyId);
+                        int id = await _adjusment.Insert(stockAdjusmentAll, CompanyId);
                         foreach (var item in degerler)
                         {
-                            if (item.Discrepancy == null)
-                            {
 
-                            }
-                            else
-                            {
-                                StockAdjusmentInsertItem A = new StockAdjusmentInsertItem();
-                                A.ItemId = item.ItemId;
-                                A.LocationId = Locations;
-                                A.Adjusment = (float)item.Discrepancy;
-                               await _adjusment.InsertItem(A, id, CompanyId,UserId);
-                            }
+                            StockAdjusmentInsertItem A = new StockAdjusmentInsertItem();
+                            A.ItemId = item.ItemId;
+                            A.LocationId = Locations;
+                            A.Adjusment = (float)item.Discrepancy;
+                            await _adjusment.InsertItem(A, id, CompanyId, UserId);
+
 
                         }
                     }
 
                     else
                     {
-                     await   _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId} ");
+                        await _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId} ");
                     }
 
                 }
                 else
                 {
-                  await  _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId} ");
+                    await _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId} ");
                 }
 
             }
@@ -256,17 +258,17 @@ namespace DAL.Repositories
             {
                 if (T.Status == 3)
                 {
-                   await _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId}");
+                    await _db.ExecuteAsync($"Update StockTakes Set Status={T.Status} where id = {T.id} and CompanyId = {CompanyId}");
                 }
                 else
                 {
                     string sqlsorgu = $@"select id from StockAdjusment where StockTakesId={T.id} and CompanyId={CompanyId}";
-                    var adjusmentid =await _db.QueryAsync(sqlsorgu);
+                    var adjusmentid = await _db.QueryAsync(sqlsorgu);
                     if (adjusmentid.First() != 0)
                     {
                         IdControl delete = new IdControl();
                         delete.id = adjusmentid.First();
-                       await _adjusment.Delete(delete, CompanyId,UserId);
+                        await _adjusment.Delete(delete, CompanyId, UserId);
                     }
 
                 }
@@ -289,7 +291,7 @@ namespace DAL.Repositories
         ISNULL(Name,'') like '%{T.Name}%' and ISNULL(StockTakes.Status,'') like '%{T.Status}%'
 		Group by StockTake,StockTakes.Reason,StockTakes.LocationId,StockTakes.id,Locations.LocationName,CreatedDate,CompletedDate,StockAdjusmentId,StockAdjusment.Name,Status)x
 		  ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY";
-            var List =await _db.QueryAsync<StockTakeList>(sql, param);
+            var List = await _db.QueryAsync<StockTakeList>(sql, param);
 
             return List.ToList();
         }
@@ -306,26 +308,26 @@ namespace DAL.Repositories
             prm.Add("@Reason", T.Reason);
             prm.Add("@Info", T.Info);
             string sql = $@"select Status from StockTakes where CompanyId=@CompanyId and id=@id ";
-            var Status =await _db.QueryFirstAsync<int>(sql, prm);
+            var Status = await _db.QueryFirstAsync<int>(sql, prm);
             if (Status == 0)
             {
-              await  _db.ExecuteAsync($"Update StockTakes set Info=@Info,Reason=@Reason,CreatedDate=@CreatedDate,StockTake=@StockTake where CompanyId=@CompanyId and id=@id ", prm);
+                await _db.ExecuteAsync($"Update StockTakes set Info=@Info,Reason=@Reason,CreatedDate=@CreatedDate,StockTake=@StockTake where CompanyId=@CompanyId and id=@id ", prm);
 
             }
-            else if (Status==1)
+            else if (Status == 1)
             {
                 await _db.ExecuteAsync($"Update StockTakes set Info=@Info,Reason=@Reason,CreatedDate=@CreatedDate,StockTake=@StockTake,StartedDate=@StartedDate where CompanyId=@CompanyId and id=@id", prm);
             }
-            else if (Status==2)
+            else if (Status == 2)
             {
                 await _db.ExecuteAsync($"Update StockTakes set Info=@Info,Reason=@Reason,CreatedDate=@CreatedDate,StockTake=@StockTake,StartedDate=@StartedDate,CompletedDate=@CompletedDate where CompanyId=@CompanyId and id=@id", prm);
             }
-            else if (Status==3)
+            else if (Status == 3)
             {
                 await _db.ExecuteAsync($"Update StockTakes set Info=@Info,Reason=@Reason,CreadtedDate=@CreadtedDate,StockTake=@StockTake,StartedDate=@StartedDate,CompletedDate=@CompletedDate where CompanyId=@CompanyId and StockTakesId=@id", prm);
             }
         }
-        public async Task UpdateItems(StockTakesUpdateItems T , int CompanyId)
+        public async Task UpdateItems(StockTakesUpdateItems T, int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.StockTakesId);

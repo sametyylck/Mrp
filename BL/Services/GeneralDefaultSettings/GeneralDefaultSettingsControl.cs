@@ -19,8 +19,9 @@ namespace BL.Services.GeneralDefaultSettings
             _db = db;
         }
 
-        public async Task<string> Update(GeneralSettingsDTO.GeneralDefaultSettings T, int CompanyId)
+        public async Task<List<string>> Update(GeneralSettingsDTO.GeneralDefaultSettings T, int CompanyId)
         {
+            List<string> hatalar = new();
             var list = await _db.QueryAsync<GeneralSettingsDTO.GeneralDefaultSettings>($@"select
              (Select id  From Currency where id={T.CurrencyId})as CurrencyId,
             (Select Count(*) as varmi From Tax where CompanyId = {CompanyId} and id = {T.DefaultTaxSalesOrderId})as DefaultTaxSalesOrderId,
@@ -31,45 +32,47 @@ namespace BL.Services.GeneralDefaultSettings
             ");
             if (list.First().DefaultManufacturingLocationId == null)
             {
-                return ("DefaultManufacturingLocationId,Boyle bir Location bulunamadı");
+                hatalar.Add("DefaultManufacturingLocationId,Boyle bir Location bulunamadı");
             }
             List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.DefaultManufacturingLocationId} ")).ToList();
             bool? make = Locaiton.First().Make;
             if (make != true)
             {
-                return ("Make kismina yetkiniz yok");
+                hatalar.Add("Make kismina yetkiniz yok");
             }
             if (list.First().DefaultPurchaseLocationId == null)
             {
-                return ("DefaultPurchaseLocationId,Boyle bir Location bulunamadı");
+                hatalar.Add("DefaultPurchaseLocationId,Boyle bir Location bulunamadı");
             }
             List<LocationsDTO> purchaselocation = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.DefaultPurchaseLocationId} ")).ToList();
             bool? buy = purchaselocation.First().Buy;
             if (buy != true)
             {
-                return ("Buy kismina yetkiniz yok");
+                hatalar.Add("Buy kismina yetkiniz yok");
             }
             if (list.First().DefaultSalesLocationId == null)
             {
-                return ("DefaultSalesLocationId,Boyle bir Location bulunamadı");
+                hatalar.Add("DefaultSalesLocationId,Boyle bir Location bulunamadı");
             }
             List<LocationsDTO> saleslocation = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.DefaultSalesLocationId} ")).ToList();
             bool? sell = saleslocation.First().Sell;
             if (sell != true)
             {
-                return ("Make kismina yetkiniz yok");
+                hatalar.Add("Make kismina yetkiniz yok");
             }
             if (list.First().DefaultTaxPurchaseOrderId==null)
             {
-                return ("DefaultTaxPurchaseOrderId, id bulunamadı");
+                hatalar.Add("DefaultTaxPurchaseOrderId, id bulunamadı");
               }
             if (list.First().DefaultTaxSalesOrderId == null)
             {
-                return ("DefaultTaxSalesOrderId, id bulunamadı");
+                hatalar.Add("DefaultTaxSalesOrderId, id bulunamadı");
+                return hatalar;
+
             }
             else
             {
-                return ("true");
+                return hatalar;
             }
         }
     }

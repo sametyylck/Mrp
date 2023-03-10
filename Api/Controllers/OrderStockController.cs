@@ -1,4 +1,5 @@
-﻿using BL.Services.IdControl;
+﻿using BL.Extensions;
+using BL.Services.IdControl;
 using DAL.Contracts;
 using DAL.DTO;
 using DAL.Models;
@@ -26,29 +27,38 @@ namespace Api.Controllers
         private readonly IOrderStockRepository _orderStockRepository;
         private readonly IValidator<PurchaseOrderId> _Purchase;
         private readonly IIDControl _idcontrol;
+        private readonly IPermissionControl _izinkontrol;
 
-        public OrderStockController(IUserService user, IDbConnection db, IOrderStockRepository orderStockRepository, IValidator<PurchaseOrderId> purchase, IIDControl idcontrol)
+        public OrderStockController(IUserService user, IDbConnection db, IOrderStockRepository orderStockRepository, IValidator<PurchaseOrderId> purchase, IIDControl idcontrol, IPermissionControl izinkontrol)
         {
             _user = user;
             _db = db;
             _orderStockRepository = orderStockRepository;
             _Purchase = purchase;
             _idcontrol = idcontrol;
+            _izinkontrol = izinkontrol;
         }
         [Route("OrdersStock")]
         [HttpPost, Authorize]
         public async Task<ActionResult<PurchaseOrderId>> OrdersStock(PurchaseOrderId T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaTamamlama, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _Purchase.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                int User = user[1];
-                string hata =await _idcontrol.GetControl("Orders", T.id, CompanyId);
-                if (hata=="true")
+                var hata =await _idcontrol.GetControl("Orders", T.id, CompanyId);
+                if (hata.Count() == 0)
                 {
-                    await _orderStockRepository.StockUpdate(T, CompanyId, User);
+                    await _orderStockRepository.StockUpdate(T, CompanyId, UserId);
                     return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
                 }
                 else
@@ -71,6 +81,14 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaGoruntule, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             var list = await _orderStockRepository.List(T, CompanyId, KAYITSAYISI, SAYFA);
             var count = await _orderStockRepository.Count(T, CompanyId);
             return Ok(new { list, count });
@@ -82,6 +100,14 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaGoruntule, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             var list = await _orderStockRepository.DoneList(T, CompanyId, KAYITSAYISI, SAYFA);
             var count = await _orderStockRepository.DoneCount(T, CompanyId);
             return Ok(new { list, count });

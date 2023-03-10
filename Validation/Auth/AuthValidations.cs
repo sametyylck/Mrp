@@ -34,11 +34,7 @@ namespace Validation.Auth
                 prm.Add("@mail", mail);
                 string sqlquery = $@"Select Count(*)as varmı from Users where Mail=@mail";
                 var list =_db.Query<int>(sqlquery,prm);
-                if (list.Count() != 0)
-                {
-                    return false;
-
-                }
+               
                 return true;
             }
             public AuthRegisterValidations(IDbConnection db)

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static DAL.DTO.ManufacturingOrderDTO;
 using static DAL.DTO.PurchaseOrderDTO;
+using static DAL.DTO.StockListDTO;
 
 namespace DAL.DTO
 {
@@ -132,6 +133,7 @@ namespace DAL.DTO
             public float Total { get; set; }
             public int Status { get; set; }
             public int Conditions { get; set; }
+            public IEnumerable<SatısDetail> detay { get; set; }
 
         }
 
@@ -143,8 +145,8 @@ namespace DAL.DTO
         public class SalesOrderUpdateItems
         {
             public int id { get; set; }
-            public int? Quotes { get; set; }
             public string? Tip { get; set; }
+            public int Quotes { get; set; }
             public int OrderItemId { get; set; }
            public int ManufacturingOrderId { get; set; }
             public int ContactId { get; set; }
@@ -182,6 +184,9 @@ namespace DAL.DTO
             public int? Production { get; set; }
             public int? DeliveryId { get; set; }
             public string? LocationName { get; set; }
+            public DateTime? BaslangıcTarih { get; set; }
+            public DateTime? SonTarih { get; set; }
+
             public IEnumerable<ManufacturingOrderDetail>? MOList { get; set; }
             public IEnumerable<SalesOrderItemDetail>? MissingList { get; set; }
         }

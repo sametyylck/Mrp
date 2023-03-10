@@ -76,7 +76,7 @@ namespace Api.Controllers
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
                 var hata = await _bomcontrol.Insert(T, CompanyId);
-                if (hata == "true")
+                if (hata.Count()==0)
                 {
                     int id = await _bom.Insert(T, CompanyId);
                     var eklenen = await _db.QueryAsync<ListBOM>($@"Select Bom.id,Bom.Quantity,
@@ -104,10 +104,6 @@ namespace Api.Controllers
 
 
 
-
-
-
-
         }
 
         [Route("Update")]
@@ -121,7 +117,7 @@ namespace Api.Controllers
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
                var hata=await _bomcontrol.Update(T, CompanyId);
-                if (hata=="true")
+                if (hata.Count()==0)
                 {
                     DynamicParameters param1 = new DynamicParameters();
                     param1.Add("@CompanyId", CompanyId);
@@ -157,13 +153,10 @@ namespace Api.Controllers
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
                 var hata =await _idcontrol.GetControl("Bom", T.id, CompanyId);
-                if (hata=="true")
-                {
-
-                }
-                else
+                if (hata.Count()!=0)
                 {
                     return BadRequest(hata);
+
                 }
                 await _bom.Delete(T, CompanyId);
                 return Ok("Başarılı");

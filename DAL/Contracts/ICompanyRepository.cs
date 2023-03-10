@@ -11,7 +11,8 @@ namespace DAL.Contracts
     public interface ICompanyRepository
     {
         Task<int> Register(CompanyRegisterDTO T);
-        Task UserRegister(User T, int id);
+        Task<int> RoleInsert(int CompanyId);
+        Task UserRegister(User T, int id, int RoleId);
         Task<IEnumerable<CompanyClas>> List(int CompanyId);
         Task<int> Insert(CompanyInsert T, int CompanyId);
         Task UpdateCompany(CompanyUpdateCompany T, int CompanyId);

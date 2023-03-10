@@ -8,6 +8,6 @@ namespace DAL.StockControl
 {
     public interface IStockControl
     {
-        int Count(int? ItemId,int CompanyId,int? LocationId);
+        Task<int> Count(int? ItemId,int CompanyId,int? LocationId);
     }
 }

@@ -18,8 +18,9 @@ namespace BL.Services.IdControl
             _db = db;
         }
 
-        public async Task<string> GetControl(string tabloadi, int id, int companyid)
+        public async Task<List<string>> GetControl(string tabloadi, int id, int companyid)
         {
+            List<string> hatalar = new();
             DynamicParameters param = new DynamicParameters();
             param.Add("@Tablo", tabloadi);
             param.Add("id", id);
@@ -30,11 +31,13 @@ namespace BL.Services.IdControl
                 var kontrol = await _db.QueryAsync<int>(sql, param);
                 if (kontrol.Count() == 0)
                 {
-                    return ("Boyle bir id yok.");
+                    hatalar.Add("Boyle bir id yok.");
+                    return hatalar;
+
                 }
                 else
                 {
-                    return ("true");
+                    return hatalar;
                 }
             }
             else
@@ -43,11 +46,14 @@ namespace BL.Services.IdControl
                 var kontrol = await _db.QueryAsync<int>(sql, param);
                 if (kontrol.Count() == 0)
                 {
-                    return ("Boyle bir id yok.");
+                    hatalar.Add("Boyle bir id yok.");
+                    return hatalar;
+
                 }
                 else
                 {
-                    return ("true");
+                    return hatalar;
+
                 }
             }
    

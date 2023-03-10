@@ -9,8 +9,10 @@ namespace BL.Services.StockTransfer
 {
     public interface IStockTransferControl
     {
-        Task<string> Insert(StockTransferInsert T,int CompanyId);
-        Task<string> InsertItem(StockTransferInsertItem T, int CompanyId);
-        Task<string> UpdateItems(int? ItemId, int? StockTransferId, int? id, int CompanyId);
+        Task<List<string>> Insert(StockTransferInsert T,int CompanyId);
+        Task<List<string>> InsertItem(StockTransferInsertItem T, int CompanyId);
+        Task<List<string>> UpdateItems(int? ItemId, int? StockTransferId, int? id, int CompanyId);
+        Task Kontrol(int? Id,int? ItemId, int? StockTransferId, int CompanyId);
+        Task<List<string>> AdresStokKontrol(int? Id,int? ItemId, int? StockTransferId, float? Quantity, int CompanyId);
     }
 }

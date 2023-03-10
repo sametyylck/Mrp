@@ -19,44 +19,88 @@ namespace BL.Services.StockTakes
         {
             _db = db;
         }
-
-        public async Task<string> DeleteItem(StockTakeDelete T, int CompanyId)
+        public async Task<List<string>> StockTakesDone(StockTakesDone T, int CompanyId)
         {
+            List<string> hatalar = new();
+            DynamicParameters prm = new DynamicParameters();
+            prm.Add("@id", T.id);
+            prm.Add("@CompanyId", CompanyId);
+            prm.Add("@Status", T.Status);
+
+            string sqlquery = $@"select Count(id) from StockTakes where CompanyId={CompanyId} and id={T.id}";
+            var id = await _db.QueryFirstAsync<int>(sqlquery);
+            if (id==0)
+            {
+                hatalar.Add("Id bulunamadı");
+                return hatalar;
+
+            }
+
+            string sql = $@"select Status from StockTakes where CompanyId={CompanyId} and id={T.id}";
+            var Status = await _db.QueryFirstAsync<int>(sql);
+
+            if (Status==1)
+            {
+                if (T.Status==2 || T.Status==3)
+                {
+                    var degerler = await _db.QueryAsync<StockTakeItems>($@"select * from StockTakesItem where CompanyId={CompanyId} and StockTakesId={T.id}");
+                    foreach (var item in degerler)
+                    {
+                        if (item.CountedQuantity==null)
+                        {
+                            hatalar.Add("Sayılan Miktar girilmedi");
+                        }
+                    }
+                }
+            }
+            return hatalar;
+        }
+
+        public async Task<List<string>> DeleteItem(StockTakeDelete T, int CompanyId)
+        {
+            List<string> hatalar = new();
             var list = await _db.QueryAsync<StockTakeDelete>($@"select
              (Select id  From StockTakesItem where CompanyId = {CompanyId} and ItemId={T.ItemId} and id={T.id} )as ItemId,
             (Select Count(*) as varmi From StockTakes where CompanyId = {CompanyId} and id = {T.id} and IsActive=1)as id
             "); 
             if (list.First().id == null)
             {
-                return ("Boyle bir Itemid yok");
+                hatalar.Add("Boyle bir Itemid yok");
             }
             if (list.First().ItemId == null)
             {
-                return ("Boyle bir location yok");
+                hatalar.Add("Boyle bir location yok");
+                return hatalar;
+
             }
             else
             {
-                return ("true");
+                return hatalar;
             }
         }
 
-        public async Task<string> Insert(StockTakesInsert T, int CompanyId)
+        public async Task<List<string>> Insert(StockTakesInsert T, int CompanyId)
         {
+            List<string> hatalar = new();
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
             (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId
             ");
             if (list.First().LocationId==null)
             {
-                return ("Boyle bir location yok");
+                hatalar.Add("Boyle bir location yok");
+                return hatalar;
+
             }
             else
             {
-                return ("true");
+                return hatalar;
+
             }
         }
 
-        public async Task<string> InsertItem(List<StockTakeInsertItems> T , int CompanyId)
+        public async Task<List<string>> InsertItem(List<StockTakeInsertItems> T , int CompanyId)
         {
+            List<string> hatalar = new();
             foreach (var item in T)
             {
                 var list = await _db.QueryAsync<StockTakeInsertItems>($@"select
@@ -65,33 +109,37 @@ namespace BL.Services.StockTakes
             ");
                 if (list.First().ItemId == null)
                 {
-                    return ("Boyle bir Itemid yok");
+                    hatalar.Add("Boyle bir Itemid yok");
                 }
                 if (list.First().StockTakesId == null)
                 {
-                    return ("StockTakesId,Boyle bir id yok");
+                    hatalar.Add("StockTakesId,Boyle bir id yok");
                 }  
             }
-            return ("true");
+           return hatalar;
      
         }
 
-        public async Task<string> UpdateItem(StockTakesUpdateItems T, int CompanyId)
+        public async Task<List<string>> UpdateItem(StockTakesUpdateItems T, int CompanyId)
         {
+            List<string> hatalar = new();
+
             var list = await _db.QueryAsync<StockTakesUpdateItems>($@"select
              (Select id  From StockTakesItem where CompanyId = {CompanyId} and id={T.StockTakesItemId} and StockTakesId={T.StockTakesId})as StockTakesItemId,
             (Select id as varmi From StockTakes where CompanyId = {CompanyId} and id = {T.StockTakesId} and IsActive=1)as StockTakesId");
             if (list.First().StockTakesId == null)
             {
-                return ("StockTakesId,Boyle bir id yok");
+                hatalar.Add("StockTakesId,Boyle bir id yok");
             }
             if (list.First().StockTakesItemId==null)
             {
-                return ("Boyle bir eslesme mevcut degi.StockTakesItemId ve StockTakesId");
+                hatalar.Add("Boyle bir eslesme mevcut degi.StockTakesItemId ve StockTakesId");
+                return hatalar;
+
             }
             else
             {
-                return ("true");
+                return hatalar;
             }
         }
     }

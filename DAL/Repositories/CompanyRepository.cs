@@ -43,6 +43,20 @@ namespace DAL.Repositories
 
             return await _db.QuerySingleAsync<int>($"Insert into Locations (AddressLine1,AddressLine2,Tip,CityTown,StateRegion,ZipPostalCode,Country,CompanyId,IsActive) OUTPUT INSERTED.[id] values (@AddressLine1,@AddressLine2,@Tip,@CityTown,@StateRegion,@ZipPostalCode,@Country,@CompanyId,@IsActive)", prm);
         }
+        public async Task<int> RoleInsert(int CompanyId)
+        {
+            DynamicParameters prm = new DynamicParameters();
+            prm.Add("@RoleName", "Admin");
+            prm.Add("@CompanyId", CompanyId);
+            prm.Add("@Varsayilan", true);
+
+
+            int id = await _db.QuerySingleAsync<int>($"Insert into Role (Varsayilan,RoleName,CompanyId) OUTPUT INSERTED.[id] values (@Varsayilan,@RoleName,@CompanyId)", prm);
+            prm.Add("@RoleId",id);
+
+            await _db.QuerySingleAsync<int>($"Insert into Permision (PermisionName,RoleId,CompanyId) OUTPUT INSERTED.[id] values (@RoleName,@RoleId,@CompanyId)", prm);
+            return id;
+        }
 
         public async Task<IEnumerable<CompanyClas>> List(int CompanyId)
         {
@@ -91,21 +105,28 @@ namespace DAL.Repositories
            await _db.ExecuteAsync($"Update Company SET DisplayName=@DisplayName, LegalName=@LegalName where id = @id", prm);
         }
 
-        public  async Task UserRegister(User T, int id)
+        public  async Task UserRegister(User T, int id,int RoleId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("Mail", T.Mail);
-            prm.Add("Password", T.Password);
-            prm.Add("PasswordSalt", T.PasswordSalt);
-            prm.Add("PasswordHash", T.PasswordHash);
-            prm.Add("FirstName", T.FirstName);
-            prm.Add("LastName", T.LastName);
-            prm.Add("PhoneNumber", T.PhoneNumber);
-            prm.Add("Role", "User");
-            prm.Add("CompanyId", id);
-            var sql = @"Insert into Users (Mail,Password,FirstName,LastName,PhoneNumber,Role,CompanyId,PasswordSalt,PasswordHash) values  (@Mail,@Password,@FirstName,@LastName,@PhoneNumber,@Role,@CompanyId,@PasswordSalt,@PasswordHash)";
-            await _db.ExecuteAsync(sql, prm);
-           
+            prm.Add("@Mail", T.Mail);
+            prm.Add("@Password", T.Password);
+            prm.Add("@PasswordSalt", T.PasswordSalt);
+            prm.Add("@PasswordHash", T.PasswordHash);
+            prm.Add("@FirstName", T.FirstName);
+            prm.Add("@LastName", T.LastName);
+            prm.Add("@PhoneNumber", T.PhoneNumber);
+            prm.Add("@RoleId", RoleId);
+            prm.Add("@CompanyId", id);
+
+            var sql = @"Insert into Users (RoleId,Mail,Password,FirstName,LastName,PhoneNumber,CompanyId,PasswordSalt,PasswordHash) OUTPUT INSERTED.[id] values  (@RoleId,@Mail,@Password,@FirstName,@LastName,@PhoneNumber,@CompanyId,@PasswordSalt,@PasswordHash)";
+           int userid= await _db.QuerySingleAsync<int>(sql, prm);
+            prm.Add("KullanıcıId", userid);
+
+            var sql1 = @"Update Role set UserId=@KullanıcıId where id=@RoleId and CompanyId=@CompanyId";
+            await _db.ExecuteAsync(sql1, prm);
+            var sql2 = @"Update Permision set UserId=@KullanıcıId where RoleId=@RoleId and CompanyId=@CompanyId";
+            await _db.ExecuteAsync(sql2, prm);
+
         }
 
        

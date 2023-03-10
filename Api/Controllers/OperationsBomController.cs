@@ -1,4 +1,5 @@
-﻿using BL.Services.IdControl;
+﻿using BL.Extensions;
+using BL.Services.IdControl;
 using BL.Services.OperationsBom;
 using DAL.Contracts;
 using DAL.DTO;
@@ -9,6 +10,7 @@ using FluentValidation.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.Design;
 using static DAL.DTO.CategoryDTO;
 using static DAL.DTO.ContactDTO;
 using static DAL.DTO.ProductOperationsBomDTO;
@@ -28,9 +30,10 @@ namespace Api.Controllers
         private readonly IOperationBomControl _operationBomControl;
         private readonly IIDControl _idcontrol;
         private readonly IOperationBomControl _operationbomcontrol;
+        private readonly IPermissionControl _izinkontrol;
 
 
-        public OperationsBomController(IUserService user, IProductOperationsBomRepository bom, IValidator<ProductOperationsBOMInsert> pBomInsert, IValidator<ProductOperationsBOMUpdate> pBomUpdate, IValidator<IdControl> pDelete, IOperationBomControl operationBomControl, IIDControl idcontrol, IOperationBomControl operationbomcontrol)
+        public OperationsBomController(IUserService user, IProductOperationsBomRepository bom, IValidator<ProductOperationsBOMInsert> pBomInsert, IValidator<ProductOperationsBOMUpdate> pBomUpdate, IValidator<IdControl> pDelete, IOperationBomControl operationBomControl, IIDControl idcontrol, IOperationBomControl operationbomcontrol, IPermissionControl izinkontrol)
         {
             _user = user;
             _bom = bom;
@@ -40,6 +43,7 @@ namespace Api.Controllers
             _operationBomControl = operationBomControl;
             _idcontrol = idcontrol;
             _operationbomcontrol = operationbomcontrol;
+            _izinkontrol = izinkontrol;
         }
 
         [Route("List")]
@@ -48,6 +52,7 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
             var list = await _bom.List(CompanyId,ItemId);
 
             return Ok(list);
@@ -56,14 +61,15 @@ namespace Api.Controllers
         [HttpPost, Authorize]
         public async Task<ActionResult<ProductOperationsBOM>> Insert(ProductOperationsBOMInsert T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            
             ValidationResult result = await _PBomInsert.ValidateAsync(T);
             if (result.IsValid)
-            {
-
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _operationbomcontrol.Insert(T, CompanyId);
-                if (hata == "true")
+            {   
+                var hata = await _operationbomcontrol.Insert(T, CompanyId);
+                if (hata.Count() == 0)
                 {
                     int id = await _bom.Insert(T, CompanyId);
                     return Ok("");
@@ -90,13 +96,15 @@ namespace Api.Controllers
         [HttpPut, Authorize]
         public async Task<ActionResult<ProductOperationsBOM>> Update(ProductOperationsBOMUpdate T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+           
             ValidationResult result = await _PBomUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _operationBomControl.Update(T, CompanyId);
-                if (hata=="true")
+                var hata = await _operationBomControl.Update(T, CompanyId);
+                if (hata.Count() == 0)
                 {
                     await _bom.Update(T, CompanyId);
                     return Ok("Başarılı");
@@ -120,14 +128,14 @@ namespace Api.Controllers
         [HttpDelete, Authorize]
         public async Task<ActionResult<ProductOperationsBOM>> Delete(IdControl T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
             ValidationResult result = await _PDelete.ValidateAsync(T);
             if (result.IsValid)
             {
-          
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _idcontrol.GetControl("ProductOperationsBom", T.id, CompanyId);
-                if (hata == "true")
+                          var hata = await _idcontrol.GetControl("ProductOperationsBom", T.id, CompanyId);
+                if (hata.Count() == 0)
                 {
                     await _bom.Delete(T, CompanyId);
                     return Ok("Başarılı");

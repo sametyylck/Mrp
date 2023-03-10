@@ -1,6 +1,7 @@
 ﻿using DAL.Contracts;
 using DAL.DTO;
 using DAL.Models;
+using DAL.StockControl;
 using Dapper;
 using System;
 using System.Collections.Generic;
@@ -17,12 +18,14 @@ namespace DAL.Repositories
         IDbConnection _db;
         ILocationStockRepository _locationStockRepository;
         IItemsRepository _itemsRepository;
+        private readonly IStockControl _control;
 
-        public StockAdjusmentRepository(IDbConnection db, ILocationStockRepository locationStockRepository, IItemsRepository itemsRepository)
+        public StockAdjusmentRepository(IDbConnection db, ILocationStockRepository locationStockRepository, IItemsRepository itemsRepository, IStockControl control)
         {
             _db = db;
             _locationStockRepository = locationStockRepository;
             _itemsRepository = itemsRepository;
+            _control = control;
         }
 
         public async Task<int> Count(StockAdjusmentList T, int CompanyId)
@@ -163,6 +166,28 @@ namespace DAL.Repositories
             prm.Add("@CompanyId", CompanyId);
 
             var list =await _db.QueryAsync<StockAdjusmentClas>($"Select x.* From (Select StockAdjusment.id, StockAdjusment.Name, StockAdjusment.Date, StockAdjusment.Reason, StockAdjusment.LocationId, loc.LocationName as LocationName,StockAdjusment.Info,StockAdjusment.CompanyId as CompanyId from StockAdjusment left join Locations loc on loc.id = StockAdjusment.LocationId) x where x.CompanyId = @CompanyId and x.id = @id", prm);
+
+            foreach (var item in list)
+            {
+
+                string sqla = $@"Select StockAdjusmentItems.id,StockAdjusmentItems.ItemId,Items.Name as ItemName,StockAdjusmentItems.Adjusment,
+            StockAdjusmentItems.CostPerUnit,StockAdjusmentItems.AdjusmentValue,
+            StockAdjusmentItems.StockAdjusmentId,l.StockCount as InStock 
+            from StockAdjusmentItems 
+            left join Items on Items.id = StockAdjusmentItems.ItemId
+            left join StockAdjusment on StockAdjusment.id = StockAdjusmentItems.StockAdjusmentId 
+            left join Locations on Locations.id = StockAdjusment.LocationId 
+            left join LocationStock l on l.ItemId = Items.id
+            and l.LocationId = StockAdjusment.LocationId
+            and l.CompanyId = StockAdjusment.CompanyId 
+            where StockAdjusmentItems.CompanyId = @CompanyId
+            and StockAdjusmentItems.StockAdjusmentId = @id 
+            Group By StockAdjusmentItems.id,StockAdjusmentItems.ItemId,
+            Items.Name,StockAdjusmentItems.Adjusment,StockAdjusmentItems.CostPerUnit,
+            StockAdjusmentItems.AdjusmentValue, StockAdjusmentItems.StockAdjusmentId,StockCount";
+                var list2 = await _db.QueryAsync<StockAdjusmentItems>(sqla, prm);
+                item.detay = list2;
+            }
             return list.ToList();
         }
 
@@ -293,30 +318,6 @@ namespace DAL.Repositories
 
             int id= await _db.QuerySingleAsync<int>($"Insert into StockAdjusmentItems (ItemId,Adjusment,CostPerUnit,StockAdjusmentId,AdjusmentValue,CompanyId) OUTPUT INSERTED.[id] values (@ItemId,@Adjusment,@CostPerUnit,@StockAdjusmentId,@AdjusmentValue,@CompanyId)", prm);
             return id;
-        }
-
-        public async Task<IEnumerable<StockAdjusmentItems>> ItemDetail( int id, int CompanyId)
-        {
-            DynamicParameters prm = new DynamicParameters();
-            prm.Add("@id", id);
-            prm.Add("@CompanyId", CompanyId);
-            string sqla = $@"Select StockAdjusmentItems.id,StockAdjusmentItems.ItemId,Items.Name as ItemName,StockAdjusmentItems.Adjusment,
-            StockAdjusmentItems.CostPerUnit,StockAdjusmentItems.AdjusmentValue,
-            StockAdjusmentItems.StockAdjusmentId,l.StockCount as InStock 
-            from StockAdjusmentItems 
-            left join Items on Items.id = StockAdjusmentItems.ItemId
-            left join StockAdjusment on StockAdjusment.id = StockAdjusmentItems.StockAdjusmentId 
-            left join Locations on Locations.id = StockAdjusment.LocationId 
-            left join LocationStock l on l.ItemId = Items.id
-            and l.LocationId = StockAdjusment.LocationId
-            and l.CompanyId = StockAdjusment.CompanyId 
-            where StockAdjusmentItems.CompanyId = @CompanyId
-            and StockAdjusmentItems.StockAdjusmentId = @id 
-            Group By StockAdjusmentItems.id,StockAdjusmentItems.ItemId,
-            Items.Name,StockAdjusmentItems.Adjusment,StockAdjusmentItems.CostPerUnit,
-            StockAdjusmentItems.AdjusmentValue, StockAdjusmentItems.StockAdjusmentId,StockCount";
-            var list = await _db.QueryAsync<StockAdjusmentItems>(sqla, prm);
-            return list.ToList();
         }
 
         public async Task<IEnumerable<StockAdjusmentList>> List(StockAdjusmentList T, int CompanyId, int KAYITSAYISI, int SAYFA)

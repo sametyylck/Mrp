@@ -1,4 +1,5 @@
-﻿using BL.Services.Contact;
+﻿using BL.Extensions;
+using BL.Services.Contact;
 using BL.Services.IdControl;
 using DAL.Contracts;
 using DAL.DTO;
@@ -34,12 +35,13 @@ namespace Api.Controllers
         private readonly IValidator<ContactsUpdateAddress> _Contacts;
         private readonly IValidator<ContactsList> _contactupdate;
         private readonly IContactControl _contactcontrol;
+        private readonly IPermissionControl _izinkontrol;
 
         private readonly IIDControl _Idcontrol;
 
 
 
-        public ContactController(IContactsRepository contactsRepository, IUserService user, IDbConnection db, IValidator<ContactsDelete> contactsDelete, IValidator<ContactsUpdateAddress> contacts, IValidator<ContactsInsert> contactsList, IValidator<ContactsList> contactupdate, IContactControl contactcontrol, IIDControl ıdcontrol)
+        public ContactController(IContactsRepository contactsRepository, IUserService user, IDbConnection db, IValidator<ContactsDelete> contactsDelete, IValidator<ContactsUpdateAddress> contacts, IValidator<ContactsInsert> contactsList, IValidator<ContactsList> contactupdate, IContactControl contactcontrol, IIDControl ıdcontrol, IPermissionControl izinkontrol)
         {
             _contactsRepository = contactsRepository;
             _user = user;
@@ -50,6 +52,7 @@ namespace Api.Controllers
             _contactupdate = contactupdate;
             _contactcontrol = contactcontrol;
             _Idcontrol = ıdcontrol;
+            _izinkontrol = izinkontrol;
         }
         [Route("List")]
         [HttpPost,Authorize]
@@ -57,6 +60,15 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimGoruntule, Permison.IletisimHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
+       
             var list =await _contactsRepository.List(T, CompanyId, KAYITSAYISI, SAYFA);
             var count =await _contactsRepository.Count(T, CompanyId);
 
@@ -68,6 +80,15 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimGoruntule, Permison.IletisimHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
+
             var list = await _contactsRepository.Details(id, CompanyId);
             return (list.First());
         }
@@ -75,12 +96,21 @@ namespace Api.Controllers
         [HttpPost, Authorize]
         public async Task<ActionResult<ContactsList>> Insert(ContactsInsert T)
         {
-
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimEkleyebilirVeDuzenleyebilir, Permison.IletisimHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _ContactsList.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
+               
+
                 if (T.Tip == "Customer")
                 {
                     int id = await _contactsRepository.Insert(T, CompanyId);
@@ -130,13 +160,22 @@ namespace Api.Controllers
         [HttpPut, Authorize]
         public async Task<ActionResult<ContactsAll>> Update(ContactsList T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimEkleyebilirVeDuzenleyebilir, Permison.IletisimHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _contactupdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
+               
                 var hata =await _contactcontrol.Update(T, CompanyId);
-                if (hata=="true")
+                if (hata.Count()==0)
                 {
                     DynamicParameters prm = new DynamicParameters();
                     prm.Add("@id", T.id); ;
@@ -184,15 +223,23 @@ namespace Api.Controllers
         [HttpPut, Authorize]
         public async Task<ActionResult<Contacts>> UpdateAddress(ContactsUpdateAddress T)
         {
-
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimEkleyebilirVeDuzenleyebilir, Permison.IletisimHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _Contacts.ValidateAsync(T);
             if (result.IsValid)
             {
 
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
+              
                 var hata = await _contactcontrol.UpdateAddress(T, CompanyId);
-                if (hata=="true")
+                if (hata.Count() != 0)
                 {
                     await _contactsRepository.UpdateAddress(T, CompanyId, T.id);
                     return Ok("Başarılı");
@@ -219,14 +266,23 @@ namespace Api.Controllers
         [HttpDelete, Authorize]
         public async Task<ActionResult<ContactsDelete>> Delete(ContactsDelete T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimSil, Permison.IletisimHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _ContactsDelete.ValidateAsync(T);
             if (result.IsValid)
             {
                 string tabloadi= "Contacts";
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
+               
                 var hata=await _Idcontrol.GetControl(tabloadi, T.id, CompanyId);
-                if (hata=="true")
+                if (hata.Count()==0)
                 {
 
                     await _contactsRepository.Delete(T, CompanyId);

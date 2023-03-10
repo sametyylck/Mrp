@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using DAL.DTO;
+using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,14 +26,14 @@ namespace Validation.SalesOrderItem
             RuleFor(x => x.Name).NotEmpty().WithMessage("Name bos gecilemez").NotNull().WithMessage("Name zorunlu alan");
         }
     }
-    public class SalesOrderItemUpdateItemValidations : AbstractValidator<SalesOrderUpdateItems>
+    public class SalesOrderItemUpdateItemValidations : AbstractValidator<SatısUpdateItems>
     {
         public SalesOrderItemUpdateItemValidations()
         {
             RuleFor(x => x.ContactId).NotEmpty().WithMessage("ContactId bos gecilemez").NotNull().WithMessage("ContactId zorunlu alan");
             RuleFor(x => x.LocationId).NotEmpty().WithMessage("LocationId bos gecilemez").NotNull().WithMessage("LocationId zorunlu alan");
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilemez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.OrderItemId).NotEmpty().WithMessage("OrderItemId bos gecilemez").NotNull().WithMessage("OrderItemId zorunlu alan");
+            RuleFor(x => x.SalesOrderId).NotEmpty().WithMessage("OrderItemId bos gecilemez").NotNull().WithMessage("OrderItemId zorunlu alan");
             RuleFor(x => x.PricePerUnit).NotEmpty().WithMessage("PricePerUnit bos gecilemez").NotNull().WithMessage("PricePerUnit zorunlu alan");
             RuleFor(x => x.TaxId).NotEmpty().WithMessage("TaxId bos gecilemez").NotNull().WithMessage("TaxId zorunlu alan");
             RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId bos gecilemez").NotNull().WithMessage("ItemId zorunlu alan");

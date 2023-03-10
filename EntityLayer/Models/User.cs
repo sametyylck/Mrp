@@ -15,7 +15,7 @@ namespace DAL.Models
         public byte[] PasswordSalt { get; set; }
         public string? Role { get; set; }
         public string? CompanyId { get; set; } = null!;
-
+        public IEnumerable<string> Roller { get; set; }
         public virtual Company? Company { get; set; }
     }
 }

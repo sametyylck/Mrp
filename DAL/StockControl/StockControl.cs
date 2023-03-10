@@ -22,7 +22,7 @@ namespace DAL.StockControl
             _locationstock = locationstock;
         }
 
-        public int Count(int? ItemId, int CompanyId, int? LocationId)
+        public async  Task<int> Count(int? ItemId, int CompanyId, int? LocationId)
         {
             var prm = new DynamicParameters();
             prm.Add("@CompanyId", CompanyId);
@@ -32,7 +32,7 @@ namespace DAL.StockControl
             string Tip = locationstock.First().Tip;
             if (locationstock.First().LocationStockId == 0)
             {
-                _locationstock.Insert(Tip, ItemId, CompanyId, LocationId);
+             int id= await _locationstock.Insert(Tip, ItemId, CompanyId, LocationId);
             }
            
             var adetbul =  _db.QueryFirst<int>($@"select

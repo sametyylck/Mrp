@@ -9,7 +9,7 @@ using static DAL.DTO.SalesOrderDTO;
 
 namespace Validation.SalesOrder
 {
-    public class SalesOrderInsertValidations:AbstractValidator<SalesOrderDTO.SalesOrder>
+    public class SalesOrderInsertValidations:AbstractValidator<SatısDTO>
     {
         public SalesOrderInsertValidations()
         {
@@ -20,11 +20,11 @@ namespace Validation.SalesOrder
             RuleFor(x => x.DeliveryDeadline).NotEmpty().WithMessage("DeliveryDeadline bos gecilemez").NotNull().WithMessage("DeliveryDeadline zorunlu alan");
         }
     }
-    public class SalesOrderInsertItemValidations : AbstractValidator<SalesOrderDTO.SalesOrderItem>
+    public class SalesOrderInsertItemValidations : AbstractValidator<SatısInsertItem>
     {
         public SalesOrderInsertItemValidations()
         {
-            RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilemez").NotNull().WithMessage("id zorunlu alan");
+            RuleFor(x => x.SalesOrderId).NotEmpty().WithMessage("SalesOrderId bos gecilemez").NotNull().WithMessage("SalesOrderId zorunlu alan");
             RuleFor(x => x.LocationId).NotEmpty().WithMessage("LocationId bos gecilemez").NotNull().WithMessage("LocationId zorunlu alan");
             RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId bos gecilemez").NotNull().WithMessage("ItemId zorunlu alan");
             RuleFor(x => x.TaxId).NotEmpty().WithMessage("TaxId bos gecilemez").NotNull().WithMessage("TaxId zorunlu alan");
@@ -41,14 +41,7 @@ namespace Validation.SalesOrder
             RuleFor(x => x.ContactId).NotEmpty().WithMessage("ContactId bos gecilemez").NotNull().WithMessage("ContactId zorunlu alan");
         }
     }
-    public class SalesOrderDeleteValidations : AbstractValidator<SalesDelete>
-    {
-        public SalesOrderDeleteValidations()
-        {
-            RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilemez").NotNull().WithMessage("id zorunlu alan");
 
-        }
-    }
     public class SalesOrderDeleteItemValidations : AbstractValidator<SalesDeleteItems>
     {
         public SalesOrderDeleteItemValidations()

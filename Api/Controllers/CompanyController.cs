@@ -1,4 +1,5 @@
-﻿using BL.Services.IdControl;
+﻿using BL.Extensions;
+using BL.Services.IdControl;
 using DAL.Contracts;
 using DAL.DTO;
 using DAL.Models;
@@ -58,7 +59,7 @@ namespace Api.Controllers
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
                 var hata =await _IDCONTROL.GetControl("Locations", T.id,CompanyId);
-                if (hata=="true")
+                if (hata.Count()==0)
                 {
                     await _company.Update(T, CompanyId);
                     var list = new CompanyUpdate
@@ -97,7 +98,7 @@ namespace Api.Controllers
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
                 var hata = await _IDCONTROL.GetControl("Company", CompanyId, CompanyId);
-                if (hata == "true")
+                if (hata.Count() == 0)
                 {
                     DynamicParameters prm = new DynamicParameters();
                     prm.Add("@id", CompanyId);
@@ -137,7 +138,7 @@ namespace Api.Controllers
                 int User = user[1];
 
                 var hata = await _IDCONTROL.GetControl("Locations", T.id, CompanyId);
-                if (hata == "true")
+                if (hata.Count() == 0)
                 {
                 await _company.Delete(T, CompanyId,User);
 

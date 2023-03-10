@@ -7,8 +7,10 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static DAL.DTO.ManufacturingOrderDTO;
 using static DAL.DTO.PurchaseOrderDTO;
 using static DAL.DTO.SalesOrderDTO;
+using static DAL.DTO.StockListDTO;
 
 namespace BL.Services.SalesOrder
 {
@@ -24,8 +26,9 @@ namespace BL.Services.SalesOrder
             _salesOrder = salesOrder;
         }
 
-        public async Task<string> Adress(int id,int? ContactId, int CompanyId)
+        public async Task<List<string>> Adress(int id,int? ContactId, int CompanyId)
         {
+            List<string> hatalar = new();
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", id);
             prm.Add("@ContactId", ContactId);
@@ -73,36 +76,44 @@ namespace BL.Services.SalesOrder
             int shipping = await _salesOrder.InsertAddress(A, CompanyId, A.ContactsId);
             prm.Add("@BillingId", billingid);
             prm.Add("@ShippingId", shipping);
-            await _db.ExecuteAsync($"Update Orders Set BillingAddressId=@BillingId ,ShippingAddressId=@ShippingId where CompanyId=@CompanyId and id=@id ", prm);
-            return ("true");
+            await _db.ExecuteAsync($"Update SalesOrder Set BillingAddressId=@BillingId ,ShippingAddressId=@ShippingId where CompanyId=@CompanyId and id=@id ", prm);
+            return hatalar;
         }
 
-        public async Task<string> DeleteItems(SalesDeleteItems T, int CompanyId)
+        public async Task<List<string>> DeleteItems(SatısDeleteItems T, int CompanyId)
         {
+            List<string> hatalar = new();
+
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
             (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip,
-            (Select id From Orders where CompanyId = {CompanyId} and id = {T.OrdersId} and IsActive=1)as OrdersId,
-            (Select id From OrdersItem where CompanyId = {CompanyId} and id = {T.id} and OrdersId={T.OrdersId})as id");
+            (Select id From SalesOrder where CompanyId = {CompanyId} and id = {T.OrdersId} and IsActive=1)as OrdersId,
+            (Select id From SalesOrderItem where CompanyId = {CompanyId} and id = {T.id} and SalesOrderId={T.OrdersId})as id");
             if (list.First().OrdersId==null)
             {
-                return ("OrderId bulunamıyor");
+                string hata = "OrderId bulunamıyor";
+                hatalar.Add(hata);
             }
             if (list.First().id==null)
             {
-                return ("Boyler bir id ve OrderId eslesmesi yok");
+                string hata = "Boyler bir id ve OrderId eslesmesi yok";
+                hatalar.Add(hata);
             }
             if (list.First().Tip == "Product" || list.First().Tip == "SemiProduct")
             {
-                return ("true");
+                return hatalar;
             }
             else
             {
-                return ("ItemId,tip hatasi");
+                string hata = "ItemId,tip hatasi";
+                hatalar.Add(hata);
+                return hatalar;
             }
         }
 
-        public async Task<string> Insert(SalesOrderDTO.SalesOrder T, int CompanyId)
+        public async Task<List<string>> Insert(SatısDTO T, int CompanyId)
         {
+            List<string> hatalar = new();
+
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
             (Select Count(*) as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId,
             (Select Tip  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId})as ContactTip
@@ -110,228 +121,258 @@ namespace BL.Services.SalesOrder
 
             if (T.Tip!="SalesOrder")
             {
-                return("Tip değişkeni,tip hatasi");
+                hatalar.Add("Tip değişkeni,tip hatasi");
             }
             if (list.First().ContactTip!="Customer")
             {
-                return ("ContactId,tip hatasi");
+                hatalar.Add("ContactId,tip hatasi");
             }
             if (list.First().LocationId==null)
             {
-                return ("Boyle bir Location yok.");
+                hatalar.Add("Boyle bir Location yok");
+
             }
             List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
             bool? sell = Locaiton.First().Sell;
             if (sell != true)
             {
-                return ("Satis kismina yetkiniz yok");
+                hatalar.Add("Satis kismina yetkiniz yok");
+                return hatalar;
+
+
             }
             else
             {
-                return ("true");
+                return hatalar;
             }
 
         }
 
-        public async Task<string> InsertItem(SalesOrderItem T, int CompanyId)
+        public async Task<List<string>> InsertItem(SatısInsertItem T, int CompanyId)
         {
+            List<string> hatalar = new();
+
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
             (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip,
             (Select id  From Tax where CompanyId = {CompanyId} and id = {T.TaxId})as TaxId,
-            (Select id  From Orders where CompanyId = {CompanyId} and id = {T.id} and IsActive=1)as OrdersId,
-            (Select id  From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId,
-            (Select id  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId})as ContactId
-            ");
-            if (list.First().ContactId==null)
-            {
-                return ("ContactId bulunamadı");
-            }
-            if (list.First().TaxId==null)
-            {
-                return ("TaxId bulunamadı");
-            }
-            if (list.First().OrdersId==null)
-            {
-                return ("Boyle bir id bulunamadı");
-            }
-            if (list.First().LocationId==null)
-            {
-                return ("Boyle bir Location bulunamadı");
-            }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
-            bool? sell = Locaiton.First().Sell;
-            if (sell != true)
-            {
-                return ("Satis kismina yetkiniz yok");
-            }
-            if (list.First().Tip == "Product" || list.First().Tip == "SemiProduct")
-            {
-                return ("true");
-            }
-            else
-            {
-                return ("ItemId,tip hatası");
-            }
-        }
-
-        public async Task<string> Make(ManufacturingOrderDTO.SalesOrderMake T, int CompanyId)
-        {
-            var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-             (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip,
-            (Select id  From Orders where CompanyId = {CompanyId} and id = {T.SalesOrderId} and IsActive=1 and DeliveryId=0)as OrdersId,
-            (Select id  From OrdersItem where CompanyId = {CompanyId} and id = {T.SalesOrderItemId} and OrdersId={T.SalesOrderId})as id,
+            (Select id  From SalesOrder where CompanyId = {CompanyId} and id = {T.SalesOrderId} and IsActive=1)as OrdersId,
             (Select id  From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId,
             (Select id  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId})as ContactId
             ");
             if (list.First().ContactId == null)
             {
-                return ("ContactId bulunamadı");
+                hatalar.Add("ContactId bulunamadı");
             }
-            if (list.First().OrdersId==null)
+            if (list.First().TaxId == null)
             {
-                return ("Boyle bir OrderId bulunamadı");
-            }
-            if (list.First().id == null)
-            {
-                return ("Boyle bir id bulunamadı");
-            }
-            if (list.First().LocationId == null)
-            {
-                return ("Boyle bir Location bulunamadı");
-            }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
-            bool? sell = Locaiton.First().Sell;
-            if (sell != true)
-            {
-                return ("Satis kismina yetkiniz yok");
-            }
-            if (list.First().Tip == "Product" || list.First().Tip == "SemiProduct")
-            {
-                return ("true");
-            }
-            else
-            {
-                return ("ItemId,tip hatası");
-            }
+                hatalar.Add("TaxId bulunamadı");
 
-        }
-
-        public async Task<string> QuotesDone(SalesOrderDTO.Quotess T, int CompanyId)
-        {
-            var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-             (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip,
-            (Select Count(*) as varmi From Orders where CompanyId = {CompanyId} and id = {T.id} and IsActive=1)as OrderId,
-            (Select Count(*) as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId,
-            (Select id  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId})as ContactId
-            ");
-            if (list.First().ContactId == null)
-            {
-                return ("ContactId bulunamadı");
-            }
-            if (list.First().Tip!="Product" || list.First().Tip!="SemiProduct")
-            {
-                return ("ItemId,tip hatası");
-            }
-            if (list.First().id == null)
-            {
-                return ("Boyle bir id bulunamadı");
-            }
-            if (list.First().LocationId == null)
-            {
-                return ("Boyle bir Location bulunamadı");
-            }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
-            bool? sell = Locaiton.First().Sell;
-            if (sell != true)
-            {
-                return ("Satis kismina yetkiniz yok");
-            }
-            else
-            {
-                return ("true");
-            }
-        }
-
-        public async Task<string> Update(SalesOrderUpdate T, int CompanyId)
-        {
-            var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select Count(*) as varmi From Orders where CompanyId = {CompanyId} and id = {T.id} and IsActive=1)as OrdersId,
-            (Select Count(*) as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId,
-            (Select id  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId})as ContactId
-            ");
-            if (list.First().ContactId == null)
-            {
-                return ("ContactId bulunamadı");
             }
             if (list.First().OrdersId == null)
             {
-                return ("Boyle bir id bulunamadı");
+                hatalar.Add("Boyle bir id bulunamadı");
+
             }
             if (list.First().LocationId == null)
             {
-                return ("Boyle bir Location bulunamadı");
+                hatalar.Add("Boyle bir Location bulunamadı");
+
             }
             List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
             bool? sell = Locaiton.First().Sell;
             if (sell != true)
             {
-                return ("Satis kismina yetkiniz yok");
+                hatalar.Add("Satis kismina yetkiniz yok");
+
+            }
+            if (list.First().Tip == "Product" || list.First().Tip == "SemiProduct")
+            {
+
+                return hatalar;
             }
             else
             {
-                return ("true");
+                hatalar.Add("ItemId,tip hatası");
+                return hatalar;
             }
         }
 
-        public async Task<string> UpdateItem(SalesOrderUpdateItems T, int CompanyId)
+        public async Task<List<string>> Make(SalesOrderMake T, int CompanyId)
         {
+            List<string> hatalar = new();
+            var list = await _db.QueryAsync<PurchaseItemControl>($@"select
+             (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip,
+            (Select id  From SalesOrder where CompanyId = {CompanyId} and id = {T.SalesOrderId} and IsActive=1 and DeliveryId=0)as OrdersId,
+            (Select id  From SalesOrderItem where CompanyId = {CompanyId} and id = {T.SalesOrderItemId} and SalesOrderId={T.SalesOrderId})as id,
+            (Select id  From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId,
+            (Select id  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId})as ContactId
+            ");
+            if (list.First().ContactId == null)
+            {
+                hatalar.Add("ContactId bulunamadı");
+            }
+            if (list.First().OrdersId == null)
+            {
+                hatalar.Add("Boyle bir OrderId bulunamadı");
+            }
+            if (list.First().id == null)
+            {
+                hatalar.Add("Boyle bir id bulunamadı");
+            }
+            if (list.First().LocationId == null)
+            {
+                hatalar.Add("Boyle bir Location bulunamadı");
+            }
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
+            bool? sell = Locaiton.First().Sell;
+            if (sell != true)
+            {
+                hatalar.Add("Satis kismina yetkiniz yok");
+            }
+            if (list.First().Tip == "Product" || list.First().Tip == "SemiProduct")
+            {
+
+                return hatalar;
+            }
+            else
+            {
+                hatalar.Add("ItemId,tip hatası");
+
+                return hatalar;
+            }
+
+        }
+
+        public async Task<List<string>> QuotesDone(QuotesDone T, int CompanyId)
+        {
+            List<string> hatalar = new();
+
+            var list = await _db.QueryAsync<PurchaseItemControl>($@"select
+            (Select Count(*) as varmi From SalesOrder where CompanyId = {CompanyId} and id = {T.id} and IsActive=1)as OrderId,
+            (Select Count(*) as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId,
+            (Select id  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId})as ContactId
+            ");
+            if (list.First().ContactId == null)
+            {
+                hatalar.Add("ContactId bulunamadı");
+            }
+            if (list.First().id == null)
+            {
+                hatalar.Add("Boyle bir id bulunamadı");
+
+            }
+            if (list.First().LocationId == null)
+            {
+                hatalar.Add("Boyle bir Location bulunamadı");
+
+            }
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
+            bool? sell = Locaiton.First().Sell;
+            if (sell != true)
+            {
+                hatalar.Add("Satis kismina yetkiniz yok");
+                return hatalar;
+
+            }
+            else
+            {
+                return hatalar;
+            }
+        }
+
+        public async Task<List<string>> Update(SalesOrderUpdate T, int CompanyId)
+        {
+            List<string> hatalar= new();
+            var list = await _db.QueryAsync<PurchaseItemControl>($@"select
+            (Select Count(*) as varmi From SalesOrder where CompanyId = {CompanyId} and id = {T.id} and IsActive=1)as OrdersId,
+            (Select Count(*) as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId,
+            (Select id  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId})as ContactId
+            ");
+            if (list.First().ContactId == null)
+            {
+                hatalar.Add("ContactId bulunamadı");
+            }
+            if (list.First().OrdersId == null)
+            {
+                hatalar.Add("Boyle bir id bulunamadı");
+
+            }
+            if (list.First().LocationId == null)
+            {
+                hatalar.Add("Boyle bir Location bulunamadı");
+
+            }
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
+            bool? sell = Locaiton.First().Sell;
+            if (sell != true)
+            {
+                hatalar.Add("Satis kismina yetkiniz yok");
+                return hatalar;
+
+            }
+            else
+            {
+                return hatalar;
+            }
+        }
+
+        public async Task<List<string>> UpdateItem(SatısUpdateItems T, int CompanyId)
+        {
+            List<string> hatalar = new();
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
             (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip,
             (Select id  From Tax where CompanyId = {CompanyId} and id = {T.TaxId})as TaxId,
-            (Select id From Orders where CompanyId = {CompanyId} and id = {T.id} and IsActive=1 and DeliveryId=0)as OrdersId,
-            (Select id From OrdersItem where CompanyId = {CompanyId} and id = {T.OrderItemId}  and OrdersId={T.id})as id,
+            (Select id From SalesOrder where CompanyId = {CompanyId} and id = {T.id} and IsActive=1 and DeliveryId=0)as OrdersId,
+            (Select id From SalesOrderItem where CompanyId = {CompanyId} and id = {T.id}  and SalesOrderId={T.SalesOrderId})as id,
             (Select id From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId,
             (Select id  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId})as ContactId
             ");
             if (list.First().ContactId == null)
             {
-                return ("ContactId bulunamadı");
+                hatalar.Add("ContactId bulunamadı");
             }
             if (list.First().TaxId == null)
             {
-                return ("TaxId bulunamadı");
+                hatalar.Add("TaxId bulunamadı");
+
             }
             if (list.First().OrdersId == null)
             {
-                return ("Boyle bir id bulunamadı");
+                hatalar.Add("Boyle bir id bulunamadı");
+
             }
             if (list.First().id == null)
             {
-                return ("Boyle bir OrdersItem bulunamadı");
+                hatalar.Add("Boyle bir OrdersItem bulunamadı");
+
             }
             if (list.First().id == null)
             {
-                return ("Boyle bir id bulunamadı");
+                hatalar.Add("Boyle bir id bulunamadı");
+
             }
             if (list.First().LocationId == null)
             {
-                return ("Boyle bir Location bulunamadı");
+                hatalar.Add("Boyle bir Location bulunamadı");
             }
             List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
             bool? sell = Locaiton.First().Sell;
             if (sell != true)
             {
-                return ("Satis kismina yetkiniz yok");
+                hatalar.Add("Satis kismina yetkiniz yok");
             }
             if (list.First().Tip == "Product" || list.First().Tip == "SemiProduct")
             {
-                return ("true");
+                return hatalar;
             }
             else
             {
-                return ("ItemId,tip hatası");
+                hatalar.Add("ItemId,tip hatası");
+                return hatalar;
             }
 
         }
+
+   
     }
 }

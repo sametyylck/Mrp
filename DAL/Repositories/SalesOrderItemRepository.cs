@@ -53,7 +53,7 @@ namespace DAL.Repositories
             prm.Add("@LocationStockId", locationStockId);
             prm.Add("@Tip", sorgu.First().Tip);
 
-            var rezervecount = _control.Count(T.ItemId, CompanyId, T.LocationId);
+            var rezervecount =await _control.Count(T.ItemId, CompanyId, T.LocationId);
 
             if (rezervecount >= T.Quantity)//Stok sayısı istesnilenden büyük ise rezerve sayısı adet olur
             {
@@ -488,7 +488,7 @@ namespace DAL.Repositories
 
                 }
 
-                var RezerveCount = _control.Count(item.MaterialId, CompanyId, T.LocationId);//stocktaki adet
+                var RezerveCount = await _control.Count(item.MaterialId, CompanyId, T.LocationId);//stocktaki adet
                 var stokcontrol = T.Quantity * item.Quantity; //bir materialin kaç tane gideceği hesaplanıyor
                 if (RezerveCount >= stokcontrol) //yeterli stok var mı
                 {
@@ -923,7 +923,7 @@ namespace DAL.Repositories
 
 
 
-                var RezerveCount = _control.Count(item.MaterialId, CompanyId, T.LocationId);//stocktaki adet
+                var RezerveCount =await _control.Count(item.MaterialId, CompanyId, T.LocationId);//stocktaki adet
                 var stokcontrol = T.Quantity * item.Quantity; //bir materialin kaç tane gideceği hesaplanıyor
                 if (deger.Count() == 0)
                 {
@@ -1166,7 +1166,7 @@ namespace DAL.Repositories
                   (Select ISNULL(Tip,'') from Items where id = @ItemId and CompanyId = @CompanyId)as Tip,
                   (Select ISNULL(id,0) from LocationStock where ItemId = @ItemId  and LocationId = @location and CompanyId = @CompanyId)   as    LocationStockId ";
                 var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, prm);
-                var RezerveCount = _control.Count(T.ItemId, CompanyId, T.LocationId);
+                var RezerveCount = await _control.Count(T.ItemId, CompanyId, T.LocationId);
                 var locationStockId = sorgu.First().LocationStockId;
                 var tip = sorgu.First().Tip;
                 prm.Add("@LocationStockId", locationStockId);
@@ -1417,7 +1417,7 @@ namespace DAL.Repositories
                 {
 
 
-                    float RezerveStockCount = _control.Count(item.MaterialId, CompanyId, LocationId);
+                    float RezerveStockCount = await _control.Count(item.MaterialId, CompanyId, LocationId);
                     List<int> Count = (await _db.QueryAsync<int>($"Select ISNULL(Rezerve.RezerveCount,0)as Count from Rezerve where CompanyId=@CompanyId and ItemId=@ItemId and ManufacturingOrderId=@ManufacturingOrderId and ManufacturingOrderItemId=@ManufacturingOrderItemId and ItemId=@ItemId and SalesOrderId=@id and SalesOrderItemId=@OrderItemId and SalesOrderRezerve.Status=1", param)).ToList();
                     float Counts;
                     if (Count.Count() == 0)
@@ -1612,7 +1612,7 @@ namespace DAL.Repositories
                 degerler = deger.First();
             }
 
-            var RezerveCount = _control.Count(T.ItemId, CompanyId, LocationId);//stocktaki adet
+            var RezerveCount = await _control.Count(T.ItemId, CompanyId, LocationId);//stocktaki adet
 
             if (degerler > T.Quantity)
             {

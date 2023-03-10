@@ -18,10 +18,10 @@ namespace BL.Services.Bom
             _db = db;
         }
 
-        public async Task<string> Insert(BomDTO.BOMInsert T, int CompanyId)
+        public async Task<List<string>> Insert(BomDTO.BOMInsert T, int CompanyId)
         {
 
-
+            List<string> hatalar = new();
             DynamicParameters param = new DynamicParameters();
             param.Add("@CompanyId", CompanyId);
             param.Add("@MaterialId", T.MaterialId);//materyal id yi alıp aşağıda sorgulatıyoruz
@@ -29,7 +29,7 @@ namespace BL.Services.Bom
             var Materialtipdogrumukontrol = await _db.QueryAsync<ItemDTO.Items>(sql, param);
             if (Materialtipdogrumukontrol.Count() == 0)
             {
-                return ("Materialid tipi Material degil.");
+                hatalar.Add("Materialid tipi Material degil.");
             }
             string? Materialtip = Materialtipdogrumukontrol.First().Tip;
 
@@ -45,13 +45,14 @@ namespace BL.Services.Bom
                 var ProductTipDogrumuKontrol = await _db.QueryAsync<ItemDTO.Items>(sql1, param1);
                 if (ProductTipDogrumuKontrol.Count() == 0)
                 {
-                    return ("SemiPrdouct'a Product Eklenmez.");
+                    hatalar.Add("SemiPrdouct'a Product Eklenmez.");
+
                 }
                 //Burda eşlemek istenilen material eklenmek istediği producta eklimi diye kontrol ediyoruz.
                 ProductTip = ProductTipDogrumuKontrol.First().Tip;
                 if (T.Tip != ProductTip)
                 {
-                    return ("ProductId Tip hatası");
+                    hatalar.Add("ProductId Tip hatası");
 
                 }
                 DynamicParameters param2 = new DynamicParameters();
@@ -69,14 +70,15 @@ namespace BL.Services.Bom
                         if (Materialtip == "Material" && ProductTip == "SemiProduct")
                         {
 
-                            return ("true");
+                            return hatalar;
                         }
                     }
-                    return ("MaterialTip veya Tip hatalı ");
+                    hatalar.Add("MaterialTip veya Tip hatalı");
                 }
                 else
                 {
-                    return ("Boyle bir tarif mevcut.");
+                    hatalar.Add("Boyle bir tarif mevcut.");
+
                 }
 
             }
@@ -86,12 +88,13 @@ namespace BL.Services.Bom
                 var ProductTipDogrumuKontrol = await _db.QueryAsync<ItemDTO.Items>(sql1, param1);
                 if (ProductTipDogrumuKontrol.Count() == 0)
                 {
-                    return ("ProductId Tip hatası");
+                    hatalar.Add("ProductId Tip hatası");
+
                 }
                 ProductTip = ProductTipDogrumuKontrol.First().Tip;
                 if (T.Tip!=ProductTip)
                 {
-                    return ("ProductId Tip hatası");
+                    hatalar.Add("ProductId Tip hatası");
 
                 }
                 //Burda eşlemek istenilen material eklenmek istediği producta eklimi diye kontrol ediyoruz.
@@ -111,20 +114,22 @@ namespace BL.Services.Bom
                         if (Materialtip == "Material" && ProductTip == "Product")
                         {
 
-                            return ("true");
+                            return hatalar;
                         }
                     }
-                    return ("MatrialId veya ProductId Tip hatası.");
+                    hatalar.Add("MatrialId veya ProductId Tip hatası.");
                 }
-                return ("boyle bir tarif mevcut.");
+                hatalar.Add("boyle bir tarif mevcut.");
 
 
             }
-            return ("Tip degiskeni hatası");
+            hatalar.Add("Tip degiskeni hatası");
+            return hatalar;
         }
 
-        public async Task<string> Update(BomDTO.BOMUpdate T, int CompanyId)
+        public async Task<List<string>> Update(BomDTO.BOMUpdate T, int CompanyId)
         {
+            List<string> hatalar = new(); 
             DynamicParameters param = new DynamicParameters();
             param.Add("@CompanyId", CompanyId);
             param.Add("@ProductId", T.ProductId);
@@ -135,14 +140,15 @@ namespace BL.Services.Bom
             var kontrol = await _db.QueryAsync(sqlquery, param);
             if (kontrol.Count() == 0)
             {
-                return ("Boyle bir id yok.");
+                hatalar.Add("Boyle bir id yok.");
             }
      
             string sql = $"Select Tip From Items where CompanyId = @CompanyId and id  = @MaterialId";
             var Materialtipdogrumukontrol = await _db.QueryAsync<ItemDTO.Items>(sql, param);
             if (Materialtipdogrumukontrol.Count() == 0)
             {
-                return ("MaterialId tip Material degil");
+                hatalar.Add("MaterialId tip Material degil");
+
             }
             string? Materialtip = Materialtipdogrumukontrol.First().Tip;
 
@@ -152,13 +158,13 @@ namespace BL.Services.Bom
                 var ProductTipDogrumuKontrol = await _db.QueryAsync<ItemDTO.Items>(sql1, param);
                 if (ProductTipDogrumuKontrol.Count() == 0)
                 {
-                    return ("SemiPrdouct'a Product Eklenmez.");
+                    hatalar.Add("SemiPrdouct'a Product Eklenmez.");
                 }
          
                 string? ProductTip = ProductTipDogrumuKontrol.First().Tip;
                 if (T.Tip != ProductTip)
                 {
-                    return ("SemiProduct,productId Tip hatası");
+                    hatalar.Add("SemiProduct,productId Tip hatası");
 
                 }
                 if (Materialtip != null || ProductTip != null)
@@ -166,11 +172,11 @@ namespace BL.Services.Bom
                     if (Materialtip == "Material" && ProductTip == "SemiProduct")
                     {
 
-                        return ("true");
+                        return hatalar;
                     }
                 }
-                return ("MaterialTip veya Tip hatalı ");
-
+                hatalar.Add("MaterialTip veya Tip hatalı ");
+                return hatalar;
 
             }
             else if (T.Tip == "Product")
@@ -184,27 +190,31 @@ namespace BL.Services.Bom
                 var ProductTipDogrumuKontrol = await _db.QueryAsync<ItemDTO.Items>(sql1, param1);
                 if (ProductTipDogrumuKontrol.Count() == 0)
                 {
-                    return ("ProductId tip hatası ");
+                    hatalar.Add("ProductId tip hatası ");
                 }
                 string? ProductTip = ProductTipDogrumuKontrol.First().Tip;
                 if (T.Tip != ProductTip)
                 {
-                    return ("Product,productId Tip hatası");
+                    hatalar.Add("Product,productId Tip hatası");
 
                 }
                 if (Materialtip != null || ProductTip != null)
                 {
                     if (Materialtip == "Material" && ProductTip == "Product")
                     {
-                        return ("true");
+                        return hatalar;
                     }
-                    return ("MaterialId veya ProductId Tip hatası");
+                    hatalar.Add("MaterialId veya ProductId Tip hatası");
                 }
-                return ("Tip null olamaz");
+                hatalar.Add("Tip null olamaz");
+                return hatalar;
+
             }
             else
             {
-                return ("Tip degiskeni yanlıs");
+                hatalar.Add("Tip degiskeni yanlıs");
+                return hatalar;
+
             }
 
 

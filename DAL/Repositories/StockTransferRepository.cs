@@ -1,6 +1,7 @@
 ﻿using DAL.Contracts;
 using DAL.DTO;
 using DAL.Models;
+using DAL.StockControl;
 using Dapper;
 using System;
 using System.Collections.Generic;
@@ -17,11 +18,13 @@ namespace DAL.Repositories
     {
         IDbConnection _db;
         ILocationStockRepository _loc;
+        private readonly IStockControl _control;
 
-        public StockTransferRepository(IDbConnection db, ILocationStockRepository loc)
+        public StockTransferRepository(IDbConnection db, ILocationStockRepository loc, IStockControl control)
         {
             _db = db;
             _loc = loc;
+            _control = control;
         }
 
         public async Task<int> Count(StockTransferList T, int CompanyId)
@@ -157,19 +160,7 @@ namespace DAL.Repositories
             prm.Add("@TransferValue", value);
             prm.Add("@CostPerUnit", CostPerUnit);
 
-
-            //Verilen konumlarda bu iteme ait stock değeri var mı kontrol edilir.Yoksa oluşturulur.
-            if (sorgu.First().originvarmi == 0)
-            {
-              await  _loc.Insert(Tip, T.ItemId, CompanyId, Origin);
-            }
             float? OriginStockCount = sorgu.First().stockCountOrigin;
-
-            if (sorgu.First().destinationvarmı == 0)
-            {
-              await  _loc.Insert(Tip, T.ItemId, CompanyId, Destination);
-            }
-
             float? DestinationStockCount = sorgu.First().DestinationStockCounts;
 
             var NewOriginStock = OriginStockCount + Quantity;
@@ -206,16 +197,38 @@ namespace DAL.Repositories
             await _db.ExecuteAsync($"Delete From StockTransferItems  where id = @id and CompanyId = @CompanyId and ItemId=@ItemId and StockTransferId=@StockTransferId", prm);
         }
 
-        public async Task<IEnumerable<StockTransferList>> Details(int id, int CompanyId)
+        public async Task<IEnumerable<StockTransferDetails>> Details(int id, int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", id);
             prm.Add("@CompanyId", CompanyId);
 
-            var list =await _db.QueryAsync<StockTransferList>($@" Select x.* From 
+            var list =await _db.QueryAsync<StockTransferDetails>($@" Select x.* From 
             (Select StockTransfer.id,StockTransfer.StockTransferName,StockTransfer.TransferDate,StockTransfer.DestinationId,da.LocationName as DestinationName,StockTransfer.Total,
                 StockTransfer.OriginId,de.LocationName as OriginName,StockTransfer.Info,StockTransfer.CompanyId as CompanyId from StockTransfer
             left join Locations de on de.id = StockTransfer.OriginId left join Locations da on da.id=StockTransfer.DestinationId ) x  where x.CompanyId = @CompanyId and x.id=@id", prm);
+
+            foreach (var item in list)
+            {
+                prm.Add("@Id", id);
+
+                string sqla = $@"Select StockTransferItems.id,StockTransferItems.ItemId,StockTransferItems.Quantity,Items.Name as ItemName,
+            StockTransferItems.CostPerUnit,StockTransfer.DestinationId,l.LocationName as DestinationLocationName,
+            (v.StockCount-((select ISNULL(SUM(RezerveCount),0) from Rezerve where ItemId = StockTransferItems.ItemId and CompanyId = @CompanyId and LocationId = StockTransfer.DestinationId and Status = 1))) as DestinationLocationStockCount,
+			StockTransfer.OriginId,m.LocationName as OriginLocationName,
+            (c.StockCount-((select ISNULL(SUM(RezerveCount),0) from Rezerve where ItemId = StockTransferItems.ItemId and CompanyId = @CompanyId and LocationId = StockTransfer.OriginId and Status = 1))) as OriginLocationStockCount,StockTransferItems.TransferValue from StockTransferItems 
+            inner join Items on Items.id = StockTransferItems.ItemId 
+            inner join StockTransfer on StockTransfer.id = StockTransferItems.StockTransferId 
+            inner join Locations l on l.id = StockTransfer.OriginId inner join Locations m on m.id = StockTransfer.DestinationId 
+            inner join LocationStock c on c.ItemId = Items.id and c.LocationId = StockTransfer.OriginId
+            and l.CompanyId = StockTransfer.CompanyId inner join LocationStock v on v.ItemId = Items.id
+            and v.LocationId = StockTransfer.DestinationId and m.CompanyId = StockTransfer.CompanyId 
+            where StockTransferItems.CompanyId = @CompanyId and StockTransferItems.StockTransferId = @id
+            Group BY StockTransferItems.id,StockTransferItems.ItemId,StockTransferItems.Quantity,Items.Name , StockTransfer.DestinationId,l.LocationName,v.StockCount, StockTransfer.OriginId,m.LocationName,c.StockCount, StockTransferItems.TransferValue,StockTransferItems.CostPerUnit";
+                var list2 = await _db.QueryAsync<StockTransferDetailsItems>(sqla, prm);
+                item.detay = list2;
+            }
+
             return list.ToList();
         }
 
@@ -265,29 +278,11 @@ namespace DAL.Repositories
             prm.Add("@TransferValue", value);
             prm.Add("@CostPerUnit", CostPerUnit);
 
-
-            //Verilen konumlarda bu iteme ait stock değeri var mı kontrol edilir.Yoksa oluşturulur.
-            if (sorgu.First().originvarmi == 0)
-            {
-              await  _loc.Insert(Tip, T.ItemId, CompanyId, Origin);
-            }
             float? OriginStockCount = sorgu.First().stockCountOrigin;
-            float? DestinationStockCount = 0;
-            if (sorgu.First().destinationvarmı == 0)
-            {
-               await _loc.Insert(Tip, T.ItemId, CompanyId,  Destination);
-            }
-            else
-            {
-                DestinationStockCount = sorgu.First().DestinationStockCounts;
-            }
-
-           
-
+            float? DestinationStockCount = sorgu.First().DestinationStockCounts;
+            
             var NewOriginStock = OriginStockCount - T.Quantity;
             var NewDestinationStock = DestinationStockCount + T.Quantity;
-
-
 
             prm.Add("@NewOriginStock", NewOriginStock); //Yeni count değerini tabloya güncelleştiriyoruz.
             prm.Add("@NewDestinationStock", NewDestinationStock);
@@ -308,7 +303,7 @@ namespace DAL.Repositories
 
             prm.Add("@PreviousValue", OriginStockCount);
             prm.Add("@Process", "LocationStock");
-            await _db.ExecuteAsync($"Insert into StockMovement ([Where],Operation,Process,Quantity,PreviousValue,NextValue,Date,[User],CompanyId,LocationId,ItemId) values(@Where,Operation,@Process,@StockMovementQuantity,@PreviousValue,@NewOriginStock,@Date,@User,@CompanyId,@Origin,@ItemId)", prm);
+            await _db.ExecuteAsync($"Insert into StockMovement ([Where],Operation,Process,Quantity,PreviousValue,NextValue,Date,[User],CompanyId,LocationId,ItemId) values(@Where,@Operation,@Process,@StockMovementQuantity,@PreviousValue,@NewOriginStock,@Date,@User,@CompanyId,@Origin,@ItemId)", prm);
 
 
             await _db.ExecuteAsync($"Update LocationStock SET StockCount =@NewOriginStock where LocationId = @Origin and ItemId=@ItemId and CompanyId = @CompanyId", prm);
@@ -316,28 +311,6 @@ namespace DAL.Repositories
        
             return await _db.QuerySingleAsync<int>($"Insert into StockTransferItems (ItemId,CostPerUnit,Quantity,TransferValue,StockTransferId,CompanyId) OUTPUT INSERTED.[id]  values (@ItemId,@CostPerUnit,@Quantity,@TransferValue,@StockTransferId,@CompanyId)", prm);
         }
-
-        public async Task<IEnumerable<StockTransferDetailsItems>> ItemDetails(int id, int CompanyId)
-        {
-            DynamicParameters prm = new DynamicParameters();
-            prm.Add("@id", id);
-            prm.Add("@CompanyId", CompanyId);
-            string sqla = $@"Select StockTransferItems.id,StockTransferItems.ItemId,StockTransferItems.Quantity,Items.Name as ItemName,
-            StockTransferItems.CostPerUnit,StockTransfer.DestinationId,l.LocationName as DestinationLocationName,
-            v.StockCount as DestinationLocationStockCount,StockTransfer.OriginId,m.LocationName as OriginLocationName,
-            c.StockCount as OriginLocationStockCount,StockTransferItems.TransferValue from StockTransferItems 
-            inner join Items on Items.id = StockTransferItems.ItemId 
-            inner join StockTransfer on StockTransfer.id = StockTransferItems.StockTransferId 
-            inner join Locations l on l.id = StockTransfer.OriginId inner join Locations m on m.id = StockTransfer.DestinationId 
-            inner join LocationStock c on c.ItemId = Items.id and c.LocationId = StockTransfer.OriginId
-            and l.CompanyId = StockTransfer.CompanyId inner join LocationStock v on v.ItemId = Items.id
-            and v.LocationId = StockTransfer.DestinationId and m.CompanyId = StockTransfer.CompanyId 
-            where StockTransferItems.CompanyId = @CompanyId and StockTransferItems.StockTransferId = @id
-            Group BY StockTransferItems.id,StockTransferItems.ItemId,StockTransferItems.Quantity,Items.Name , StockTransfer.DestinationId,l.LocationName,v.StockCount, StockTransfer.OriginId,m.LocationName,c.StockCount, StockTransferItems.TransferValue,StockTransferItems.CostPerUnit";
-            var list =await _db.QueryAsync<StockTransferDetailsItems>(sqla, prm);
-            return list.ToList();
-        }
-
         public async Task<IEnumerable<StockTransferList>> List(StockTransferList T, int CompanyId, int KAYITSAYISI, int sayfa)
         {
             string sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {sayfa}  Select x.* From (Select StockTransfer.id,StockTransfer.StockTransferName,StockTransfer.TransferDate,StockTransfer.IsActive,StockTransfer.DestinationId,da.LocationName as DestinationName,StockTransfer.OriginId,de.LocationName as OriginName,StockTransfer.Total,StockTransfer.CompanyId as CompanyId from StockTransfer inner join Locations de on de.id = StockTransfer.OriginId inner join Locations da on da.id=StockTransfer.DestinationId ) x  where x.CompanyId = {CompanyId} and x.IsActive=1  and ISNULL(x.StockTransferName,0) LIKE '%{T.StockTransferName}%'and ISNULL(x.DestinationId,0) LIKE '%%' and ISNULL(DestinationName,0) LIKE '%{T.DestinationName}%' and ISNULL(OriginName,0) LIKE '%{T.OriginName}%' and ISNULL(x.Total,0) LIKE '%{T.Total}%' ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;  ";
@@ -360,7 +333,7 @@ namespace DAL.Repositories
             await _db.ExecuteAsync($"Update StockTransfer SET TransferDate = @TransferDate,StockTransferName=@StockTransferName,Info=@Info,Total=@Total where id=@id and CompanyId = @CompanyId", prm);
         }
 
-        public async Task UpdateStockTransferItem(StockTransferItems T, int CompanyId,int UserId)
+        public async Task<int> UpdateStockTransferItem(StockTransferItems T, int CompanyId,int UserId)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@CompanyId", CompanyId);
@@ -374,72 +347,46 @@ namespace DAL.Repositories
 
             var deger = await _db.QueryAsync<int>($"Select  StockTransferItems.Quantity from StockTransferItems where id=@id and CompanyId=@CompanyId", prm);
             var quantity = T.Quantity - deger.First();
+           
+
 
             //DefaultPrice,Tip,OriginId,DestinationId getiriliyor.Gelen id ile originvarmı,destinationvarmı kontrol edilir.Eğer var ise StockCount değerleri çekilir.
             string sqlf = $@"declare @@Origin int,@@Destination int 
             set @@Origin=(Select OriginId from StockTransfer where id = @StockTransferId and CompanyId = @CompanyId)
             set @@Destination=(Select DestinationId from StockTransfer where id = @StockTransferId and CompanyId =  @CompanyId)
-            select (Select DefaultPrice from Items where id = @ItemId and CompanyId = @CompanyId) as DefaultPrice,
+            select
             (Select Tip from Items where id = @ItemId and CompanyId = @CompanyId) as Tip,(Select @@Origin) as OriginId,
             (Select @@Destination) as DestinationId,
-            (select id from LocationStock where LocationId = @@Origin and CompanyId = @CompanyId and ItemId = @ItemId) as            originvarmi,
-            (Select StockCount from LocationStock where ItemId = @ItemId and LocationId = @@Origin and CompanyId =       @CompanyId) as     stockCountOrigin,
-            (select id from LocationStock where LocationId = @@Destination and CompanyId = @CompanyId and ItemId = @ItemId) as  destinationvarmı  , (Select StockCount from LocationStock where ItemId = @ItemId and LocationId = @@Destination and CompanyId = @CompanyId) as DestinationStockCounts    ";
-            var sorgu = await _db.QueryAsync<StockMergeSql>(sqlf, prm);
-
-            var CostPerUnit = sorgu.First().DefaultPrice;
-            var Tip = sorgu.First().Tip;
-            var value = T.Quantity * CostPerUnit; //transfer value hesaplama
-            Total += value;
-            int Origin = sorgu.First().OriginId;
-            int Destination = sorgu.First().DestinationId;
-            prm.Add("@Destination", Destination);
-            prm.Add("@Origin", Origin);
-            prm.Add("@Total", Total);
-            prm.Add("@TransferValue", value);
-            prm.Add("@CostPerUnit", CostPerUnit);
-
-            if (sorgu.First().originvarmi == 0)
+            (select StockTransferName from StockTransfer where id = @StockTransferId and CompanyId = @CompanyId) as StockTransferName
+  ";
+            var sorgu = await _db.QueryAsync<StockTransferDetails>(sqlf, prm);
+            int id = T.StockTransferId; ;
+            if (T.Quantity != deger.First())
             {
-                await _loc.Insert(Tip, T.ItemId, CompanyId, Origin);
+                StockTransferInsert insert = new();
+                StockTransferInsertItem item = new();
+                insert.ItemId = T.ItemId;
+                insert.StockTransferName = sorgu.First().StockTransferName;
+                if (deger.First()<T.Quantity)
+                {
+                    insert.OriginId = sorgu.First().OriginId;
+                    insert.DestinationId = sorgu.First().DestinationId;
+                    item.Quantity = T.Quantity - deger.First();
+                }
+                else
+                {
+                    insert.OriginId = sorgu.First().DestinationId;
+                    insert.DestinationId = sorgu.First().OriginId;
+                    item.Quantity= deger.First()-T.Quantity;
+                }
+                insert.TransferDate = DateTime.Now;
+               id= await Insert(insert, CompanyId);
+                item.ItemId= T.ItemId;
+                item.StockTransferId = id;
+                await InsertStockTransferItem(item,id, CompanyId, UserId);
             }
-            float? OriginStockCount = sorgu.First().stockCountOrigin;
 
-            if (sorgu.First().destinationvarmı == 0)
-            {
-                await _loc.Insert(Tip, T.ItemId, CompanyId, Destination);
-            }
-
-            float? DestinationStockCount = sorgu.First().DestinationStockCounts;
-
-            var NewOriginStock = OriginStockCount - quantity;
-            var NewDestinationStock = DestinationStockCount + quantity;
-           await _db.ExecuteAsync($"Update StockTransferItems SET   ItemId=@ItemId,CostPerUnit=@CostPerUnit,Quantity=@Quantity,TransferValue=@TransferValue where StockTransferId=@StockTransferId and id=@id and CompanyId = @CompanyId", prm);
-            prm.Add("@NewOriginStock", NewOriginStock); //Yeni count değerini tabloya güncelleştiriyoruz.
-            prm.Add("@NewDestinationStock", NewDestinationStock);
-            prm.Add("@CompanyId", CompanyId);
-
-
-            prm.Add("@User", UserId);
-            prm.Add("@StockMovementQuantity", quantity);
-            prm.Add("@PreviousValue", DestinationStockCount);
-            prm.Add("@Process", "LocationStock");
-            prm.Add("@Date", DateTime.Now);
-            prm.Add("@Operation", "+");
-
-            prm.Add("@Where", "StockTransferDelete");
-            await _db.ExecuteAsync($"Insert into StockMovement ([Where],Operation,Process,Quantity,PreviousValue,NextValue,Date,[User],CompanyId,LocationId,ItemId) values(@Where,Operation,@Process,@StockMovementQuantity,@PreviousValue,@NewDestinationStock,@Date,@User,@CompanyId,@Destination,@ItemId)", prm);
-
-            prm.Add("@Operation", "-");
-
-            prm.Add("@PreviousValue", OriginStockCount);
-            prm.Add("@Process", "LocationStock");
-            await _db.ExecuteAsync($"Insert into StockMovement ([Where],Operation,Process,Quantity,PreviousValue,NextValue,Date,[User],CompanyId,LocationId) values(@Where,@Operation,@Process,@StockMovementQuantity,@PreviousValue,@NewOriginStock,@Date,@User,@CompanyId,@Origin)", prm);
-
-
-
-            await _db.ExecuteAsync($"Update LocationStock SET StockCount =@NewOriginStock where LocationId = @Origin and ItemId=@ItemId and CompanyId = @CompanyId", prm); //LocationStock tablosuna origin location değeri ile işleşen StockCount güncellenir.
-            await _db.ExecuteAsync($"Update LocationStock SET StockCount =@NewDestinationStock where LocationId = @Destination and ItemId=@ItemId  and CompanyId = @CompanyId", prm); //LocationStock tablosuna origin destination değeri ile işleşen StockCount güncellenir.
+            return id;
           
         }
     }

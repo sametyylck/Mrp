@@ -73,7 +73,9 @@ namespace Api.Controllers
                 user.Password = request.Password;
                 user.PasswordHash = passwordHash;
                 user.PasswordSalt = passwordSalt;
-                await _company.UserRegister(user, id);
+               int roleid=await _company.RoleInsert(id);
+
+                await _company.UserRegister(user, id,roleid);
                 await _measure.Register(id);
                 int taxid = await _taxRepository.Register(id);
                 int locationid = await _location.Register(id);
@@ -85,9 +87,6 @@ namespace Api.Controllers
                 string sql = $@"Update Company SET LocationId = @LegalAddressId where id = @id";
                 await _db.ExecuteAsync(sql, param);
                 await _generalDefault.Register(id, taxid, locationid);
-
-
-
                 return Ok("Kayıt Başarılı");
             }
             else
@@ -113,24 +112,31 @@ namespace Api.Controllers
                 prm.Add("@Passowrd", A.Password);
                 prm.Add("@Mail", A.Mail);
 
-                string sql = $@"Select * from Users where Mail=@Mail and Password=@Passowrd";
-                var list = await _db.QueryAsync<Users>(sql,prm);
+                string sql = $@"Select u.id,u.FirstName,u.LastName,u.CompanyId,Company.DisplayName from Users u 
+left join Company on Company.id=u.CompanyId
+where Mail=@Mail and Password=@Passowrd";
+                var list = await _db.QueryAsync<TokenKontrol>(sql,prm);
                 if (list.Count() <= 0)
                 {
                     return BadRequest("Giriş bilgileriniz kontrol ediniz.");
 
                 }
+          
                 user.Mail = A.Mail;
                 user.CompanyId = Convert.ToString(list.First().CompanyId);
-                user.Id = list.First().Id;
+                user.Id = list.First().id;
 
-
-                //if (!VerifyPasswordHash(request.Password, passwordhash, passwordsalt))
+                        //if (!VerifyPasswordHash(request.Password, passwordhash, passwordsalt))
                 //{
                 //    return BadRequest("Wrong password.");
                 //}
                 string token = CreateToken(user);
-                return Ok(token);
+                string? firstname = list.First().FirstName;
+                string? LastName = list.First().LastName;
+                string? DisplayName = list.First().DisplayName;
+
+
+                return Ok(new { token,firstname,LastName,DisplayName });
             }
             else
             {
@@ -146,11 +152,11 @@ namespace Api.Controllers
         {
             List<Claim> claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Email, user.Mail),
-                new Claim(ClaimTypes.Role, "Admin"),
+                
                 new Claim(ClaimTypes.GivenName,value: user.CompanyId),
                 new Claim(ClaimTypes.Gender,value:Convert.ToString(user.Id))
             };
+
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
                 _configuration.GetSection("AppSettings:Token").Value));

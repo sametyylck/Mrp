@@ -1,4 +1,5 @@
-﻿using BL.Services.IdControl;
+﻿using BL.Extensions;
+using BL.Services.IdControl;
 using DAL.Contracts;
 using DAL.DTO;
 using DAL.Models;
@@ -27,7 +28,8 @@ namespace Api.Controllers
         private readonly IValidator<ResourcesInsert> _ResourceInsert;
         private readonly IValidator<IdControl> _delete;
         private readonly IIDControl _idcontrol;
-        public SettingResourceController(IUserService user, IDbConnection db, IResourceRepository resource, IValidator<ResourcesUpdate> resourceUpdate, IValidator<ResourcesInsert> resourceInsert, IValidator<IdControl> delete, IIDControl idcontrol)
+        private readonly IPermissionControl _izinkontrol;
+        public SettingResourceController(IUserService user, IDbConnection db, IResourceRepository resource, IValidator<ResourcesUpdate> resourceUpdate, IValidator<ResourcesInsert> resourceInsert, IValidator<IdControl> delete, IIDControl idcontrol, IPermissionControl izinkontrol)
         {
             _user = user;
             _db = db;
@@ -36,6 +38,7 @@ namespace Api.Controllers
             _ResourceInsert = resourceInsert;
             _delete = delete;
             _idcontrol = idcontrol;
+            _izinkontrol = izinkontrol;
         }
         [Route("List")]
         [HttpGet, Authorize]
@@ -43,6 +46,14 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             var list = await _resource.List(CompanyId);
 
             return Ok(list);
@@ -52,11 +63,20 @@ namespace Api.Controllers
         [HttpPost, Authorize]
         public async Task<ActionResult<ResourcesDTO>> Insert(ResourcesInsert T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _ResourceInsert.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
+                
                 int id = await _resource.Insert(T, CompanyId);
 
                 DynamicParameters param = new DynamicParameters();
@@ -79,13 +99,21 @@ namespace Api.Controllers
         [HttpPut, Authorize]
         public async Task<ActionResult<ResourcesDTO>> Update(ResourcesUpdate T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _ResourceUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _idcontrol.GetControl("Resources", T.id, CompanyId);
-                if (hata == "true")
+                var hata = await _idcontrol.GetControl("Resources", T.id, CompanyId);
+                if (hata.Count() == 0)
                 {
                     await _resource.Update(T, CompanyId);
                     return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
@@ -108,13 +136,22 @@ namespace Api.Controllers
         [HttpDelete, Authorize]
         public async Task<ActionResult<ResourcesDTO>> Delete(IdControl T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _delete.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _idcontrol.GetControl("Resources", T.id, CompanyId);
-                if (hata == "true")
+                
+                var hata = await _idcontrol.GetControl("Resources", T.id, CompanyId);
+                if (hata.Count() == 0)
                 {
                     await _resource.Delete(T, CompanyId);
                     return Ok("Silme İşlemi Başarıyla Gerçekleşti");

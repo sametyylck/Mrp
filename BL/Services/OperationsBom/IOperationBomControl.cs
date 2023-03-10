@@ -9,7 +9,7 @@ namespace BL.Services.OperationsBom
 {
     public interface IOperationBomControl
     {
-        Task<string> Insert(ProductOperationsBOMInsert T, int CompanyId);
-        Task<string> Update(ProductOperationsBOMUpdate T, int CompanyId);
+        Task<List<string>> Insert(ProductOperationsBOMInsert T, int CompanyId);
+        Task<List<string>> Update(ProductOperationsBOMUpdate T, int CompanyId);
     }
 }

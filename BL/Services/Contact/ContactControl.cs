@@ -18,8 +18,9 @@ namespace BL.Services.Contact
             _db = db;
         }
 
-        public async Task<string> Update(ContactDTO.ContactsList T, int CompanyId)
+        public async Task<List<string>> Update(ContactDTO.ContactsList T, int CompanyId)
         {
+            List<string> list = new List<string>();
             DynamicParameters param = new DynamicParameters();
             param.Add("@id", T.id);
             param.Add("@CompanyId", CompanyId);
@@ -27,23 +28,26 @@ namespace BL.Services.Contact
             var kontrol = await _db.QueryAsync<int>(sql, param);
             if (kontrol.Count() == 0)
             {
-                return ("Boyle bir id yok.");
+                list.Add("Boyle bir id yok.");
             }
             var tipbul = await _db.QueryAsync<ItemDTO.Items>($"Select Tip from Contacts where CompanyId = @CompanyId and id = @id", param);
             string? tip = tipbul.First().Tip;
             if (T.Tip==tip)
             {
-                return ("true");
+                return list;
             }
             else
             {
-                return ("Tip uyuşmazlığı.Tip hatası.");
+                list.Add("Tip uyuşmazlığı.Tip hatası.");
+                return list;
+
             }
 
         }
 
-        public async Task<string> UpdateAddress(ContactDTO.ContactsUpdateAddress T, int CompanyId)
+        public async Task<List<string>> UpdateAddress(ContactDTO.ContactsUpdateAddress T, int CompanyId)
         {
+            List<string> list = new();
             DynamicParameters param = new DynamicParameters();
             param.Add("@id", T.id);
             param.Add("@CompanyId", CompanyId);
@@ -51,17 +55,19 @@ namespace BL.Services.Contact
             var kontrol = await _db.QueryAsync<int>(sql, param);
             if (kontrol.Count() == 0)
             {
-                return (" Boyle bir id yok.");
+                list.Add(" Boyle bir id yok.");
             }
             var tipbul = await _db.QueryAsync<ItemDTO.Items>($"Select Tip from Locations where CompanyId = @CompanyId and id = @id", param);
             string? tip = tipbul.First().Tip;
             if (T.Tip == tip)
             {
-                return ("true");
+                return list;
             }
             else
             {
-                return ("Tip uyuşmazlığı.Tip hatası.");
+                list.Add("Tip uyuşmazlığı.Tip hatası.");
+                return list;
+
             }
         }
     }

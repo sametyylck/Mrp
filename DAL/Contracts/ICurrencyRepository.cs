@@ -10,6 +10,6 @@ namespace DAL.Contracts
 {
     public interface ICurrencyRepository
     {
-        Task<IEnumerable<CurrencyDTO>> List();
+        Task<IEnumerable<CurrencyDTO>> List(string? kelime);
     }
 }

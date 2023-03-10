@@ -177,7 +177,7 @@ namespace DAL.DTO
             public DateTime? CreateDate { get; set; }
             public int? LocationId { get; set; }
             public string LocationName { get; set; } = string.Empty;
-
+            public IEnumerable<PurchaseOrdersItemDetails> detay { get; set; }
 
         }
 
@@ -199,6 +199,7 @@ namespace DAL.DTO
             public int OrdersId { get; set; }
 
         }
+
 
         public class PurchaseOrderControls
         {

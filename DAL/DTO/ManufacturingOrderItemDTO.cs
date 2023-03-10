@@ -28,6 +28,8 @@ namespace DAL.DTO
             public int RezerveId { get; set; }
             public int Status { get; set; }
             public int LocationId { get; set; }
+            public int SalesOrderId { get; set; }
+            public int SalesOrderItemId { get; set; }
         }
 
         public class ManufacturingOrderItems
@@ -52,6 +54,13 @@ namespace DAL.DTO
             public int? PurchaseOrderId { get; set; }
             public int? CompanyId { get; set; }
         }
+        public class BuyKontrol
+        {
+            public int MeasureId { get; set; }
+            public int TaxId { get; set; }
+
+        }
+
 
         public class ManufacturingOrderItemsIngredientsDetail
         {
@@ -162,5 +171,15 @@ namespace DAL.DTO
             public float Quantity { get; set; }
 
         }
+        public class UretimDeleteKontrolClas
+        {
+            public int? SalesOrderId { get; set; }
+            public int? SalesOrderItemId { get; set; }
+
+            public string? Name { get; set; }
+
+        }
+
+
     }
 }

@@ -10,11 +10,11 @@ namespace BL.Services.Orders
 {
     public interface IPurchaseOrderControl
     {
-        Task<string> Insert(PurchaseOrderInsert T, int CompanyId);
-        Task<string> InsertItem(PurchaseOrderInsertItem T, int CompanyId);
-        Task<string> Update(PurchaseOrderUpdate T, int CompanyId);
-        Task<string> UpdatePurchaseItem(PurchaseItem T, int CompanyId);
-        Task<string> Delete(Delete T,int CompanyId);
-        Task<string> DeleteItem(DeleteItems T,int CompanyId);
+        Task<List<string>> Insert(PurchaseOrderInsert T, int CompanyId);
+        Task<List<string>> InsertItem(PurchaseOrderInsertItem T, int CompanyId);
+        Task<List<string>> Update(PurchaseOrderUpdate T, int CompanyId);
+        Task<List<string>> UpdatePurchaseItem(PurchaseItem T, int CompanyId);
+        Task<List<string>> Delete(Delete T,int CompanyId);
+        Task<List<string>> DeleteItem(DeleteItems T,int CompanyId);
     }
 }

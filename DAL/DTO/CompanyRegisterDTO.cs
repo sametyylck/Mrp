@@ -28,6 +28,24 @@ namespace DAL.DTO
 
 
     }
+    public class TokenKontrol
+    {
+        public int id { get; set; }
+        public string DisplayName { get; set; } = string.Empty;
+
+        public string FirstName { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string? Mail { get; set; }
+
+        public string Password { get; set; } = string.Empty;
+        public int CompanyId { get; set; }
+
+
+    }
+
     public class CompanyClas
     {
         public int id { get; set; }

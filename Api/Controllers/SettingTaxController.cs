@@ -1,4 +1,5 @@
-﻿using BL.Services.IdControl;
+﻿using BL.Extensions;
+using BL.Services.IdControl;
 using DAL.Contracts;
 using DAL.DTO;
 using DAL.Models;
@@ -27,7 +28,8 @@ namespace Api.Controllers
         private readonly IValidator<TaxInsert> _TaxInsert;
         private readonly IValidator<TaxUpdate> _TaxUpdate;
         private readonly IIDControl _idcontrol;
-        public SettingTaxController(IUserService user, IDbConnection db, ITaxRepository tax, IValidator<IdControl> delete, IValidator<TaxInsert> taxInsert, IValidator<TaxUpdate> taxUpdate, IIDControl idcontrol)
+        private readonly IPermissionControl _izinkontrol;
+        public SettingTaxController(IUserService user, IDbConnection db, ITaxRepository tax, IValidator<IdControl> delete, IValidator<TaxInsert> taxInsert, IValidator<TaxUpdate> taxUpdate, IIDControl idcontrol, IPermissionControl izinkontrol)
         {
             _user = user;
             _db = db;
@@ -36,15 +38,23 @@ namespace Api.Controllers
             _TaxInsert = taxInsert;
             _TaxUpdate = taxUpdate;
             _idcontrol = idcontrol;
+            _izinkontrol = izinkontrol;
         }
         [Route("List")]
         [HttpGet, Authorize]
         public async Task<ActionResult<TaxClas>> List()
         {
 
-
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             var list = await _tax.List(CompanyId);
             return Ok(list);
 
@@ -53,11 +63,20 @@ namespace Api.Controllers
         [HttpPost, Authorize]
         public async Task<ActionResult<TaxClas>> Insert(TaxInsert T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _TaxInsert.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
+               
                 int id = await _tax.Insert(T, CompanyId);
 
 
@@ -80,13 +99,22 @@ namespace Api.Controllers
         [HttpPut, Authorize]
         public async Task<ActionResult<TaxClas>> Update(TaxUpdate T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _TaxUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _idcontrol.GetControl("Tax", T.id, CompanyId);
-                if (hata == "true")
+                
+                var hata = await _idcontrol.GetControl("Tax", T.id, CompanyId);
+                if (hata.Count() == 0)
                 {
                     await _tax.Update(T, CompanyId);
                     return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
@@ -110,14 +138,23 @@ namespace Api.Controllers
         [HttpDelete, Authorize]
         public async Task<ActionResult<TaxClas>> Delete(IdControl T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _Delete.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
+                
 
-                string hata = await _idcontrol.GetControl("Tax", T.id, CompanyId);
-                if (hata == "true")
+                var hata = await _idcontrol.GetControl("Tax", T.id, CompanyId);
+                if (hata.Count() == 0)
                 {
                     await _tax.Delete(T, CompanyId);
                     return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");

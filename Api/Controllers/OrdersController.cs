@@ -1,4 +1,5 @@
-﻿using BL.Services.IdControl;
+﻿using BL.Extensions;
+using BL.Services.IdControl;
 using BL.Services.Orders;
 using DAL.Contracts;
 using DAL.DTO;
@@ -36,8 +37,9 @@ namespace Api.Controllers
         private readonly IValidator<DeleteItems> _DeleteItems;
         private readonly IValidator<Delete> _Delete;
         private readonly IIDControl _idcontrol;
+        private readonly IPermissionControl _izinkontrol;
 
-        public OrdersController(IOrdersRepository order, IDbConnection db, IUserService user, IPurchaseOrderControl control, IValidator<PurchaseOrderInsert> purcOrderInsert, IValidator<PurchaseOrderInsertItem> purcOrderInsertItem, IValidator<PurchaseOrderUpdate> purcOrderUpdate, IValidator<PurchaseItem> purhaseItem, IValidator<DeleteItems> deleteItems, IValidator<Delete> delete, IIDControl idcontrol)
+        public OrdersController(IOrdersRepository order, IDbConnection db, IUserService user, IPurchaseOrderControl control, IValidator<PurchaseOrderInsert> purcOrderInsert, IValidator<PurchaseOrderInsertItem> purcOrderInsertItem, IValidator<PurchaseOrderUpdate> purcOrderUpdate, IValidator<PurchaseItem> purhaseItem, IValidator<DeleteItems> deleteItems, IValidator<Delete> delete, IIDControl idcontrol, IPermissionControl izinkontrol)
         {
             _order = order;
             _db = db;
@@ -50,6 +52,7 @@ namespace Api.Controllers
             _DeleteItems = deleteItems;
             _Delete = delete;
             _idcontrol = idcontrol;
+            _izinkontrol = izinkontrol;
         }
         [Route("Details/{id}")]
         [HttpGet, Authorize]
@@ -57,31 +60,37 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaGoruntule, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             var list = await _order.Details(id, CompanyId);
 
-            return Ok(list);
-        }
-        [Route("PurchaseOrderDetailsItem")]
-        [HttpGet, Authorize]
-        public async Task<ActionResult<PurchaseOrdersItemDetails>> PurchaseOrderDetailsItem(int id)
-        {
-            List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
-            var list = await _order.PurchaseOrderDetailsItem(id, CompanyId);
             return Ok(list);
         }
         [Route("Insert")]
         [HttpPost, Authorize]
         public async Task<ActionResult<PurchaseOrder>> Insert(PurchaseOrderInsert T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaEkleyebilirVeDuzenleyebilir, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _PurcOrderInsert.ValidateAsync(T);
             if (result.IsValid)
             {
-
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _control.Insert(T, CompanyId);
-                if (hata=="true")
+                var hata = await _control.Insert(T, CompanyId);
+                if (hata.Count()==0)
                 {
                     int id = await _order.Insert(T, CompanyId);
                     PurchaseOrderInsertItem B = new PurchaseOrderInsertItem();
@@ -110,7 +119,7 @@ namespace Api.Controllers
                     return BadRequest(hata);
                 }
 
- 
+
             }
             else
             {
@@ -130,13 +139,22 @@ namespace Api.Controllers
         [HttpPost, Authorize]
         public async Task<ActionResult<PurchaseOrder>> InsertItems(PurchaseOrderInsertItem T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaEkleyebilirVeDuzenleyebilir, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _PurcOrderInsertItem.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                string hata = await _control.InsertItem(T, CompanyId);
-                if (hata == "true")
+
+                var hata = await _control.InsertItem(T, CompanyId);
+                if (hata.Count() == 0)
                 {
                     int id = await _order.InsertPurchaseItem(T, T.OrderId, CompanyId);
                     DynamicParameters param2 = new DynamicParameters();
@@ -151,14 +169,14 @@ namespace Api.Controllers
                 {
                     return BadRequest(hata);
                 }
- 
+
             }
             else
             {
                 result.AddToModelState(this.ModelState);
                 return BadRequest(result.ToString());
             }
-        
+
 
 
 
@@ -168,13 +186,21 @@ namespace Api.Controllers
         [HttpPut, Authorize]
         public async Task<ActionResult<PurchaseOrderUpdate>> Update(PurchaseOrderUpdate T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaEkleyebilirVeDuzenleyebilir, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _PurcOrderUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                var control =await _control.Update(T, CompanyId);
-                if (control == "true")
+                var control = await _control.Update(T, CompanyId);
+                if (control.Count() == 0)
                 {
                     DynamicParameters param1 = new DynamicParameters();
                     param1.Add("@id", T.id);
@@ -196,7 +222,7 @@ namespace Api.Controllers
                 result.AddToModelState(this.ModelState);
                 return BadRequest(result.ToString());
             }
-       
+
 
 
         }
@@ -205,13 +231,21 @@ namespace Api.Controllers
         [HttpPut, Authorize]
         public async Task<ActionResult<PurchaseItem>> UpdatePurchaseItem(PurchaseItem T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaEkleyebilirVeDuzenleyebilir, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _PurhaseItem.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                var control =await _control.UpdatePurchaseItem(T, CompanyId);
-                if (control == "true")
+                var control = await _control.UpdatePurchaseItem(T, CompanyId);
+                if (control.Count() == 0)
                 {
 
                     DynamicParameters param2 = new DynamicParameters();
@@ -232,7 +266,7 @@ namespace Api.Controllers
                 result.AddToModelState(this.ModelState);
                 return BadRequest(result.ToString());
             }
-         
+
 
 
 
@@ -245,13 +279,21 @@ namespace Api.Controllers
         [HttpDelete, Authorize]
         public async Task<ActionResult<DeleteItems>> DeleteItems(DeleteItems T)
         {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaSilebilir, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            if (izin == false)
+            {
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
+            }
             ValidationResult result = await _DeleteItems.ValidateAsync(T);
             if (result.IsValid)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                var control =await _control.DeleteItem(T, CompanyId);
-                if (control == "true")
+                var control = await _control.DeleteItem(T, CompanyId);
+                if (control.Count() == 0)
                 {
                     await _order.DeleteItems(T, CompanyId);
                     return Ok("Silme İşlemi Başarıyla Gerçekleşti");
@@ -266,39 +308,35 @@ namespace Api.Controllers
                 result.AddToModelState(this.ModelState);
                 return BadRequest(result.ToString());
             }
-        
+
 
         }
         [Route("Delete")]
         [HttpDelete, Authorize]
-        public async Task<ActionResult<Delete>> Delete(Delete T)
+        public async Task<ActionResult<Delete>> Delete(List<Delete> A)
         {
-            ValidationResult result = await _Delete.ValidateAsync(T);
-            if (result.IsValid)
+
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaSilebilir, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            if (izin == false)
             {
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                var control =await _control.Delete(T, CompanyId);
-                if (control == "true")
-                {
-                    var userId = user[1];
-                    await _order.Delete(T, CompanyId, userId);
-                    return Ok("Silme İşlemi Başarıyla Gerçekleşti");
-                }
-                else
-                {
-                    return BadRequest("Hatalı parametre");
-                }
+                List<string> izinhatasi = new();
+                izinhatasi.Add("Yetkiniz yetersiz");
+                return BadRequest(izinhatasi);
             }
-            else
-            {
-                result.AddToModelState(this.ModelState);
-                return BadRequest(result.ToString());
-            }
-         
-       
+            var userId = user[1];
+            await _order.Delete(A, CompanyId, userId);
+            return Ok("Silme İşlemi Başarıyla Gerçekleşti");
 
 
         }
+
+
+
+
+
     }
 }
+

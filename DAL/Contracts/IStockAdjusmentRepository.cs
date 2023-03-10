@@ -21,6 +21,5 @@ namespace DAL.Contracts
         Task DeleteItems(StockAdjusmentItemDelete T, int CompanyId,int User);
         Task<IEnumerable<StockAdjusmentList>> List(StockAdjusmentList T, int CompanyId, int KAYITSAYISI, int SAYFA);
          Task<IEnumerable<StockAdjusmentClas>> Detail(int CompanyId, int id);
-         Task<IEnumerable<StockAdjusmentItems>> ItemDetail(int CompanyId, int id);
     }
 }

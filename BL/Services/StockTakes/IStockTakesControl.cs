@@ -9,10 +9,11 @@ namespace BL.Services.StockTakes
 {
     public interface IStockTakesControl
     {
-        Task<string> Insert(StockTakesInsert T,int CompanyId);
-        Task<string> InsertItem(List<StockTakeInsertItems> T , int CompanyId);
-        Task<string> UpdateItem(StockTakesUpdateItems T, int CompanyId);
-        Task<string> DeleteItem(StockTakeDelete T, int CompanyId);
+        Task<List<string>> Insert(StockTakesInsert T, int CompanyId);
+        Task<List<string>> InsertItem(List<StockTakeInsertItems> T, int CompanyId);
+        Task<List<string>> UpdateItem(StockTakesUpdateItems T, int CompanyId);
+        Task<List<string>> DeleteItem(StockTakeDelete T, int CompanyId);
+        Task<List<string>> StockTakesDone(StockTakesDone T, int CompanyId);
 
-    }
+        }
 }

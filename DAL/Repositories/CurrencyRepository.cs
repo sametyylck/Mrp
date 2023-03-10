@@ -20,9 +20,9 @@ namespace DAL.Repositories
             _db = db;
         }
 
-        public async Task<IEnumerable<CurrencyDTO>> List()
+        public async Task<IEnumerable<CurrencyDTO>> List(string? kelime)
         {
-            string sql = $"Select * From Currency";
+            string sql = $"Select * From Currency  where [Name] like '%{kelime}%'";
             var list = await _db.QueryAsync<CurrencyDTO>(sql);
             return list.ToList();
         }

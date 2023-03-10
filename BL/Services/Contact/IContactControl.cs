@@ -10,8 +10,8 @@ namespace BL.Services.Contact
 {
     public interface IContactControl
     {
-        Task<string> Update(ContactsList T, int CompanyId);
-        Task<string> UpdateAddress(ContactsUpdateAddress T, int CompanyId);
+        Task<List<string>> Update(ContactsList T, int CompanyId);
+        Task<List<string>> UpdateAddress(ContactsUpdateAddress T, int CompanyId);
 
 
     }

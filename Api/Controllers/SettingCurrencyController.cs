@@ -22,11 +22,11 @@ namespace Api.Controllers
         }
         [Route("List")]
         [HttpGet, Authorize]
-        public async Task<ActionResult<CurrencyDTO>> List()
+        public async Task<ActionResult<CurrencyDTO>> List(string? kelime)
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
-            var list = await _currren.List();
+            var list = await _currren.List(kelime);
             return Ok(list);
         }
     }

@@ -8,6 +8,6 @@ namespace BL.Services.IdControl
 {
     public interface IIDControl
     {
-        Task<string> GetControl(string tabloadi,int id,int companyid);
+        Task<List<string>> GetControl(string tabloadi,int id,int companyid);
     }
 }

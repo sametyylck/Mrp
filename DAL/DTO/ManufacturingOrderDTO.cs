@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static DAL.DTO.ManufacturingOrderItemDTO;
 
 namespace DAL.DTO
 {
@@ -135,6 +136,9 @@ namespace DAL.DTO
             public string LocationName { get; set; } = string.Empty;
             public int? Status { get; set; }
             public string Info { get; set; } = string.Empty;
+            public IEnumerable<ManufacturingOrderItemsIngredientsDetail> IngredientDetail { get; set; }
+            public IEnumerable<ManufacturingOrderItemsOperationDetail> OperationDetail { get; set; }
+
         }
         public class ManufacturingOrderList
         {
@@ -147,14 +151,14 @@ namespace DAL.DTO
             public string CategoryName { get; set; } = string.Empty;
             public float? PlannedQuantity { get; set; }
             public int? PlannedTime { get; set; }
-            public DateTime? ProductDeadline { get; set; }
             public int? Status { get; set; }
-            public DateTime ExpectedDate { get; set; }
 
             // (0 = Not Started) (1 = Blocked) (2 = Work In Progress) (3 = Done) 
             public string Availability { get; set; } = string.Empty;
             public int? LocationId { get; set; }
             public string LocationName { get; set; } = string.Empty;
+            public DateTime? BaslangıcTarih { get; set; }
+            public DateTime? SonTarih { get; set; }
         }
         public class ManufacturingOrderDoneList
         {
@@ -170,12 +174,15 @@ namespace DAL.DTO
             public int? Status { get; set; }
             // (0 = Not Started) (1 = Blocked) (2 = Work In Progress) (3 = Done) 
             public int? LocationId { get; set; }
-            public string LocationName { get; set; } = string.Empty;
+            public string? LocationName { get; set; } = string.Empty;
             public float? MaterialCost { get; set; }
             public float? OperationCost { get; set; }
             public float? TotalCost { get; set; }
-            public DateTime DoneDate { get; set; }
+            public DateTime? BaslangıcTarih { get; set; }
+            public DateTime? SonTarih { get; set; }
+        
         }
+
         public class ManufacturingOrderResponse
         {
             public int id { get; set; }
