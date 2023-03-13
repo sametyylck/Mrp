@@ -14,7 +14,6 @@ namespace DAL.DTO
             public int id { get; set; }
             public float Rate { get; set; }
             public string TaxName { get; set; } = string.Empty;
-            public int? CompanyId { get; set; }
         }
         public class TaxInsert
         {

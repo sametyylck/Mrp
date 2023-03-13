@@ -117,6 +117,9 @@ namespace DAL.Repositories
             prm.Add("@CompanyId", CompanyId);
             prm.Add("@UserId", UserId);
             prm.Add("@id", T.id);
+
+            var sql = @"Update Role set  RoleName=@RoleName where @CompanyId=@CompanyId and id=@id";
+            await _db.ExecuteAsync(sql, prm);
         }
         public async Task RoleDelete(int id, int CompanyId, int UserId)
         {
@@ -125,7 +128,7 @@ namespace DAL.Repositories
             prm.Add("@UserId", UserId);
             prm.Add("@id", id);
 
-            await _db.ExecuteAsync($"Delete from Role where id=@id and CompanyId=@CompanyId)", prm);
+            await _db.ExecuteAsync($"Delete from Role where id=@id and CompanyId=@CompanyId", prm);
         }
         public async Task<IEnumerable<RoleDetay>> RoleDetail(int id, int CompanyId, int UserId)
         {

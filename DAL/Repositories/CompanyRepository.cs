@@ -49,12 +49,12 @@ namespace DAL.Repositories
             prm.Add("@RoleName", "Admin");
             prm.Add("@CompanyId", CompanyId);
             prm.Add("@Varsayilan", true);
-
+            prm.Add("@PermisionId", 1);
 
             int id = await _db.QuerySingleAsync<int>($"Insert into Role (Varsayilan,RoleName,CompanyId) OUTPUT INSERTED.[id] values (@Varsayilan,@RoleName,@CompanyId)", prm);
             prm.Add("@RoleId",id);
 
-            await _db.QuerySingleAsync<int>($"Insert into Permision (PermisionName,RoleId,CompanyId) OUTPUT INSERTED.[id] values (@RoleName,@RoleId,@CompanyId)", prm);
+            await _db.QuerySingleAsync<int>($"Insert into Permision (PermisionId,RoleId,CompanyId) OUTPUT INSERTED.[id] values (@PermisionId,@RoleId,@CompanyId)", prm);
             return id;
         }
 

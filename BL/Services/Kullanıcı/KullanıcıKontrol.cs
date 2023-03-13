@@ -147,7 +147,7 @@ namespace BL.Services.Kullanıcı
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@CompanyId", CompanyId);
             prm.Add("@RoleId", id);
-            var adminid = await _db.QueryFirstAsync<int>(@$"select id from Role where Company=@Company and Varsayilan=1", prm);
+            var adminid = await _db.QueryFirstAsync<int>(@$"select id from Role where CompanyId=@CompanyId and Varsayilan=1", prm);
             if (adminid==id)
             {
                 hatalar.Add("Admin rolü silinemez");

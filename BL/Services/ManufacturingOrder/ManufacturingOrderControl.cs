@@ -276,8 +276,6 @@ namespace BL.Services.ManufacturingOrder
             }
             else
             {
-                string hata = "";
-                hatalar.Add(hata);
                 return hatalar;
             }
         }

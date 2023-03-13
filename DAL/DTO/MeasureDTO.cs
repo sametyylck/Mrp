@@ -10,7 +10,6 @@ namespace DAL.DTO
     {
         public int id { get; set; }
         public string Name { get; set; } = null!;
-        public int? CompanyId { get; set; }
     }
     public class MeasureUpdate
     {

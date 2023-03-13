@@ -19,6 +19,7 @@ namespace DAL.DTO
             [Required]
             public int ItemId { get; set; }
             [Required]
+            public int? ParentId { get; set; }
             public float PlannedQuantity { get; set; }
             [RegularExpression(RegularExpression, ErrorMessage = "Özel karekter giremezsiniz")]
             [StringLength(50)]

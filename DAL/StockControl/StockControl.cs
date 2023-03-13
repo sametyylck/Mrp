@@ -36,7 +36,7 @@ namespace DAL.StockControl
             }
            
             var adetbul =  _db.QueryFirst<int>($@"select
-            (Select StockCount from LocationStock where ItemId = @ItemId and CompanyId = @CompanyId and LocationId = @LocationId and IsActive = 1)
+            (Select StockCount from LocationStock where ItemId = @ItemId and CompanyId = @CompanyId and LocationId = @LocationId)
             -
             (select ISNULL(SUM(RezerveCount),0) from Rezerve where ItemId = @ItemId and CompanyId = @CompanyId and LocationId = @LocationId and Status = 1)",prm);
             return adetbul;

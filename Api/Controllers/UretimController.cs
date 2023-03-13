@@ -39,9 +39,10 @@ namespace Api.Controllers
         private readonly IValidator<UretimOperationsUpdate> _ManuItemOperUpdate;
         private readonly IValidator<PurchaseBuy> _ManuItemPurchaseOrder;
         private readonly IPermissionControl _izinkontrol;
+        private readonly IUretimList _uretimlist;
 
 
-        public UretimController(IUretimRepository uretim, IUserService user, IDbConnection db, IOrdersRepository order, IManufacturingOrderControl control, IValidator<UretimDTO> manufacturinginsert, IValidator<UretimUpdate> manufacturinguptade, IValidator<UretimTamamlama> manufacturingDoneStock, IValidator<UretimDeleteItems> manufacturingItemsDelete, IPermissionControl izinkontrol)
+        public UretimController(IUretimRepository uretim, IUserService user, IDbConnection db, IOrdersRepository order, IManufacturingOrderControl control, IValidator<UretimDTO> manufacturinginsert, IValidator<UretimUpdate> manufacturinguptade, IValidator<UretimTamamlama> manufacturingDoneStock, IValidator<UretimDeleteItems> manufacturingItemsDelete, IPermissionControl izinkontrol, IValidator<UretimIngredientsUpdate> manuItemsIngUpdate, IValidator<ManufacturingTaskDone> manufacturingtaskdone, IValidator<UretimIngredientsInsert> manuItemIngInsert, IValidator<UretimOperationsInsert> manuItemOperInsert, IValidator<UretimOperationsUpdate> manuItemOperUpdate, IValidator<PurchaseBuy> manuItemPurchaseOrder, IUretimList uretimlist)
         {
             _uretim = uretim;
             _user = user;
@@ -53,6 +54,13 @@ namespace Api.Controllers
             _ManufacturingDoneStock = manufacturingDoneStock;
             _ManufacturingItemsDelete = manufacturingItemsDelete;
             _izinkontrol = izinkontrol;
+            _ManuItemsIngUpdate = manuItemsIngUpdate;
+            _Manufacturingtaskdone = manufacturingtaskdone;
+            _ManuItemIngInsert = manuItemIngInsert;
+            _ManuItemOperInsert = manuItemOperInsert;
+            _ManuItemOperUpdate = manuItemOperUpdate;
+            _ManuItemPurchaseOrder = manuItemPurchaseOrder;
+            _uretimlist = uretimlist;
         }
 
         [Route("Insert")]
@@ -82,7 +90,8 @@ namespace Api.Controllers
                 }
                 int id = await _uretim.Insert(T, CompanyId);
                 await _uretim.InsertOrderItems(id, T.ItemId, T.LocationId, T.PlannedQuantity, CompanyId, 0, 0);
-                return Ok();
+                var list = await _uretimlist.Detail(CompanyId, id);
+                return Ok(list);
             }
             else
             {
@@ -421,6 +430,8 @@ namespace Api.Controllers
                     insert.ExpectedDate = T.ExpectedDate;
                     insert.Tip = T.Tip;
                     insert.ItemId = T.ItemId;
+                    insert.SalesOrderItemId = 0;
+                    insert.SalesOrderId = 0;
 
                     insert.Info = "";
 
@@ -449,6 +460,30 @@ namespace Api.Controllers
 
                 return Ok(ex.Message);
             }
+        }
+
+        [Route("Uret")]
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> Uret(UretimSemiProduct T)
+        {
+            List<int> user = _user.CompanyId();
+            int CompanyId = user[0];
+            int UserId = user[1];
+
+            UretimDTO insert = new();
+            insert.PlannedQuantity = T.PlannedQuantity;
+            insert.Private = true;
+            insert.CreatedDate=DateTime.Now;
+            insert.ItemId = T.ItemId;
+            insert.ParentId = T.ParentId;
+            insert.Name = T.Name;
+            insert.ExpectedDate = T.ExpectedDate;
+            insert.LocationId = T.LocationId;
+            int id = await _uretim.Insert(insert,CompanyId);
+            await _uretim.InsertOrderItems(id, insert.ItemId, insert.LocationId, insert.PlannedQuantity, CompanyId, 0, 0);
+            var list = await _uretimlist.Detail(CompanyId, id);
+            return Ok(list);
         }
 
     }

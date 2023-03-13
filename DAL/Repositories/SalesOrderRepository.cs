@@ -245,6 +245,8 @@ namespace DAL.Repositories
        (Select ISNULL(id,0) from LocationStock where StockId =  (Select ISNULL(id,0) from Stock where ItemId = @ItemId and CompanyId = @CompanyId) and LocationId = @location and CompanyId = @CompanyId)   as    LocationStockId";
                     var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, param);
                     var RezerveCount =await _control.Count(item.ItemId,CompanyId,T.LocationId);
+                    RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
+
                     var locationStockId = sorgu.First().LocationStockId;
                     var tip = sorgu.First().Tip;
                     param.Add("@LocationStockId", locationStockId);
@@ -553,6 +555,8 @@ namespace DAL.Repositories
                      (select ISNULL(SUM(ManufacturingOrder.PlannedQuantity),0) as Quantity from ManufacturingOrder where  ManufacturingOrder.ItemId=@ItemId and ManufacturingOrder.CompanyId=@CompanyId and   ManufacturingOrder.CustomerId=@ContactId )as ManufacturingQuantity";
                     var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, param);
                     var RezerveCount =  await _control.Count(item.ItemId, CompanyId, T.LocationId);
+                    RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
+
                     var locationStockId = sorgu.First().LocationStockId;
                     var tip = sorgu.First().Tip;
                     param.Add("@LocationStockId", locationStockId);

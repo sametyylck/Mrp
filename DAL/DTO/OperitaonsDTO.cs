@@ -11,7 +11,6 @@ namespace DAL.DTO
         public int id { get; set; }
         public string Name { get; set; } = string.Empty;
         public bool IsActive { get; set; }
-        public int? CompanyId { get; set; }
     }
     public class OperationsInsert
     {

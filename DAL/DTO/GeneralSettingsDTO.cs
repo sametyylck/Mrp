@@ -29,7 +29,6 @@ namespace DAL.DTO
        
             public int? DefaultManufacturingLocationId { get; set; }
 
-            public int? CompanyId { get; set; }
         }
         public class DefaultSettingList
         {
@@ -50,7 +49,6 @@ namespace DAL.DTO
             public string PurchaseLocationName { get; set; } = string.Empty;
             public int ManufacturingLocationId { get; set; }
             public string ManufacturingLocationName { get; set; } = string.Empty;
-            public int CompanyId { get; set; }
         }
     }
 }

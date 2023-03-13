@@ -14,8 +14,6 @@ namespace DAL.DTO
         public string Name { get; set; } = string.Empty;
 
         public double? DefaultCostHour { get; set; }
-
-        public int? CompanyId { get; set; }
     }
     public class ResourcesInsert
     {

@@ -147,18 +147,17 @@ namespace BL.Services.Orders
             {
                 hatalar.Add("TaxId bulunamadi");
             }
-            if (list.First().Tip!= "Material" || list.First().Tip != "SemiProduct")
+            if (list.First().Tip== "Material" || list.First().Tip == "SemiProduct")
             {
-                hatalar.Add("ItemId,tip hatası");
                 return hatalar;
-
 
             }
             else
             {
+                hatalar.Add("ItemId,tip hatası");
                 return hatalar;
             }
-
+        
 
         }
 

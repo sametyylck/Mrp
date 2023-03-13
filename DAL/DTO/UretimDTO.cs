@@ -10,6 +10,7 @@ namespace DAL.DTO
 {
     public class UretimDTO
     {
+        public int? ParentId { get; set; }
         public string? Tip { get; set; }
         public string? Name { get; set; }
         public int? ItemId { get; set; }
@@ -142,7 +143,26 @@ namespace DAL.DTO
         public DateTime? ExpectedDate { get; set; }
         public int? LocationId { get; set; }
     }
+    public class UretimSemiProduct
+    {
+        public int ParentId { get; set; }
+        public string? Name { get; set; }
+        public int? ItemId { get; set; }
+        public DateTime? ExpectedDate { get; set; }
+        public float? PlannedQuantity { get; set; }
+        public int LocationId { get; set; }
+    }
 
+    public class UretimMake
+    {
+        public int? id { get; set; }
+        public int? OrderId { get; set; }
+        public int? ItemId { get; set; }
+        public string Note { get; set; } = string.Empty;
+        public float? PlannedQuantity { get; set; }
+        public int? LocationId { get; set; }
+
+    }
 
 
 

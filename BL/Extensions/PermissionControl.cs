@@ -38,7 +38,6 @@ namespace BL.Extensions
         AyarlarHepsi,
         SatinAlmaHepsi,
         StokTransferHepsi,
-        StokDuzenlemeHepsi,
         AyarlarGenel,
         AyarlarOlcü,
         AyarlarVergi,
@@ -76,7 +75,9 @@ namespace BL.Extensions
         TeklifHepsi,
         TeklifEkleyebilirVeDuzenleyebilir,
         TeklifSilebilir,
-        TeklifGoruntule
-   
+        TeklifGoruntule,
+        StokDuzenlemeHepsi,
+
+
     };
 }

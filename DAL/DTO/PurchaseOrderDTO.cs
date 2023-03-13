@@ -230,7 +230,6 @@ namespace DAL.DTO
         {
             public int id { get; set; }
             public string Tip { get; set; } = string.Empty;
-            public int? Quotes { get; set; }
         }
   
 
@@ -252,7 +251,6 @@ namespace DAL.DTO
             public int id { get; set; }
             public int ItemId { get; set; }
             public int OrdersId { get; set; }
-            public int? Quotes { get; set; }
         }
         public class PurchaseBuy
         {

@@ -36,7 +36,7 @@ namespace Api.Controllers
         private readonly IPermissionControl _izinkontrol;
 
 
-        public SatısController(IUserService user, ISatısRepository satıs, IDbConnection db, ISalesOrderControl salescontrol, ISatısListRepository list, IValidator<SatısDTO> salesOrderInsert, IValidator<SatısInsertItem> salesOrderInsertItem = null, IValidator<SalesOrderUpdate> salesOrderUpdate = null, IValidator<SalesOrderMake> salesOrderMake = null, IValidator<SatısUpdateItems> salesOrderUpdateItems = null, IPermissionControl izinkontrol = null, IValidator<SatısDeleteItems> salesOrderDeleteItems = null)
+        public SatısController(IUserService user, ISatısRepository satıs, IDbConnection db, ISalesOrderControl salescontrol, ISatısListRepository list, IValidator<SatısDTO> salesOrderInsert, IValidator<SatısInsertItem> salesOrderInsertItem = null, IValidator<SalesOrderUpdate> salesOrderUpdate = null, IValidator<SalesOrderMake> salesOrderMake = null, IValidator<SatısUpdateItems> salesOrderUpdateItems = null, IPermissionControl izinkontrol = null, IValidator<SatısDeleteItems> salesOrderDeleteItems = null, IValidator<SalesDone> salesOrderDone = null)
         {
             _user = user;
             _satıs = satıs;
@@ -50,6 +50,7 @@ namespace Api.Controllers
             _SalesOrderUpdateItems = salesOrderUpdateItems;
             _izinkontrol = izinkontrol;
             _SalesOrderDeleteItems = salesOrderDeleteItems;
+            _SalesOrderDone = salesOrderDone;
         }
 
         [Route("Insert")]

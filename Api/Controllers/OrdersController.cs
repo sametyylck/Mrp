@@ -102,17 +102,8 @@ namespace Api.Controllers
                     DynamicParameters param2 = new DynamicParameters();
                     param2.Add("@CompanyId", CompanyId);
                     param2.Add("@id", id);
-                    var list = await _db.QueryAsync<PurchaseOrderList>($@"Select Orders.id,Orders.Tip,Orders.ContactId,OrdersItem.ItemId,Items.Name,Contacts.DisplayName as SupplierName,Orders.SalesOrderId,Orders.SalesOrderItemId,
-                    Orders.ManufacturingOrderId,Orders.ManufacturingOrderItemId,Orders.ExpectedDate,OrdersItem.TaxId,Tax.Rate as TaxValue,OrdersItem.MeasureId,Measure.Name as                  MeasureName,Orders.CreateDate, Orders.OrderName, 
-                    Orders.LocationId,Orders.Info, Orders.TotalAll,Orders.CompanyId From Orders 
-                    left join Contacts on Contacts.id = Orders.ContactId 
-                    left join OrdersItem on OrdersItem.OrdersId = Orders.id
-                    left join Items on Items.id = OrdersItem.ItemId 
-                    left join Tax on Tax.id = OrdersItem.TaxId 
-                    left join Measure on Measure.id = OrdersItem.MeasureId
-                    where Orders.CompanyId = @CompanyId and Orders.id = @id and Orders.Tip = 'PurchaseOrder'  ", param2);
-
-                    return Ok(list.First());
+                    var list=await _order.Details(id,CompanyId);
+                    return Ok(list);
                 }
                 else
                 {
@@ -208,8 +199,7 @@ namespace Api.Controllers
                     param1.Add("@ContactId", T.ContactId);
                     param1.Add("@LocationId", T.LocationId);
                     await _order.Update(T, CompanyId);
-                    var list = await _db.QueryAsync<PurchaseDetails>($"Select Orders.id,Orders.Tip,Orders.ContactId,Contacts.DisplayName as SupplierName,Orders.ExpectedDate,Orders.CreateDate, Orders.OrderName,Orders.LocationId, Locations.LocationName, Orders.Info, Orders.TotalAll as OrdersTotalAll, Orders.CompanyId From Orders left join Contacts on Contacts.id = Orders.ContactId left join Locations on Locations.id = Orders.LocationId where Orders.CompanyId = @CompanyId and Orders.id = @id  ", param1);
-
+                    var list = await _order.Details(T.id, CompanyId);
                     return Ok(list);
                 }
                 else

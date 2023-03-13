@@ -26,8 +26,6 @@ namespace DAL.DTO
         public string LastName { get; set; } = string.Empty;
         public string CompanyName { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
-        public bool IsActive { get; set; }
-        public int? CompanyId { get; set; }
     }
     public class LocationsInsert
     {

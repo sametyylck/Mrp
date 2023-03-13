@@ -15,14 +15,12 @@ namespace DAL.DTO
 
             public string Name { get; set; } = string.Empty;
 
-            public int? CompanyId { get; set; }
         }
 
         public class CategoryInsert
         {  
             public string Name { get; set; } = string.Empty;
 
-            public int? CompanyId { get; set; }
         }
         public class CategoryUpdate
         {
@@ -30,7 +28,6 @@ namespace DAL.DTO
 
             public string Name { get; set; } = string.Empty;
 
-            public int? CompanyId { get; set; }
 
         }
         public class CategoryDelete

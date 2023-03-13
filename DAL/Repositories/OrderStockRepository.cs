@@ -134,6 +134,7 @@ namespace DAL.Repositories
                     prm.Add("@CompanyId", CompanyId);
                     prm.Add("@OrdersItemid", item.id);
                     float? StockLocationRezerve = await _stockcontrol.Count(item.ItemId, CompanyId, locaitonId);
+                    StockLocationRezerve = StockLocationRezerve >= 0 ? StockLocationRezerve : 0;
 
 
                     string sqlc = $"select * from Orders where id=@id and CompanyId=@CompanyId";
@@ -155,7 +156,7 @@ namespace DAL.Repositories
                     float? adet = item.Quantity;
 
 
-                    if (salesorderId != 0)
+                    if (salesorderId!=0)
                     {
 
 
@@ -389,7 +390,7 @@ namespace DAL.Repositories
                         string sqlorder = $"select ManufacturingOrder.id as ManufacturingOrderId,ManufacturingOrderItems.id as ManufacturingOrderItemId,ManufacturingOrder.LocationId ,ManufacturingOrder.ExpectedDate from ManufacturingOrder left join Orders on Orders.ManufacturingOrderId = ManufacturingOrder.id and Orders.DeliveryId = 1 LEFT join ManufacturingOrderItems on ManufacturingOrderItems.OrderId = ManufacturingOrder.id left join OrdersItem on OrdersItem.OrdersId = Orders.id where ManufacturingOrder.CompanyId = @CompanyId and ManufacturingOrderItems.Availability = 0 and ManufacturingOrderItems.ItemId = @ItemId and  ManufacturingOrder.IsActive=1 and ManufacturingOrder.LocationId=@locationId Group by ManufacturingOrder.id,ManufacturingOrder.ExpectedDate,ManufacturingOrder.LocationId ,Orders.DeliveryId,ManufacturingOrderItems.id Order By ExpectedDate";
                         var ItemList = await _db.QueryAsync<PurchaseOrder>(sqlorder, prm);
                         string sqlf = $"select (Select AllStockQuantity from Items where Items.id = @ItemId  and Items.CompanyId = @CompanyId and Stock.Tip = 'Material')as Quantity,(Select StockCount from LocationStock where ItemId = @ItemId   and LocationId = @locationId and CompanyId = @CompanyId)as LocationsStockCount,(Select id from LocationStock where StockId = @@stockıd and LocationId = @locationId and CompanyId = @CompanyId) as LocationStockId";
-                        var sorgu1 = _db.QueryAsync<StockDTO.Stock>(sqlf, prm);//
+                        var sorgu1 = await _db.QueryAsync<StockDTO.Stock>(sqlf, prm);//
 
                         foreach (var list in ItemList)
                         {

@@ -165,7 +165,7 @@ namespace Api.Controllers
             int UserId = user[1];
             var list= await _kullanıcı.RoleList(kelime, CompanyId, UserId); ;
 
-            return Ok();
+            return Ok(list);
         }
         [Route("RoleDetay")]
         [HttpPost, Authorize]
