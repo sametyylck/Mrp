@@ -12,14 +12,14 @@ namespace Validation.Operations
     {
         public OperationsInsertValidations()
         {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("name bos gecilemez").NotNull().WithMessage("name zorunlu");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("name bos gecilemez").NotNull().WithMessage("name zorunlu");
         }
     }
     public class OperationsUpdateValidations : AbstractValidator<OperationsUpdate>
     {
         public OperationsUpdateValidations()
         {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("name bos gecilemez").NotNull().WithMessage("name zorunlu");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("name bos gecilemez").NotNull().WithMessage("name zorunlu");
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilemez").NotNull().WithMessage("id zorunlu");
         }
     }

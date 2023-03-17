@@ -22,17 +22,16 @@ namespace DAL.StockControl
             _locationstock = locationstock;
         }
 
-        public async  Task<int> Count(int? ItemId, int CompanyId, int? LocationId)
+        public async  Task<int> Count(int? ItemId,int? LocationId)
         {
             var prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@ItemId", ItemId);
             prm.Add("@LocationId", LocationId);
             var locationstock = _db.Query<LocaVarmı>($@"select (select id from LocationStock where ItemId=@ItemId and LocationId=@LocationId)as LocationStockId,(Select Tip from Items where id=@ItemId)as Tip", prm);
             string Tip = locationstock.First().Tip;
-            if (locationstock.First().LocationStockId == 0)
+            if (locationstock.First().DepoId == 0)
             {
-             int id= await _locationstock.Insert(Tip, ItemId, CompanyId, LocationId);
+             int id= await _locationstock.Insert(Tip, ItemId, LocationId);
             }
            
             var adetbul =  _db.QueryFirst<int>($@"select

@@ -9,11 +9,11 @@ namespace DAL.Contracts
 {
     public interface ILocationsRepository
     {
-        Task<int> Register(int id);
-        Task<int> RegisterLegalAddress(int id);
-        Task<IEnumerable<LocationsDTO>> List(int CompanyId);
-        Task<int> Insert(LocationsInsert T, int CompanyId);
-        Task Update(LocationsDTO T, int CompanyId);
-        Task Delete(IdControl T, int CompanyId);
+        Task<int> Register(int KullanıcıId);
+        Task<int> RegisterLegalAddress(int KullanıcıId);
+        Task<IEnumerable<LocationsDTO>> List();
+        Task<int> Insert(LocationsInsert T, int KullanıcıId);
+        Task Update(LocationsDTO T);
+        Task Delete(IdControl T);
     }
 }

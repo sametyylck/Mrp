@@ -9,10 +9,8 @@ namespace DAL.Contracts
 {
     public interface IOrderStockRepository
     {
-        Task StockUpdate(PurchaseOrderId T, int CompanyId,int user);
-         Task<IEnumerable<PurchaseOrderLogsList>> List(PurchaseOrderLogsList T, int CompanyId, int KAYITSAYISI, int SAYFA);
-        Task<IEnumerable<PurchaseOrderLogsList>> DoneList(PurchaseOrderLogsList T, int CompanyId, int KAYITSAYISI, int SAYFA);
-        Task<int> DoneCount(PurchaseOrderLogsList T, int CompanyId);
-        Task<int> Count(PurchaseOrderLogsList T,int CompanyId);
+        Task StockUpdate(PurchaseOrderId T,int user);
+         Task<IEnumerable<PurchaseOrderLogsList>> List(PurchaseOrderLogsList T,  int KAYITSAYISI, int SAYFA);
+        Task<IEnumerable<PurchaseOrderLogsList>> DoneList(PurchaseOrderLogsList T,  int KAYITSAYISI, int SAYFA);
     }
 }

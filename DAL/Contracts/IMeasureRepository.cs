@@ -10,10 +10,10 @@ namespace DAL.Contracts
 {
     public interface IMeasureRepository
     {
-        Task Register(int id);
-        Task<IEnumerable<MeasureDTO>> List(int CompanyId);
-        Task<int> Insert(MeasureInsert T, int CompanyId);
-        Task Update(MeasureUpdate T, int CompanyId);
-        Task Delete(IdControl T, int CompanyId);
+        Task Register(int UserId);
+        Task<IEnumerable<MeasureDTO>> List();
+        Task<int> Insert(MeasureInsert T, int UserId);
+        Task Update(MeasureUpdate T);
+        Task Delete(IdControl T);
     }
 }

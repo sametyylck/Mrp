@@ -25,35 +25,34 @@ namespace DAL.Repositories
             prm.Add("@id", T.id);
             prm.Add("@IsActive", false);
             prm.Add("@CompanyId", CompanyId);
-           await _db.ExecuteAsync($"Update  Resources Set IsActive=@IsActive where id = @id and CompanyId = @CompanyId", prm);
+           await _db.ExecuteAsync($"Update  Kaynaklar Set Aktif=@IsActive where id = @id", prm);
         }
 
-        public async Task<int> Insert(ResourcesInsert T, int CompanyId)
+        public async Task<int> Insert(ResourcesInsert T, int KullaniciId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@Name", T.Name);
-            prm.Add("@DefaultCostHour", T.DefaultCostHour);
-            prm.Add("@CompanyId", CompanyId);
-            prm.Add("@IsActive", true);
-            return await _db.QuerySingleAsync<int>($"Insert into Resources (Name, DefaultCostHour,IsActive,CompanyId) OUTPUT INSERTED.[id] values (@Name, @DefaultCostHour,@IsActive, @CompanyId)", prm);
+            prm.Add("@Name", T.Isim);
+            prm.Add("@DefaultCostHour", T.VarsayilanSaatlikUcret);
+            prm.Add("@KullaniciId", KullaniciId);
+            prm.Add("@Aktif", true);
+            return await _db.QuerySingleAsync<int>($"Insert into Kaynaklar (Isim, VarsayilanSaatlikUcret,Aktif,KullaniciId) OUTPUT INSERTED.[id] values (@Name, @DefaultCostHour,@Aktif, @KullaniciId)", prm);
         }
 
         public async Task<IEnumerable<ResourcesDTO>> List(int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@CompanyId", CompanyId);
-            var list =await _db.QueryAsync<ResourcesDTO>($"Select * From Resources where CompanyId = @CompanyId and IsActive=1", prm);
+            var list =await _db.QueryAsync<ResourcesDTO>($"Select id,Isim ,VarsayilanSaatlikUcret  From Kaynaklar where Aktif=1", prm);
             return list.ToList();
         }
 
-        public async Task Update(ResourcesUpdate T, int CompanyId)
+        public async Task Update(ResourcesUpdate T)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@Name", T.Name);
-            prm.Add("@DefaultCostHour", T.DefaultCostHour);
-            prm.Add("@CompanyId", CompanyId);
-           await _db.ExecuteAsync($"Update Resources SET Name = @Name , DefaultCostHour = @DefaultCostHour where id = @id  and CompanyId = @CompanyId", prm);
+            prm.Add("@Name", T.Isim);
+            prm.Add("@DefaultCostHour", T.VarsayilanSaatlikUcret);
+           await _db.ExecuteAsync($"Update Kaynaklar SET Isim = @Name , VarsayilanSaatlikUcret = @DefaultCostHour where id = @id", prm);
         }
     }
 }

@@ -8,6 +8,6 @@ namespace BL.Extensions
 {
     public interface IPermissionControl
     {
-        Task<bool> Kontrol(Permison permison, Permison permisons, int CompanyId, int UserId);
+        Task<bool> Kontrol(Permison permison, Permison permisons, int UserId);
     }
 }

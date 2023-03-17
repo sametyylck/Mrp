@@ -11,14 +11,12 @@ namespace DAL.Contracts
 {
     public interface IContactsRepository
     {
-        Task<IEnumerable<ContactsFilters>> List(ContactsFilters T, int CompanyId, int KAYITSAYISI, int SAYFA);
-        Task<IEnumerable<ContactsAll>> Details(int id, int CompanyId);
-        Task<int> Insert(ContactsInsert T, int CompanyId);
-        Task<int> InsertAddress(int CompanyId, string Tip);
-        Task UpdateAddress(ContactsUpdateAddress T, int CompanyId, int id);
-        Task Update(ContactsList T, int CompanyId,int id);
-
-        Task Delete(ContactsDelete T, int CompanyId);
-        Task<int> Count(ContactsFilters T, int CompanyId);
+        Task<IEnumerable<ContactsFilters>> List(ContactsFilters T,int KAYITSAYISI, int SAYFA);
+        Task<IEnumerable<ContactsAll>> Details(int id);
+        Task<int> Insert(ContactsInsert T, int KullaniciId);
+        Task<int> InsertAddress(string Tip);
+        Task UpdateAddress(ContactsUpdateAddress T, int id);
+        Task Update(CariUpdate T);
+        Task Delete(ContactsDelete T);
     }
 }

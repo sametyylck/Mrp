@@ -9,11 +9,11 @@ namespace BL.Services.StockAdjusment
 {
     public interface IStockAdjusmentControl
     {
-        Task<List<string>> Insert(StockAdjusmentInsert T, int CompanyId);
-        Task<List<string>> InsertItem(StockAdjusmentInsertItem T, int CompanyId);
-        Task<List<string>> Update(StockAdjusmentUpdate T, int CompanyId);
-        Task<List<string>> UpdateStockAdjusment(StockAdjusmentUpdateItems T, int CompanyId);
-        Task<List<string>> DeleteItems(StockAdjusmentItemDelete T, int CompanyId);
+        Task<List<string>> Insert(StockAdjusmentInsert T);
+        Task<List<string>> InsertItem(StockAdjusmentInsertItem T);
+        Task<List<string>> Update(StockAdjusmentUpdate T);
+        Task<List<string>> UpdateStockAdjusment(StockAdjusmentUpdateItems T);
+        Task<List<string>> DeleteItems(StockAdjusmentItemDelete T);
 
 
     }

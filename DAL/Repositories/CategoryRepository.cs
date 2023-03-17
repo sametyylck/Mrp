@@ -19,41 +19,38 @@ namespace DAL.Repositories
             _db = db;
         }
 
-        public async Task Delete(IdControl T, int CompanyId)
+        public async Task Delete(IdControl T)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@CompanyId", CompanyId);
             //Silinen Categorye ait ürünlerin CategoryId Kolonunu null olarak gücelliyoruz
-            _db.Execute($"Update Items SET CategoryId = null where CategoryId = @id and CompanyId = @CompanyId", prm);
+            _db.Execute($"Update Urunler SET KategoriId = null where KategoriId = @id", prm);
             //Normal Category Kaydını Siliyoruz
-            await _db.ExecuteAsync($"Delete From Categories where id = @id and CompanyId = @CompanyId", prm);
+            await _db.ExecuteAsync($"Delete From Kategoriler where id = @id", prm);
         }
 
-        public async Task<int> Insert(CategoryDTO.CategoryInsert T, int CompanyId)
+        public async Task<int> Insert(CategoryDTO.CategoryInsert T, int KullaniciId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@Name", T.Name);
-            prm.Add("@CompanyId", CompanyId);
-            int id = await _db.QuerySingleAsync<int>($"Insert into Categories (Name, CompanyId) OUTPUT INSERTED.[id] values (@Name, @CompanyId)", prm);
+            prm.Add("@Name", T.Isim);
+            prm.Add("@KullaniciId", KullaniciId);
+            int id = await _db.QuerySingleAsync<int>($"Insert into Kategoriler (Isim, KullaniciId) OUTPUT INSERTED.[id] values (@Name, @KullaniciId)", prm);
             return id;
         }
 
-        public async Task<IEnumerable<CategoryDTO.CategoryClass>> List(int CompanyId)
+        public async Task<IEnumerable<CategoryDTO.CategoryClass>> List()
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
-            var list = await _db.QueryAsync<CategoryDTO.CategoryClass>($"Select * From Categories where CompanyId = @CompanyId", prm);
+            var list = await _db.QueryAsync<CategoryDTO.CategoryClass>($"Select id,Isim From Kategoriler", prm);
             return list.ToList();
         }
 
-        public async Task Update(CategoryDTO.CategoryUpdate T, int CompanyId)
+        public async Task Update(CategoryDTO.CategoryUpdate T)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@Name", T.Name);
-            prm.Add("@CompanyId", CompanyId);
-            await _db.ExecuteAsync($"Update Categories SET Name = @Name where id = @id and CompanyId = @CompanyId", prm);
+            prm.Add("@Name", T.Isim);
+            await _db.ExecuteAsync($"Update Kategoriler SET Isim = @Name where id = @id", prm);
         }
     }
 }

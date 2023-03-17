@@ -26,25 +26,25 @@ namespace DAL.Repositories
             prm.Add("@id", T.id);
             prm.Add("@CompanyId", CompanyId);
             //Burada OperationBom eşleşme tablosundaki operasyon id si silinen operasyon olan kayıtları soft delete ediyoruz
-           await _db.ExecuteAsync($"Update ProductOperationsBom SET IsActive = 0 where OperationId = @id and CompanyId = @CompanyId", prm);
+           await _db.ExecuteAsync($"Update UrunKaynakRecetesi SET Aktif = 0 where OperasyonId = @id", prm);
             //Burada Normal Operasyon Kaydını Siliyoruz
-           await _db.ExecuteAsync($"Update Operations SET IsActive = 0 where id = @id and CompanyId = @CompanyId", prm);
+           await _db.ExecuteAsync($"Update Operasyonlar SET Aktif = 0 where id = @id", prm);
         }
 
-        public async Task<int> Insert(OperationsInsert T, int CompanyId)
+        public async Task<int> Insert(OperationsInsert T, int KullaniciId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@Name", T.Name);
+            prm.Add("@Name", T.Isim);
             prm.Add("@IsActive", true);
-            prm.Add("@CompanyId", CompanyId);
-            return await _db.QuerySingleAsync<int>($"Insert into Operations (Name,IsActive,CompanyId) OUTPUT INSERTED.[id] values (@Name,@IsActive,@CompanyId)", prm);
+            prm.Add("@KullaniciId", KullaniciId);
+            return await _db.QuerySingleAsync<int>($"Insert into Operasyonlar (Isim,Aktif,KullaniciId) OUTPUT INSERTED.[id] values (@Name,@IsActive,@KullaniciId)", prm);
         }
 
         public async Task<IEnumerable<OperitaonsDTO>> List(int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@CompanyId", CompanyId);
-            var list =await _db.QueryAsync<OperitaonsDTO>($"Select * From Operations where CompanyId = @CompanyId and IsActive = 1", prm);
+            var list =await _db.QueryAsync<OperitaonsDTO>($"Select id,Isim From Operasyonlar where  Aktif = 1", prm);
             return list.ToList();
         }
 
@@ -52,9 +52,9 @@ namespace DAL.Repositories
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@Name", T.Name);
+            prm.Add("@Name", T.Isim);
             prm.Add("@CompanyId", CompanyId);
-           await _db.ExecuteAsync($"Update Operations SET Name = @Name where id = @id  and CompanyId = @CompanyId", prm);
+           await _db.ExecuteAsync($"Update Operasyonlar SET Isim = @Name where id = @id", prm);
         }
     }
 }

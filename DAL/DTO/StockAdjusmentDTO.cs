@@ -141,25 +141,24 @@ namespace DAL.DTO
         {
             public int id { get; set; }
             public int RezerveId { get; set; }
-            public int Availability { get; set; }
-            public int StockId { get; set; }
+            public int MalzemeDurum { get; set; }
             public float LocationStock { get; set; }
-            public float LocationStockId { get; set; }
+            public float DepoStokId { get; set; }
             public string Tip { get; set; } = string.Empty;
-            public float DefaultPrice { get; set; }
+            public float VarsayilanFiyat { get; set; }
             public int? RezerveStockCount { get; set; }
-            public float? RezerveCount { get; set; }
+            public float? RezerveDeger { get; set; }
             public float OrdersItemCount { get; set; }
-            public int ItemId { get; set; }
-            public int LocationId { get; set; }
-            public float Quantity { get; set; }
-            public int ContactId { get; set; }
-            public int StockQuantity { get; set; }
-            public float PlannedQuantity { get; set; }
-            public int TaxId { get; set; }
-            public int Rate { get; set; }
-            public int Status { get; set; }
-            public float Missing { get; set; }
+            public int StokId { get; set; }
+            public int DepoId { get; set; }
+            public float Miktari { get; set; }
+            public int CariKod { get; set; }
+            public int StokMiktar { get; set; }
+            public float PlanlananMiktar { get; set; }
+            public int VergiId { get; set; }
+            public int VergiDeger { get; set; }
+            public int Durum { get; set; }
+            public float Kayıp { get; set; }
 
 
 

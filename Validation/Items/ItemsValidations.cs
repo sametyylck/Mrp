@@ -32,8 +32,8 @@ namespace Validation.Items
         public ItemsInsertValidations()
         {
             RuleFor(x => x.Tip).NotEmpty().WithMessage("tip bos gecilmez").NotNull().WithMessage("tip alanı zorunlu");
-            RuleFor(x => x.DefaultPrice).NotEmpty().WithMessage("DefaultPrice bos gecilmez").NotNull().WithMessage("DefaultPrice alanı zorunlu");
-            RuleFor(x => x.MeasureId).NotEmpty().WithMessage("MeasureId bos gecilmez").NotNull().WithMessage("MeasureId alanı zorunlu");
+            RuleFor(x => x.VarsayilanFiyat).NotEmpty().WithMessage("DefaultPrice bos gecilmez").NotNull().WithMessage("DefaultPrice alanı zorunlu");
+            RuleFor(x => x.OlcuId).NotEmpty().WithMessage("MeasureId bos gecilmez").NotNull().WithMessage("MeasureId alanı zorunlu");
 
 
 

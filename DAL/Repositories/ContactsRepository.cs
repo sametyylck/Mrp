@@ -14,150 +14,138 @@ using static DAL.DTO.ContactDTO.ContactsList;
 
 namespace DAL.Repositories
 {
-    public class ContactsRepository:IContactsRepository
+    public class ContactsRepository : IContactsRepository
     {
-      
+
         private readonly IDbConnection _dbConnection;
 
         public ContactsRepository(IDbConnection dbConnection)
         {
             _dbConnection = dbConnection;
-       
+
         }
 
-        public async Task<int> Count(ContactsFilters T, int CompanyId)
-        {
-            var kayitsayisi =await _dbConnection.QuerySingleAsync<int>($"Select COUNT(*) as kayitsayisi from Contacts where Contacts.CompanyId = {CompanyId} and Contacts.IsActive=1  and Contacts.Tip = '{T.Tip}' and ISNULL(Contacts.DisplayName,0) LIKE '%{T.DisplayName}%' and ISNULL(Contacts.Mail,0) LIKE '%{T.Mail}%' and ISNULL(Contacts.Phone,0) LIKE '%{T.Phone}%' and ISNULL(Contacts.Comment,0) LIKE '%{T.Comment}%'");
-            return kayitsayisi;
-        }
 
-        public async Task Delete(ContactsDelete T, int CompanyId)
+        public async Task Delete(ContactsDelete T)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@Tip", T.Tip);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@IsActive", false);
             prm.Add("@DateTime", DateTime.Now);
-          await  _dbConnection.ExecuteAsync($"Update Contacts Set IsActive=@IsActive,DeleteDate=@DateTime where id = @id and CompanyId = @CompanyId and Tip=@Tip", prm);
-           
+            await _dbConnection.ExecuteAsync($"Update Cari Set Aktif=@IsActive,SilinmeTarihi=@DateTime where CariKod = @id", prm);
+
         }
 
-        public async Task DeleteAddress(ContactsDelete T, int CompanyId, int id, string Tip)
+        public async Task DeleteAddress(ContactsDelete T, int id, string Tip)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@billing", id);
             prm.Add("@DateTime", DateTime.Now);
             prm.Add("@IsActive", false);
-            if (Tip== "BillingAddress")
-             await  _dbConnection.ExecuteAsync($"Update Locations Set IsActive=@IsActive,DeleteDate=@DateTime where id = @billing and CompanyId = @CompanyId", prm);
-            else if (Tip== "ShippingAddress")
-               await _dbConnection.ExecuteAsync($"Update Locations Set IsActive=@IsActive,DeleteDate=@DateTime where id = @billing and CompanyId = @CompanyId", prm);
+            await _dbConnection.ExecuteAsync($"Update DepoVeAdresler Set Aktif=@IsActive,SilinmeTarihi=@DateTime where id = @billing ", prm);
+
 
         }
 
-        public async Task<IEnumerable<ContactsAll>> Details(int id, int CompanyId)
+        public async Task<IEnumerable<ContactsAll>> Details(int id)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", id);
-            prm.Add("@CompanyId", CompanyId);
 
-            var list = await _dbConnection.QueryAsync<ContactsAll>($"Select Contacts.id as CustomerId,Contacts.Tip,  Contacts.FirstName,Contacts.LastName,Contacts.CompanyName,Contacts.DisplayName,Contacts.Mail,Contacts.Phone,Contacts.Comment,Contacts.BillingLocationId,Contacts.ShippingLocationId,bil.FirstName as BillingFirstName, bil.LastName as BillingLastName, bil.CompanyName as BillingCompanyName, bil.Phone as BillingPhone,bil.AddressLine1 as BillingAddressLine1, bil.AddressLine2 as BillingAddressline2, bil.CityTown as BillingCityTown, bil.StateRegion as BillingStateRegion,bil.ZipPostalCode as BillingZipPostal, bil.Country as BillingCountry,ship.FirstName as ShippingFirstName, ship.LastName as ShippingLastName, ship.CompanyName as ShippingCompanyName, ship.Phone as ShippingPhone,ship.AddressLine1 as ShippingAddressLine1, ship.AddressLine2 as ShippingAddressline2, ship.CityTown as ShippingCityTown, ship.StateRegion as ShippingStateRegion,ship.ZipPostalCode ShippingZipPostal, ship.Country as ShippingCountry,Contacts.CompanyId from Contacts inner join Locations bil on bil.id = Contacts.BillingLocationId inner join Locations ship on ship.id = Contacts.ShippingLocationId where Contacts.id = @id and Contacts.CompanyId=@CompanyId", prm);
+            var list = await _dbConnection.QueryAsync<ContactsAll>($@"Select cr.CariKod ,  cr.AdSoyad,cr.VergiDairesi,cr.VergiNumarası,
+            cr.Mail,cr.Telefon,cr.CariTipId,cr.FaturaAdresId,cr.KargoAdresId,bil.Ad as FaturaAdresIdAd,
+            bil.Soyisim as FaturaAdresIdSoyIsim, bil.SirketIsmi as FaturaAdresIdSirketIsmi,
+            bil.Telefon as FaturaAdresIdTelefon,bil.Adres1 as FaturaAdresIdAdres1,
+            bil.Adres2 as FaturaAdresIdAdres2, bil.Sehir as FaturaAdresIdSehir,
+            bil.Cadde as FaturaAdresIdCadde,bil.PostaKodu as FaturaAdresIdPostaKodu,
+            bil.Ulke as FaturaAdresIdUlke,ship.Ad as KargoAdresIdAd,
+            ship.Soyisim as KargoAdresIdSoyIsim, ship.SirketIsmi as KargoAdresIdSirketIsmi,
+            ship.Telefon as KargoAdresIdTelefon,ship.Adres1 as KargoAdresIdAdres1, 
+            ship.Adres2 as KargoAdresIdAdres2, ship.Sehir as KargoAdresIdSehir
+            , ship.Cadde as KargoAdresIdCadde,ship.PostaKodu KargoAdresIdPostaKodu, 
+            ship.Ulke as KargoAdresIdUlke
+            from Cari cr 
+            inner join DepoVeAdresler bil on bil.id = cr.FaturaAdresId 
+            inner join DepoVeAdresler ship on ship.id = cr.KargoAdresId 
+            where cr.CariKod = @id ", prm);
             return list.ToList();
         }
 
-        public async Task<int> Insert(ContactsInsert T, int CompanyId)
+        public async Task<int> Insert(ContactsInsert T, int KullaniciId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@Tip", T.Tip);
-            prm.Add("@FirstName", T.FirstName);
-            prm.Add("@LastName", T.LastName);
-            prm.Add("@CompanyName", T.CompanyName);
-            prm.Add("@DisplayName", T.DisplayName);
+            prm.Add("@CariTipId", T.CariTipId);
+            prm.Add("@AdSoyad", T.AdSoyad);
+            prm.Add("@VergiDairesi", T.VergiDairesi);
             prm.Add("@Mail", T.Mail);
-            prm.Add("@Comment", T.Comment);
-            prm.Add("@CompanyId", CompanyId);
+            prm.Add("@VergiNumarası", T.VergiNumarası);
+            prm.Add("@Telefon", T.Telefon);
+            prm.Add("@ParaBirimiId", T.ParaBirimiId);
+            prm.Add("@CompanyId", KullaniciId);
             prm.Add("@IsActive", true);
-            if (T.Tip == "Customer")
-            {
-                //Ekleme işlemi yapılırken id i çekiyoruz
-                return await _dbConnection.QuerySingleAsync<int>($"Insert into Contacts (FirstName,LastName,Tip,CompanyName,DisplayName, CompanyId,IsActive) OUTPUT INSERTED.[id] values (@FirstName,@LastName,@Tip,@CompanyName, @DisplayName,@CompanyId,@IsActive)", prm);
-            }
-            else if (T.Tip == "Supplier")
-            {
-                //Ekleme işlemi yapılırken id i çekiyoruz
-                return await _dbConnection.QuerySingleAsync<int>($"Insert into Contacts (DisplayName,Mail,Tip,Comment,CompanyId,IsActive) OUTPUT INSERTED.[id] values (@DisplayName,@Mail,@Tip, @Comment,@CompanyId,@IsActive)", prm);
-            }
-            return 1;
+
+            return await _dbConnection.QuerySingleAsync<int>($"Insert into Cari (AdSoyad,VergiDairesi,CariTipId,VergiNumarası, Mail,Telefon,ParaBirimiId,Aktif) OUTPUT INSERTED.[CariKod] values (@AdSoyad,@VergiDairesi,@CariTipId,@VergiNumarası,@Mail, @Telefon,@ParaBirimiId,@IsActive)", prm);
+
         }
 
-        public async Task<int> InsertAddress( int CompanyId,string Tip)
+        public async Task<int> InsertAddress(string Tip)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@Tip", Tip);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@IsActive", true);
-            return await _dbConnection.QuerySingleAsync<int>($"Insert into Locations (Tip, CompanyId,IsActive)  OUTPUT INSERTED.[id]  values (@Tip,@CompanyId,@IsActive)", prm);
+            return await _dbConnection.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Tip,Aktif)  OUTPUT INSERTED.[id]  values (@Tip,@IsActive)", prm);
         }
 
-        public async Task<IEnumerable<ContactsFilters>> List(ContactsFilters T, int CompanyId, int KAYITSAYISI, int SAYFA)
+        public async Task<IEnumerable<ContactsFilters>> List(ContactsFilters T, int KAYITSAYISI, int SAYFA)
         {
-            string sql = $"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}  Select Contacts.id,Contacts.Tip,Contacts.DisplayName,Contacts.Mail,Contacts.Phone,Contacts.Comment,Contacts.IsActive from Contacts where Contacts.CompanyId = {CompanyId} and Contacts.IsActive=1 and Contacts.Tip = '{T.Tip}' and ISNULL(Contacts.DisplayName,0) LIKE '%{T.DisplayName}%' and ISNULL(Contacts.Mail,0) LIKE '%{T.Mail}%' and ISNULL(Contacts.Phone,0) LIKE '%{T.Phone}%' and ISNULL(Contacts.Comment,0) LIKE '%{T.Comment}%' ORDER BY Contacts.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY; ";
+            string sql = $"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}  Select c.CariKod,c.AdSoyad ,c.Mail,c.Telefon,c.Bilgi,c.Aktif,c.VergiDairesi,c.VergiNumarası  from Cari c where c.Aktif=1 and c.VergiDairesi = '{T.VergiDairesi}' and ISNULL(c.AdSoyad,0) LIKE '%{T.AdSoyad}%' and ISNULL(c.Mail,0) LIKE '%{T.Mail}%' and ISNULL(c.Telefon,0) LIKE '%{T.Telefon}%' and ISNULL(c.VergiNumarası,0) LIKE '%{T.VergiNumarası}%' ORDER BY Cari.CariKod OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY; ";
 
             var list = await _dbConnection.QueryAsync<ContactsFilters>(sql);
             return list.ToList();
         }
 
-        public async Task Update(ContactsList T, int CompanyId,int id)
+        public async Task Update(CariUpdate T)
         {
 
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@id", id);
-            prm.Add("@FirstName", T.FirstName);
-            prm.Add("@LastName", T.LastName);
-            prm.Add("@CompanyName", T.CompanyName);
-            prm.Add("@DisplayName", T.DisplayName);
+            prm.Add("@id", T.CariKod);
+            prm.Add("@CariTipId", T.CariTipId);
+            prm.Add("@AdSoyad", T.AdSoyad);
             prm.Add("@Mail", T.Mail);
-            prm.Add("@Phone", T.Phone);
-            prm.Add("@Comment", T.Comment);
-            prm.Add("@CompanyId", CompanyId);
-            if (T.Tip == "Customer")
-            {
-              await  _dbConnection.ExecuteAsync($"Update Contacts SET FirstName = @FirstName,LastName=@LastName,CompanyName=@CompanyName,DisplayName=@DisplayName,Mail=@Mail,Phone=@Phone,Comment=@Comment where id = @id  and CompanyId = @CompanyId", prm);
-            }
-            else if (T.Tip == "Supplier")
-            {
-             await _dbConnection.ExecuteAsync($"Update Contacts SET DisplayName=@DisplayName,Mail=@Mail,Comment=@Comment where id = @id  and CompanyId = @CompanyId", prm);
-            }
+            prm.Add("@VergiNumarası", T.VergiNumarası);
+            prm.Add("@VergiDairesi", T.VergiDairesi);
+            prm.Add("@ParaBirimiId", T.ParaBirimiId);
+            prm.Add("@Telefon", T.Telefon);
+
+            await _dbConnection.ExecuteAsync($"Update Cari SET CariTipId=@CariTipId,AdSoyad = @AdSoyad,Mail=@Mail,Telefon=@Telefon,VergiNumarası=@VergiNumarası,VergiDairesi=@VergiDairesi,ParaBirimiId=@ParaBirimiId where CariKod = @id", prm);
+
         }
 
-        public async Task UpdateAddress(ContactsUpdateAddress T, int CompanyId, int id)
+        public async Task UpdateAddress(ContactsUpdateAddress T, int id)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@Tip", T.Tip);
-            prm.Add("@AddressLine1", T.AddressLine1);
-            prm.Add("@AddressLine2", T.AddressLine2);
-            prm.Add("@CityTown", T.AddressCityTown);
-            prm.Add("@StateRegion", T.AddressStateRegion);
-            prm.Add("@ZipPostalCode", T.AddressZipPostal);
-            prm.Add("@Country", T.AddressCountry);
-            prm.Add("@FirstName", T.AddressFirstName);
-            prm.Add("@LastName", T.AddressLastName);
-            prm.Add("@CompanyName", T.AddressCompany);
-            prm.Add("@Phone", T.AddressPhone);
-            prm.Add("@CompanyId", CompanyId);
+            prm.Add("@Adres1", T.Adres1);
+            prm.Add("@Adres2", T.Adres2);
+            prm.Add("@AdresSehir", T.AdresSehir);
+            prm.Add("@AdresCadde", T.AdresCadde);
+            prm.Add("@AdresPostaKodu", T.AdresPostaKodu);
+            prm.Add("@AdresUlke", T.AdresUlke);
+            prm.Add("@AdresAd", T.AdresAd);
+            prm.Add("@AdresSoyisim", T.AdresSoyisim);
+            prm.Add("@AdresSirket", T.AdresSirket);
+            prm.Add("@AdresTelefon", T.AdresTelefon);
             prm.Add("@id", id);
 
 
             if (T.Tip == "BillingAddress")
             {
-              await  _dbConnection.ExecuteAsync($"Update Locations SET FirstName=@FirstName,LastName=@LastName,CompanyName=@CompanyName,Phone=@Phone,AddressLine1=@AddressLine1,AddressLine2=@AddressLine2,CityTown=@CityTown,StateRegion=@StateRegion,ZipPostalCode=@ZipPostalCode,Country=@Country where id = @id  and CompanyId = @CompanyId and Tip=@Tip", prm);
+                await _dbConnection.ExecuteAsync($"Update DepoVeAdresler SET Adres1=@Adres1,Adres2=@Adres2,Sehir=@AdresSehir,Cadde=@AdresCadde,PostaKodu=@AdresPostaKodu,Ulke=@AdresUlke,Ad=@AdresAd,Soyisim=@AdresSoyisim,SirketIsmi=@AdresSirket,Telefon=@AdresTelefon where id = @id and Tip=@Tip", prm);
             }
             else if (T.Tip == "ShippingAddress")
             {
-              await  _dbConnection.ExecuteAsync($"Update Locations SET FirstName=@FirstName,LastName=@LastName,CompanyName=@CompanyName,Phone=@Phone,AddressLine1=@AddressLine1,AddressLine2=@AddressLine2,CityTown=@CityTown,StateRegion=@StateRegion,ZipPostalCode=@ZipPostalCode,Country=@Country where id = @id  and CompanyId = @CompanyId and Tip=@Tip", prm);
+                await _dbConnection.ExecuteAsync($"Update DepoVeAdresler SET Adres1=@Adres1,Adres2=@Adres2,Sehir=@AdresSehir,Cadde=@AdresCadde,PostaKodu=@AdresPostaKodu,Ulke=@AdresUlke,Ad=@AdresAd,Soyisim=@AdresSoyisim,SirketIsmi=@AdresSirket,Telefon=@AdresTelefon where id = @id and Tip=@Tip", prm);
             }
         }
     }

@@ -10,12 +10,12 @@ namespace DAL.Contracts
 {
     public interface IOrdersRepository
     {
-        Task<int> Insert(PurchaseOrderInsert T, int CompanyId);
-        Task<int> InsertPurchaseItem(PurchaseOrderInsertItem T, int OrdersId, int CompanyId);
-        Task Update(PurchaseOrderUpdate T, int CompanyId);
-        Task UpdatePurchaseItem(PurchaseItem T, int CompanyId);
-        Task Delete(List<Delete> A, int CompanyId,int user);
-        Task DeleteItems(DeleteItems T, int CompanyId);
-        Task<IEnumerable<PurchaseDetails>> Details(int id, int CompanyId);
+        Task<int> Insert(PurchaseOrderInsert T, int UserId);
+        Task<int> InsertPurchaseItem(PurchaseOrderInsertItem T, int OrdersId);
+        Task Update(PurchaseOrderUpdate T);
+        Task UpdatePurchaseItem(PurchaseItem T);
+        Task Delete(List<Delete> A,int user);
+        Task DeleteItems(DeleteItems T);
+        Task<IEnumerable<PurchaseDetails>> Details(int id);
     }
 }

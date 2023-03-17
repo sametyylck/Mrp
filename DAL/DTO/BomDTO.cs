@@ -13,13 +13,13 @@ namespace DAL.DTO
         public class BOMInsert
         {
           
-            public int ProductId { get; set; }
+            public int MamulId { get; set; }
            
-            public int MaterialId { get; set; }
+            public int MalzemeId { get; set; }
       
-            public float Quantity { get; set; }
+            public float Miktar { get; set; }
          
-            public string? Note { get; set; }
+            public string? Bilgi { get; set; }
             public string? Tip { get; set; }
         }
         public class BOMUpdate
@@ -27,13 +27,13 @@ namespace DAL.DTO
 
             public int id { get; set; }
 
-            public int ProductId { get; set; }
+            public int MamulId { get; set; }
 
-            public int MaterialId { get; set; }
+            public int MalzemeId { get; set; }
 
-            public float Quantity { get; set; }
+            public float Miktar { get; set; }
 
-            public string? Note { get; set; }
+            public string? Bilgi { get; set; }
             public string? Tip { get; set; }
 
 
@@ -43,14 +43,13 @@ namespace DAL.DTO
 
             public int id { get; set; }
 
-            public int ProductId { get; set; }
+            public int MamulId { get; set; }
 
-            public int MaterialId { get; set; }
+            public int MalzemeId { get; set; }
 
-            public float Quantity { get; set; }
+            public float Miktar { get; set; }
 
-            public string? Note { get; set; }
-            public int CompanyId { get; set; }
+            public string? Bilgi { get; set; }
 
 
         }
@@ -64,32 +63,31 @@ namespace DAL.DTO
         {
 
             public int? id { get; set; }
-            public string Name { get; set; } = string.Empty;
-            public bool IsActive { get; set; }
+            public string Isim { get; set; } = string.Empty;
         }
         public class ListBOM
         {
             public int id { get; set; }
-            public int? ProductId { get; set; }
-            public int? MaterialId { get; set; }
-            public string MaterialName { get; set; } = string.Empty;
-            public int? Quantity { get; set; }
-            public string Note { get; set; } = string.Empty;
-            public float? StockCost { get; set; }
-            public bool IsActive { get; set; }
-            public int? CompanyId { get; set; }
+            public int? MamulId { get; set; }
+            public string MamulIsmi { get; set; }
+            public int? MalzemeId { get; set; }
+            public string MalzemeIsmi { get; set; } = string.Empty;
+            public int? Miktar { get; set; }
+            public string Bilgi { get; set; } = string.Empty;
+            public float? Tutar { get; set; }
+            public bool Aktif { get; set; }
         }
         public class MissingCount
         {
             [Required]
             public int id { get; set; }
-            public int LocationId { get; set; }
-            public int SalesOrderItemId { get; set; }
+            public int DepoId { get; set; }
+            public int SatisDetayId { get; set; }
             [Required]
-            public int ProductId { get; set; }
-            public int MaterialId { get; set; }
-            public string MaterialName { get; set; } = string.Empty;
-            public int Missing { get; set; }
+            public int MamulId { get; set; }
+            public int MalzemeId { get; set; }
+            public string MalzemeIsim { get; set; } = string.Empty;
+            public int Kayıp { get; set; }
             public List<PurchaseOrdersItemDetails> PurchaseOrderList { get; set; } 
 
 

@@ -12,11 +12,11 @@ namespace Validation.OperationsBom
     {
         public OperationBomInsertValidations()
         {
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId bos gecilmez").NotNull().WithMessage("ItemId zorunlu alan");
-            RuleFor(x => x.ResourceId).NotEmpty().WithMessage("ResourceId bos gecilmez").NotNull().WithMessage("ResourceId zorunlu alan");
-            RuleFor(x => x.OperationId).NotEmpty().WithMessage("OperationId bos gecilmez").NotNull().WithMessage("OperationId zorunlu alan");
-            RuleFor(x => x.CostHour).NotEmpty().WithMessage("CostHour bos gecilmez").NotNull().WithMessage("CostHour zorunlu alan");
-            RuleFor(x => x.OperationTime).NotEmpty().WithMessage("OperationTime bos gecilmez").NotNull().WithMessage("OperationTime zorunlu alan");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId bos gecilmez").NotNull().WithMessage("ItemId zorunlu alan");
+            RuleFor(x => x.KaynakId).NotEmpty().WithMessage("ResourceId bos gecilmez").NotNull().WithMessage("ResourceId zorunlu alan");
+            RuleFor(x => x.OperasyonId).NotEmpty().WithMessage("OperationId bos gecilmez").NotNull().WithMessage("OperationId zorunlu alan");
+            RuleFor(x => x.SaatlikUcret).NotEmpty().WithMessage("CostHour bos gecilmez").NotNull().WithMessage("CostHour zorunlu alan");
+            RuleFor(x => x.OperasyonZamani).NotEmpty().WithMessage("OperationTime bos gecilmez").NotNull().WithMessage("OperationTime zorunlu alan");
 
         }
     }
@@ -25,10 +25,10 @@ namespace Validation.OperationsBom
         public OperationBomUpdateValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilmez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.ResourceId).NotEmpty().WithMessage("ResourceId bos gecilmez").NotNull().WithMessage("ResourceId zorunlu alan");
-            RuleFor(x => x.OperationId).NotEmpty().WithMessage("OperationId bos gecilmez").NotNull().WithMessage("OperationId zorunlu alan");
-            RuleFor(x => x.CostHour).NotEmpty().WithMessage("CostHour bos gecilmez").NotNull().WithMessage("CostHour zorunlu alan");
-            RuleFor(x => x.OperationTime).NotEmpty().WithMessage("OperationTime bos gecilmez").NotNull().WithMessage("OperationTime zorunlu alan");
+            RuleFor(x => x.KaynakId).NotEmpty().WithMessage("ResourceId bos gecilmez").NotNull().WithMessage("ResourceId zorunlu alan");
+            RuleFor(x => x.OperasyonId).NotEmpty().WithMessage("OperationId bos gecilmez").NotNull().WithMessage("OperationId zorunlu alan");
+            RuleFor(x => x.SaatlikUcret).NotEmpty().WithMessage("CostHour bos gecilmez").NotNull().WithMessage("CostHour zorunlu alan");
+            RuleFor(x => x.OperasyonZamani).NotEmpty().WithMessage("OperationTime bos gecilmez").NotNull().WithMessage("OperationTime zorunlu alan");
         }
     }
 }

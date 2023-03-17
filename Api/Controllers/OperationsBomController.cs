@@ -53,7 +53,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var list = await _bom.List(CompanyId,ItemId);
+            var list = await _bom.List(ItemId);
 
             return Ok(list);
         }
@@ -62,16 +62,15 @@ namespace Api.Controllers
         public async Task<ActionResult<ProductOperationsBOM>> Insert(ProductOperationsBOMInsert T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
             
             ValidationResult result = await _PBomInsert.ValidateAsync(T);
             if (result.IsValid)
             {   
-                var hata = await _operationbomcontrol.Insert(T, CompanyId);
+                var hata = await _operationbomcontrol.Insert(T);
                 if (hata.Count() == 0)
                 {
-                    int id = await _bom.Insert(T, CompanyId);
+                    int id = await _bom.Insert(T,UserId);
                     return Ok("");
                 }
                 else
@@ -103,10 +102,10 @@ namespace Api.Controllers
             ValidationResult result = await _PBomUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _operationBomControl.Update(T, CompanyId);
+                var hata = await _operationBomControl.Update(T);
                 if (hata.Count() == 0)
                 {
-                    await _bom.Update(T, CompanyId);
+                    await _bom.Update(T);
                     return Ok("Başarılı");
                 }
                 else
@@ -134,10 +133,10 @@ namespace Api.Controllers
             ValidationResult result = await _PDelete.ValidateAsync(T);
             if (result.IsValid)
             {
-                          var hata = await _idcontrol.GetControl("ProductOperationsBom", T.id, CompanyId);
+                 var hata = await _idcontrol.GetControl("UrunKaynakRecetesi", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _bom.Delete(T, CompanyId);
+                    await _bom.Delete(T);
                     return Ok("Başarılı");
                 }
                 else

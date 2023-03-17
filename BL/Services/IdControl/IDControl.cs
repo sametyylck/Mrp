@@ -18,13 +18,12 @@ namespace BL.Services.IdControl
             _db = db;
         }
 
-        public async Task<List<string>> GetControl(string tabloadi, int id, int companyid)
+        public async Task<List<string>> GetControl(string tabloadi, int id)
         {
             List<string> hatalar = new();
             DynamicParameters param = new DynamicParameters();
             param.Add("@Tablo", tabloadi);
             param.Add("id", id);
-            param.Add("@CompanyId", companyid);
             if (tabloadi=="Company")
             {
                 string sql = $"Select id from {tabloadi} where id=@id";
@@ -42,7 +41,7 @@ namespace BL.Services.IdControl
             }
             else
             {
-                string sql = $"Select id from {tabloadi} where id=@id and CompanyId = @CompanyId";
+                string sql = $"Select id from {tabloadi} where id=@id";
                 var kontrol = await _db.QueryAsync<int>(sql, param);
                 if (kontrol.Count() == 0)
                 {

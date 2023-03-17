@@ -39,7 +39,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarGenel, Permison.AyarlarGenel, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarGenel, Permison.AyarlarGenel, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -57,7 +57,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarGenel, Permison.AyarlarGenel, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarGenel, Permison.AyarlarGenel, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -67,7 +67,7 @@ namespace Api.Controllers
             ValidationResult result = await _GeneralDefaultSettings.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _control.Update(T, CompanyId);
+                var hata = await _control.Update(T);
                 if (hata.Count()==0)
                 {
                     await _general.Update(T, CompanyId);

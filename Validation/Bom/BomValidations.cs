@@ -13,9 +13,9 @@ namespace Validation.Bom
     {
         public BomInsertValidations()
         {
-            RuleFor(x => x.ProductId).NotEmpty().WithMessage(" ProductId Bos geçilmez").NotNull().WithMessage("ProductId zorunlu alan");
-            RuleFor(x => x.MaterialId).NotEmpty().WithMessage(" MaterialId Bos geçilmez").NotNull().WithMessage("MaterialId zorunlu alan");
-            RuleFor(x => x.Quantity).NotEmpty().WithMessage(" Quantity Bos geçilmez").NotNull().NotNull().WithMessage("Quantity zorunlu alan");
+            RuleFor(x => x.MamulId).NotEmpty().WithMessage(" ProductId Bos geçilmez").NotNull().WithMessage("ProductId zorunlu alan");
+            RuleFor(x => x.MalzemeId).NotEmpty().WithMessage(" MaterialId Bos geçilmez").NotNull().WithMessage("MaterialId zorunlu alan");
+            RuleFor(x => x.Miktar).NotEmpty().WithMessage(" Quantity Bos geçilmez").NotNull().NotNull().WithMessage("Quantity zorunlu alan");
         }
     }
     public class BomUpdateValidations : AbstractValidator<BomDTO.BOMUpdate>
@@ -23,8 +23,8 @@ namespace Validation.Bom
         public BomUpdateValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("Bos geçilmez").NotNull();
-            RuleFor(x => x.MaterialId).NotEmpty().WithMessage("Bos geçilmez").NotNull();
-            RuleFor(x => x.Quantity).NotEmpty().WithMessage("Bos geçilmez").NotNull();
+            RuleFor(x => x.MalzemeId).NotEmpty().WithMessage("Bos geçilmez").NotNull();
+            RuleFor(x => x.Miktar).NotEmpty().WithMessage("Bos geçilmez").NotNull();
             
         }
     }

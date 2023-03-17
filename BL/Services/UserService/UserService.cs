@@ -23,7 +23,7 @@ namespace BL.Services.UserService
       
             if ( _httpContextAccessor != null)
             {
-                result.Add( Convert.ToInt32(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.GivenName)));
+                result.Add( Convert.ToInt32(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.PostalCode)));
                 result.Add( Convert.ToInt32(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Gender)));
                
             }

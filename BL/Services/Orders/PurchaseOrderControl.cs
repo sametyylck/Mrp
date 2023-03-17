@@ -21,14 +21,13 @@ namespace BL.Services.Orders
         }
 
 
-       public async Task<List<string>>  Delete(Delete T, int CompanyId)
+       public async Task<List<string>>  Delete(Delete T)
         {
             List<string> hatalar = new();
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
             prm.Add("@Tip", T.Tip);
-            prm.Add("@CompanyId", CompanyId);
-            string sql = $"Select id From Orders where CompanyId = @CompanyId and id  = @id";
+            string sql = $"Select id From SatinAlma where  id  = @id";
             var idcontrol =await _db.QueryAsync<Contacts>(sql, prm);
             if (idcontrol.Count() == 0)
             {
@@ -49,17 +48,17 @@ namespace BL.Services.Orders
 
         }
 
-       public async Task<List<string>> DeleteItem(DeleteItems T, int CompanyId)
+       public async Task<List<string>> DeleteItem(DeleteItems T)
         {
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip,
-            (Select id as varmi From Orders where CompanyId = {CompanyId} and id = {T.OrdersId} and IsActive=1)as OrdersId,
-            (Select id From OrdersItem where CompanyId = {CompanyId} and id = {T.id} and OrdersId={T.OrdersId})as id");
+            (Select Tip  From Urunler where id={T.StokId})as Tip,
+            (Select id as varmi From SatinAlma where  id = {T.SatinAlmaId} and Aktif=1)as SatinAlmaId,
+            (Select id From SatinAlmaDetay where  id = {T.id} and SatinAlmaId={T.SatinAlmaId})as id");
 
          
-            if (list.First().OrdersId == null)
+            if (list.First().SatinAlmaId == null)
             {
                 hatalar.Add("OrdersId bulunamadi");
             }
@@ -81,24 +80,24 @@ namespace BL.Services.Orders
            
         }
 
-       public async Task<List<string>> Insert(PurchaseOrderInsert T, int CompanyId)
+       public async Task<List<string>> Insert(PurchaseOrderInsert T)
         {
             List<string> hatalar = new();
-            var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select id  From Measure where CompanyId = {CompanyId} and id = {T.MeasureId})as MeasureId,
-            (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip,
-            (Select id  From Tax where CompanyId = {CompanyId} and id = {T.TaxId})as TaxId,
-            (Select  id as OrdersId From ManufacturingOrder where CompanyId = {CompanyId} and id = {T.ManufacturingOrderId} and IsActive=1 and Status!=3)as OrdersId,
-            (Select id From ManufacturingOrderItems where CompanyId = {CompanyId} and id = {T.ManufacturingOrderItemId} and OrderId={T.ManufacturingOrderId})as id,
-             (select id From SalesOrder where CompanyId = {CompanyId} and id = {T.SalesOrderId} and DeliveryId!=2 and  DeliveryId!=4)as SalesOrderId, 
-            (Select id From SalesOrderItem where CompanyId = {CompanyId} and id = {T.SalesOrderItemId} and SalesOrderId={T.SalesOrderId})as SalesOrderItemId,
-            (Select id as LocationId From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId,
-            (Select Tip  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId})as ContactTip
+            var list = await _db.QueryAsync<PurchaseItemControl2>($@"select
+            (Select id  From Olcu where  id = {T.OlcuId})as MeasureId,
+            (Select Tip  From Urunler where  id={T.StokId})as Tip,
+            (Select id  From Vergi where  id = {T.VergiId})as TaxId,
+            (Select  id as OrdersId From Uretim where id = {T.UretimId} and Aktif=1 and Status!=3)as UretimId,
+            (Select id From UretimDetay where  id = {T.UretimDetayId} and OrderId={T.UretimId})as id,
+             (select id From Satis where  id = {T.SatisId} and DeliveryId!=2 and  DeliveryId!=4)as SalesOrderId, 
+            (Select id From SatisDetay where  id = {T.SatisDetayId} and SalesOrderId={T.SatisId})as SalesOrderItemId,
+            (Select id as LocationId From DepoVeAdresler where  id = {T.DepoId})as LocationId,
+            (Select Tip  From Cari where  id = {T.TedarikciId})as ContactTip
             ");
 
-            if (T.ManufacturingOrderId!=0 && T.ManufacturingOrderItemId !=0)
+            if (T.UretimId!=0 && T.UretimDetayId !=0)
             {
-                if (list.First().OrdersId == null)
+                if (list.First().UretimId == null)
                 {
                     hatalar.Add("Böyle Bir id Yok");
                 }
@@ -108,14 +107,14 @@ namespace BL.Services.Orders
                 }
             }
 
-            if (T.SalesOrderId != 0 && T.SalesOrderItemId != 0)
+            if (T.SatisId != 0 && T.SatisDetayId != 0)
             {
-                if (list.First().SalesOrderId == null)
+                if (list.First().SatisId == null)
                 {
                     hatalar.Add("SalesOrderid bulunamadı.");
                 }
 
-                if (list.First().SalesOrderItemId == null)
+                if (list.First().SatisDetayId == null)
                 {
                     hatalar.Add("SalesOrderid ve SalesOrderItemid eşleşmesi hatalı.");
                 }
@@ -124,26 +123,21 @@ namespace BL.Services.Orders
             {
                 hatalar.Add("Tip değişkeni,tip hatasi");
             }
-            if (list.First().LocationId==null)
+            if (list.First().DepoId==null)
             {
                 hatalar.Add("Böyle Bir Lokasyon Yok");
             }
-            var Locaiton = await _db.QueryFirstAsync<bool>($"select Make from Locations where CompanyId={CompanyId} and id={T.LocationId} ");
+            var Locaiton = await _db.QueryFirstAsync<bool>($"select Uretim from DepoVeAdresler where  id={T.DepoId} ");
             if (Locaiton != true)
             {
                 hatalar.Add("Uretim kismina yetkiniz yok");
 
             }
-            if (list.First().ContactTip != "Supplier")
-            {
-                hatalar.Add("ContactId,Böyle Bir Tedarikci Yok");
-
-            }
-            if (list.First().MeasureId==null)
+            if (list.First().OlcuId==null)
             {
                 hatalar.Add("MeasureId bulunamadı");
             }
-            if (list.First().TaxId== null)
+            if (list.First().VergiId== null)
             {
                 hatalar.Add("TaxId bulunamadi");
             }
@@ -161,18 +155,18 @@ namespace BL.Services.Orders
 
         }
 
-        public async Task<List<string>> InsertItem(PurchaseOrderInsertItem T, int CompanyId)
+        public async Task<List<string>> InsertItem(PurchaseOrderInsertItem T)
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select id  From Measure where CompanyId = {CompanyId} and id = {T.MeasureId})as MeasureId,
-            (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip,
-            (Select id  From Tax where CompanyId = {CompanyId} and id = {T.TaxId})as TaxId,
-            (Select id as varmi From Orders where CompanyId = {CompanyId} and id = {T.OrderId} and IsActive=1 and DeliveryId=1)as OrdersId");
+            (Select id  From Olcu where  id = {T.OlcuId})as OlcuId,
+            (Select Tip  From Urunler where id={T.StokId})as Tip,
+            (Select id  From Vergi where  id = {T.VergiId})as VergiId,
+            (Select id as varmi From SatinAlma where  id = {T.SatinAlmaId} and IsActive=1 and DeliveryId=1)as OrdersId");
 
 
 
-            if (list.First().MeasureId==null)
+            if (list.First().OlcuId==null)
             {
                 hatalar.Add("MeasureId bulunamadı");
 
@@ -182,11 +176,11 @@ namespace BL.Services.Orders
                 hatalar.Add("ItemId tip hatası");
 
             }
-            if (list.First().OrdersId== null)
+            if (list.First().SatinAlmaId == null)
             {
                 hatalar.Add("Böyle Bir OrdersId Yok");
             }
-            if (list.First().TaxId == null)
+            if (list.First().VergiId == null)
             {
                 hatalar.Add("TaxId bulunamadi");
                 return hatalar;
@@ -198,19 +192,19 @@ namespace BL.Services.Orders
             }
         }
 
-       public async Task<List<string>> Update(PurchaseOrderUpdate T, int CompanyId)
+       public async Task<List<string>> Update(PurchaseOrderUpdate T)
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId,
-            (Select Tip  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId})as Tip
+            (Select id as varmi From Locations where  id = {T.DepoId})as LocationId,
+            (Select Tip  From Cari where  CariKod= {T.TedarikciId})as Tip
         ");
-            if (list.First().LocationId==null)
+            if (list.First().DepoId==null)
             {
                 hatalar.Add("Böyle Bir Lokasyon Yok");
             }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
-            bool? make = Locaiton.First().Make;
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from DepoVeAdresler where  id={T.DepoId} ")).ToList();
+            bool? make = Locaiton.First().Uretim;
             if (make != true)
             {
                 hatalar.Add("Uretim kismina yetkiniz yok");
@@ -227,16 +221,16 @@ namespace BL.Services.Orders
             }
         }
 
-      public async Task<List<string>> UpdatePurchaseItem(PurchaseItem T, int CompanyId)
+      public async Task<List<string>> UpdatePurchaseItem(PurchaseItem T)
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select id  From Measure where CompanyId = {CompanyId} and id = {T.MeasureId})as MeasureId,
-            (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip,
-            (Select id  From Tax where CompanyId = {CompanyId} and id = {T.TaxId})as TaxId,
-            (Select id as varmi From Orders where CompanyId = {CompanyId} and id = {T.OrdersId} and IsActive=1 and DeliveryId=1)as OrdersId,
-            (Select id as varmi From OrdersItem where CompanyId = {CompanyId} and id ={T.id} and OrdersId={T.OrdersId})as id");
-            if (list.First().MeasureId==null)
+            (Select id  From Olcu where  id = {T.OlcuId})as MeasureId,
+            (Select Tip  From Urunler where  id={T.StokId})as Tip,
+            (Select id  From Vergi where  id = {T.VergiId})as TaxId,
+            (Select id as varmi From SatinAlma where  id = {T.SatinAlmaId} and Aktif=1 and DurumBelirteci=1)as OrdersId,
+            (Select id as varmi From SatinAlmaDetay where  id ={T.id} and SatinAlmaId={T.SatinAlmaId})as id");
+            if (list.First().OlcuId ==null)
             {
                 hatalar.Add("MeasureId bulunamadı");
             }
@@ -244,11 +238,11 @@ namespace BL.Services.Orders
             {
                 hatalar.Add("ItemId tip hatası");
             }
-            if (list.First().TaxId == null)
+            if (list.First().VergiId == null)
             {
                 hatalar.Add("TaxId bulunamadi");
             }
-            if (list.First().OrdersId == null)
+            if (list.First().SatinAlmaId == null)
             {
                 hatalar.Add("Böyle Bir OrdersId Yok");
             }

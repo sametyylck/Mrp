@@ -61,31 +61,21 @@ namespace Api.Controllers
             ValidationResult result = await _RegisterValidator.ValidateAsync(request);
             if (result.IsValid)
             {
-                CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
                 user.Mail = request.Mail;
-            
-                int id = await _company.Register(request);
+                user.Ad = request.FirstName;
+                user.Soyisim = request.LastName;
+                user.Telefon = request.PhoneNumber;
+                user.Sifre = request.Password;
 
-                user.FirstName = request.FirstName;
-                user.LastName = request.LastName;
-                user.PhoneNumber = request.PhoneNumber;
-                user.CompanyId = Convert.ToString(id);
-                user.Password = request.Password;
-                user.PasswordHash = passwordHash;
-                user.PasswordSalt = passwordSalt;
-               int roleid=await _company.RoleInsert(id);
-
-                await _company.UserRegister(user, id,roleid);
+                int roleid = await _company.RoleInsert();
+                int id =await _company.UserRegister(user,roleid);
                 await _measure.Register(id);
                 int taxid = await _taxRepository.Register(id);
                 int locationid = await _location.Register(id);
                 int legaladdress = await _location.RegisterLegalAddress(id);
                 //Kullanıcı register olduktan sonra locations tablosuna settings locationdan ayrı olarak bir adet de Legal Adres ekliyor yukarıda burdada company tablosuna legal adress ıd yi vermek için güncelleme atıyoturuz
                 DynamicParameters param = new DynamicParameters();
-                param.Add("@id", id);
-                param.Add("@LegalAddressId", legaladdress);
-                string sql = $@"Update Company SET LocationId = @LegalAddressId where id = @id";
-                await _db.ExecuteAsync(sql, param);
+
                 await _generalDefault.Register(id, taxid, locationid);
                 return Ok("Kayıt Başarılı");
             }
@@ -109,12 +99,11 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                 DynamicParameters prm = new DynamicParameters();
-                prm.Add("@Passowrd", A.Password);
+                prm.Add("@Passowrd", A.Sifre);
                 prm.Add("@Mail", A.Mail);
 
-                string sql = $@"Select u.id,u.FirstName,u.LastName,u.CompanyId,Company.DisplayName from Users u 
-left join Company on Company.id=u.CompanyId
-where Mail=@Mail and Password=@Passowrd";
+                string sql = $@"Select u.id,u.Ad,u.Soyisim from Kullanıcılar u 
+                where Mail=@Mail and Sifre=@Passowrd";
                 var list = await _db.QueryAsync<TokenKontrol>(sql,prm);
                 if (list.Count() <= 0)
                 {
@@ -122,8 +111,7 @@ where Mail=@Mail and Password=@Passowrd";
 
                 }
           
-                user.Mail = A.Mail;
-                user.CompanyId = Convert.ToString(list.First().CompanyId);
+                user.Soyisim = list.First().Soyisim;
                 user.Id = list.First().id;
 
                         //if (!VerifyPasswordHash(request.Password, passwordhash, passwordsalt))
@@ -131,8 +119,8 @@ where Mail=@Mail and Password=@Passowrd";
                 //    return BadRequest("Wrong password.");
                 //}
                 string token = CreateToken(user);
-                string? firstname = list.First().FirstName;
-                string? LastName = list.First().LastName;
+                string? firstname = list.First().Ad;
+                string? LastName = list.First().Soyisim;
                 string? DisplayName = list.First().DisplayName;
 
 
@@ -153,7 +141,7 @@ where Mail=@Mail and Password=@Passowrd";
             List<Claim> claims = new List<Claim>
             {
                 
-                new Claim(ClaimTypes.GivenName,value: user.CompanyId),
+                new Claim(ClaimTypes.GivenName,value: user.Soyisim),
                 new Claim(ClaimTypes.Gender,value:Convert.ToString(user.Id))
             };
 
@@ -173,22 +161,6 @@ where Mail=@Mail and Password=@Passowrd";
             return jwt;
         }
 
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-            }
-        }
 
-        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512(passwordSalt))
-            {
-                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                return computedHash.SequenceEqual(passwordHash);
-            }
-        }
     }
 }

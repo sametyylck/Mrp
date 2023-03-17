@@ -10,10 +10,10 @@ namespace DAL.Contracts
 {
     public interface IUretimList
     {
-        Task<IEnumerable<ManufacturingOrderList>> ScheludeOpenList(ManufacturingOrderList T, int CompanyId, int? KAYITSAYISI, int? SAYFA);
-        Task<IEnumerable<ManufacturingOrderDoneList>> ScheludeDoneList(ManufacturingOrderDoneList T, int CompanyId, int? KAYITSAYISI, int? SAYFA);
-        Task<IEnumerable<ManufacturingTask>> TaskDoneList(ManufacturingTask T, int CompanyId, int? KAYITSAYISI, int? SAYFA);
-        Task<IEnumerable<ManufacturingTask>> TaskOpenList(ManufacturingTask T, int CompanyId, int? KAYITSAYISI, int? SAYFA);
+        Task<IEnumerable<ManufacturingOrderList>> ScheludeOpenList(ManufacturingOrderListArama T, int CompanyId, int? KAYITSAYISI, int? SAYFA);
+        Task<IEnumerable<ManufacturingOrderDoneList>> ScheludeDoneList(ManufacturingOrderDoneListArama T, int CompanyId, int? KAYITSAYISI, int? SAYFA);
+        Task<IEnumerable<ManufacturingTask>> TaskDoneList(ManufacturingTaskArama T, int CompanyId, int? KAYITSAYISI, int? SAYFA);
+        Task<IEnumerable<ManufacturingTask>> TaskOpenList(ManufacturingTaskArama T, int CompanyId, int? KAYITSAYISI, int? SAYFA);
         Task<IEnumerable<ManufacturingOrderDetail>> Detail(int CompanyId, int id);
         Task<IEnumerable<ManufacturingOrderItemsIngredientsDetail>> IngredientsDetail(int CompanyId, int id);
         Task<IEnumerable<ManufacturingOrderItemsOperationDetail>> OperationDetail(int CompanyId, int id);

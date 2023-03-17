@@ -51,7 +51,7 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
-            var list = await _db.QueryAsync<ListBomMaterial>($"Select TOP 10 id,Name,IsActive From Items where Tip = 'Material' and CompanyId = {CompanyId} and IsActive = 1 and Name LIKE '%{Name}%'");
+            var list = await _db.QueryAsync<ListBomMaterial>($"Select TOP 10 id,Isim From Urunler where Tip = 'Material' and  Aktif = 1 and Isim LIKE '%{Name}%'");
             return Ok(list);
         }
         [Route("List")]
@@ -75,17 +75,17 @@ namespace Api.Controllers
 
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
-                var hata = await _bomcontrol.Insert(T, CompanyId);
+                var hata = await _bomcontrol.Insert(T);
                 if (hata.Count()==0)
                 {
                     int id = await _bom.Insert(T, CompanyId);
-                    var eklenen = await _db.QueryAsync<ListBOM>($@"Select Bom.id,Bom.Quantity,
-                                                                ISNULL(Bom.Note,'') as Note,Bom.IsActive,
-                                                                CAST((Bom.Quantity * a.DefaultPrice)as decimal(15,2)) as StockCost,
-                                                                a.id as MaterialId,a.Name as MaterialName,i.id as ProductId From Bom 
-                                                                inner join Items a on a.id = Bom.MaterialId
-                                                                inner join Items i on i.id = Bom.ProductId
-                                                                where Bom.CompanyId = {CompanyId} and Bom.id = {id}");
+                    var eklenen = await _db.QueryAsync<ListBOM>($@"Select ur.id,ur.Miktar Quantity,
+                                                                ISNULL(ur.Bilgi,'') as Bilgi,ur.Aktif,
+                                                                CAST((ur.Miktar * a.VarsayilanFiyat)as decimal(15,2)) as Tutar,
+                                                                a.id as MalzemeId,a.Isim as MalzemeIsmi,i.id as MamulId,i.Isim as MamulIsmi From UrunRecetesi ur 
+                                                                inner join Urunler a on a.id = ur.MalzemeId
+                                                                inner join Urunler i on i.id = ur.MamulId
+                                                                where ur.id = {id}");
                     return Ok(eklenen);
                 }
                 else
@@ -116,7 +116,7 @@ namespace Api.Controllers
            
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
-               var hata=await _bomcontrol.Update(T, CompanyId);
+               var hata=await _bomcontrol.Update(T);
                 if (hata.Count()==0)
                 {
                     DynamicParameters param1 = new DynamicParameters();
@@ -124,7 +124,7 @@ namespace Api.Controllers
                     param1.Add("@id", T.id);
 
                     await _bom.Update(T, CompanyId);
-                    var list = await _db.QueryAsync<ListBOM>($@"select Bom.id,Bom.ProductId,a.[Name] as ProductName,Bom.MaterialId,b.[Name] as MaterialName,Bom.Quantity,ISNULL(Bom.Note,'')as Note  from Bom left join Items a on a.id=Bom.ProductId  left join Items b on b.id=Bom.MaterialId where Bom.CompanyId=@CompanyId and Bom.id=@id", param1);
+                    var list = await _db.QueryAsync<ListBOM>($@"select ur.id,ur.MamulId ,a.[Isim] as MamulIsmi,ur.MalzemeId,b.[Isim] as MalzemeIsmi,ur.Miktar,ISNULL(ur.Bilgi,'')as Bilgi  from UrunRecetesi ur left join Urunler a on a.id=ur.MamulId  left join Urunler b on b.id=ur.MalzemeId where ur.id=@id", param1);
                     return Ok(list);
                 }
                 else
@@ -152,7 +152,7 @@ namespace Api.Controllers
       
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
-                var hata =await _idcontrol.GetControl("Bom", T.id, CompanyId);
+                var hata =await _idcontrol.GetControl("Urunler", T.id);
                 if (hata.Count()!=0)
                 {
                     return BadRequest(hata);

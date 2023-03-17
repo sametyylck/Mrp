@@ -12,13 +12,13 @@ namespace Validation.Locations
     {
         public LocationsInsertValidations()
         {
-            RuleFor(x => x.Make).NotEmpty().WithMessage("make boş geçilemez").NotNull().WithMessage("make zorunlu alan");
-            RuleFor(x => x.Sell).NotEmpty().WithMessage("Sell boş geçilemez").NotNull().WithMessage("Sell zorunlu alan");
-            RuleFor(x => x.Buy).NotEmpty().WithMessage("Buy boş geçilemez").NotNull().WithMessage("Buy zorunlu alan");
-            RuleFor(x => x.LocationName).NotEmpty().WithMessage("LocationName boş geçilemez").NotNull().WithMessage("LocationName zorunlu alan");
-            RuleFor(x => x.Country).NotEmpty().WithMessage("Country boş geçilemez").NotNull().WithMessage("Country zorunlu alan");
-            RuleFor(x => x.AddressLine1).NotEmpty().WithMessage("AddressLine1 boş geçilemez").NotNull().WithMessage("AddressLine1 zorunlu alan");
-            RuleFor(x => x.CityTown).NotEmpty().WithMessage("CityTown boş geçilemez").NotNull().WithMessage("CityTown zorunlu alan");
+            RuleFor(x => x.Uretim).NotEmpty().WithMessage("make boş geçilemez").NotNull().WithMessage("make zorunlu alan");
+            RuleFor(x => x.Satis).NotEmpty().WithMessage("Sell boş geçilemez").NotNull().WithMessage("Sell zorunlu alan");
+            RuleFor(x => x.SatinAlma).NotEmpty().WithMessage("Buy boş geçilemez").NotNull().WithMessage("Buy zorunlu alan");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("LocationName boş geçilemez").NotNull().WithMessage("LocationName zorunlu alan");
+            RuleFor(x => x.Ulke).NotEmpty().WithMessage("Country boş geçilemez").NotNull().WithMessage("Country zorunlu alan");
+            RuleFor(x => x.Adres1).NotEmpty().WithMessage("AddressLine1 boş geçilemez").NotNull().WithMessage("AddressLine1 zorunlu alan");
+            RuleFor(x => x.Sehir).NotEmpty().WithMessage("CityTown boş geçilemez").NotNull().WithMessage("CityTown zorunlu alan");
 
         }
     }
@@ -27,13 +27,13 @@ namespace Validation.Locations
         public LocationsUpdateValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id boş geçilemez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.Make).NotEmpty().WithMessage("make boş geçilemez").NotNull().WithMessage("make zorunlu alan");
-            RuleFor(x => x.Sell).NotEmpty().WithMessage("make boş geçilemez").NotNull().WithMessage("make zorunlu alan");
-            RuleFor(x => x.Buy).NotEmpty().WithMessage("make boş geçilemez").NotNull().WithMessage("make zorunlu alan");
-            RuleFor(x => x.LocationName).NotEmpty().WithMessage("LocationName boş geçilemez").NotNull().WithMessage("LocationName zorunlu alan");
-            RuleFor(x => x.Country).NotEmpty().WithMessage("Country boş geçilemez").NotNull().WithMessage("Country zorunlu alan");
-            RuleFor(x => x.AddressLine1).NotEmpty().WithMessage("AddressLine1 boş geçilemez").NotNull().WithMessage("AddressLine1 zorunlu alan");
-            RuleFor(x => x.CityTown).NotEmpty().WithMessage("CityTown boş geçilemez").NotNull().WithMessage("CityTown zorunlu alan");
+            RuleFor(x => x.Uretim).NotEmpty().WithMessage("make boş geçilemez").NotNull().WithMessage("make zorunlu alan");
+            RuleFor(x => x.Satis).NotEmpty().WithMessage("make boş geçilemez").NotNull().WithMessage("make zorunlu alan");
+            RuleFor(x => x.SatinAlma).NotEmpty().WithMessage("make boş geçilemez").NotNull().WithMessage("make zorunlu alan");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("LocationName boş geçilemez").NotNull().WithMessage("LocationName zorunlu alan");
+            RuleFor(x => x.Ulke).NotEmpty().WithMessage("Country boş geçilemez").NotNull().WithMessage("Country zorunlu alan");
+            RuleFor(x => x.Adres1).NotEmpty().WithMessage("AddressLine1 boş geçilemez").NotNull().WithMessage("AddressLine1 zorunlu alan");
+            RuleFor(x => x.Sehir).NotEmpty().WithMessage("CityTown boş geçilemez").NotNull().WithMessage("CityTown zorunlu alan");
 
         }
     }

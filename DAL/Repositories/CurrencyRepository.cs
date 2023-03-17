@@ -22,7 +22,7 @@ namespace DAL.Repositories
 
         public async Task<IEnumerable<CurrencyDTO>> List(string? kelime)
         {
-            string sql = $"Select * From Currency  where [Name] like '%{kelime}%'";
+            string sql = $"Select id,Isim From ParaBirimleri  where [Isim] like '%{kelime}%'";
             var list = await _db.QueryAsync<CurrencyDTO>(sql);
             return list.ToList();
         }

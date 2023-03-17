@@ -9,6 +9,6 @@ namespace DAL.DTO
     public class CurrencyDTO
     {
         public int id { get; set; }
-        public string? Name { get; set; }
+        public string? Isim { get; set; }
     }
 }

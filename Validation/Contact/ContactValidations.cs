@@ -14,7 +14,6 @@ namespace Validation.Contact
         public ContactDeleteValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilmez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.Tip).NotEmpty().WithMessage("Tip bos gecilmez").NotNull().WithMessage("Tip Zorunlu alan");
         }
     }
     public class ContactInsertValidations : AbstractValidator<ContactsInsert>
@@ -22,9 +21,9 @@ namespace Validation.Contact
         public ContactInsertValidations()
         {
             
-            RuleFor(x => x.Tip).NotEmpty().WithMessage("Tip bos gecilmez").NotNull().WithMessage("Tip Zorunlu alan");
+            RuleFor(x => x.CariTipId).NotEmpty().WithMessage("CariTipId bos gecilmez").NotNull().WithMessage("CariTipId Zorunlu alan");
 
-            RuleFor(x => x.DisplayName).NotEmpty().WithMessage("Görünen isim bos gecilmez").NotNull().WithMessage("Görünen isim Zorunlu alan");
+            RuleFor(x => x.AdSoyad).NotEmpty().WithMessage("AdSoyad  bos gecilmez").NotNull().WithMessage("AdSoyad Zorunlu alan");
 
             RuleFor(x => x.Mail).NotEmpty().WithMessage("Mail bos gecilmez").NotNull().WithMessage(" Mail Zorunlu alan");
 
@@ -32,15 +31,11 @@ namespace Validation.Contact
 
         }
     }
-    public class ContactUpdateValidations : AbstractValidator<ContactsList>
+    public class ContactUpdateValidations : AbstractValidator<CariUpdate>
     {
         public ContactUpdateValidations()
         {
-            RuleFor(x => x.id).NotNull().WithMessage("Zorunlu alan").NotEmpty().WithMessage(" id zorunlu alan");
-
-            RuleFor(x => x.Tip).NotEmpty().WithMessage("Tip bos gecilmez").NotNull().WithMessage("Tip zorunlu alan");
-
-            RuleFor(x => x.DisplayName).NotEmpty().WithMessage("Görünen isim bos gecilmez").NotNull().WithMessage("Görünen isim Zorunlu alan");
+            RuleFor(x => x.CariKod).NotNull().WithMessage("Zorunlu alan").NotEmpty().WithMessage(" id zorunlu alan");
 
             RuleFor(x => x.Mail).NotEmpty().WithMessage("Mail bos gecilmez").NotNull().WithMessage("Mail  Zorunlu alan");
         }
@@ -54,14 +49,14 @@ namespace Validation.Contact
 
             RuleFor(x => x.Tip).NotEmpty().WithMessage("Tip bos gecilmez").NotNull().WithMessage("Zorunlu alan");
 
-            RuleFor(x => x.AddressLine1).NotNull().WithMessage("Zorunlu alan").NotEmpty().WithMessage("Adres satırı zorunlu");
+            RuleFor(x => x.Adres1).NotNull().WithMessage("Zorunlu alan").NotEmpty().WithMessage("Adres satırı zorunlu");
 
-            RuleFor(x => x.AddressPhone).NotEmpty().WithMessage("Tip bos gecilmez").NotNull().WithMessage("telefon Zorunlu alan");
+            RuleFor(x => x.AdresTelefon).NotEmpty().WithMessage("Tip bos gecilmez").NotNull().WithMessage("telefon Zorunlu alan");
 
-            RuleFor(x => x.AddressCountry).NotNull().WithMessage("Zorunlu alan").NotEmpty().WithMessage("Ulke zorunlu alan");
+            RuleFor(x => x.AdresUlke).NotNull().WithMessage("Zorunlu alan").NotEmpty().WithMessage("Ulke zorunlu alan");
 
-            RuleFor(x => x.AddressFirstName).NotEmpty().WithMessage("Tip bos gecilmez").NotNull().WithMessage("İsim Zorunlu alan");
-            RuleFor(x => x.AddressLastName).NotEmpty().WithMessage("Tip bos gecilmez").NotNull().WithMessage("Soyisim Zorunlu alan");
+            RuleFor(x => x.AdresAd).NotEmpty().WithMessage("Tip bos gecilmez").NotNull().WithMessage("İsim Zorunlu alan");
+            RuleFor(x => x.AdresSoyisim).NotEmpty().WithMessage("Tip bos gecilmez").NotNull().WithMessage("Soyisim Zorunlu alan");
 
         }
     }

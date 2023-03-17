@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Runtime.CompilerServices;
 using static DAL.DTO.CategoryDTO;
 using static DAL.DTO.ContactDTO;
@@ -25,15 +26,15 @@ namespace Api.Controllers
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class ContactController : ControllerBase
+    public class CariController : ControllerBase
     {
         private readonly IContactsRepository _contactsRepository;
-        private readonly IDbConnection _db; 
+        private readonly IDbConnection _db;
         private readonly IUserService _user;
         private readonly IValidator<ContactsInsert> _ContactsList;
         private readonly IValidator<ContactsDelete> _ContactsDelete;
         private readonly IValidator<ContactsUpdateAddress> _Contacts;
-        private readonly IValidator<ContactsList> _contactupdate;
+        private readonly IValidator<CariUpdate> _contactupdate;
         private readonly IContactControl _contactcontrol;
         private readonly IPermissionControl _izinkontrol;
 
@@ -41,7 +42,7 @@ namespace Api.Controllers
 
 
 
-        public ContactController(IContactsRepository contactsRepository, IUserService user, IDbConnection db, IValidator<ContactsDelete> contactsDelete, IValidator<ContactsUpdateAddress> contacts, IValidator<ContactsInsert> contactsList, IValidator<ContactsList> contactupdate, IContactControl contactcontrol, IIDControl ıdcontrol, IPermissionControl izinkontrol)
+        public CariController(IContactsRepository contactsRepository, IUserService user, IDbConnection db, IValidator<ContactsDelete> contactsDelete, IValidator<ContactsUpdateAddress> contacts, IValidator<ContactsInsert> contactsList, IValidator<CariUpdate> contactupdate, IContactControl contactcontrol, IIDControl ıdcontrol, IPermissionControl izinkontrol)
         {
             _contactsRepository = contactsRepository;
             _user = user;
@@ -55,24 +56,24 @@ namespace Api.Controllers
             _izinkontrol = izinkontrol;
         }
         [Route("List")]
-        [HttpPost,Authorize]
-        public async Task<ActionResult<User>> List(ContactsFilters T,int KAYITSAYISI,int SAYFA)
+        [HttpPost, Authorize]
+        public async Task<ActionResult<User>> List(ContactsFilters T, int KAYITSAYISI, int SAYFA)
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.IletisimGoruntule, Permison.IletisimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimGoruntule, Permison.IletisimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
-       
-            var list =await _contactsRepository.List(T, CompanyId, KAYITSAYISI, SAYFA);
-            var count =await _contactsRepository.Count(T, CompanyId);
 
-            return Ok(new {list,count});
+            var list = await _contactsRepository.List(T, KAYITSAYISI, SAYFA);
+            var count = list.Count();
+
+            return Ok(new { list, count });
         }
         [Route("Details")]
         [HttpGet, Authorize]
@@ -81,25 +82,51 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.IletisimGoruntule, Permison.IletisimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimGoruntule, Permison.IletisimHepsi, UserId);
             if (izin == false)
-            {
+            {       
                 List<string> izinhatasi = new();
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
 
-            var list = await _contactsRepository.Details(id, CompanyId);
+            var list = await _contactsRepository.Details(id);
             return (list.First());
         }
+        [Route("CariTip")]
+        [HttpGet, Authorize]
+        public async Task<ActionResult<ContactsAll>> CariTip(int id)
+        {
+            List<int> user = _user.CompanyId();
+            int UserId = user[1];
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimGoruntule, Permison.IletisimHepsi, UserId);
+            if (izin == true)
+            {
+                string sql = $"Select * from CariTip";
+                var list = await _db.QueryAsync<CariTip>(sql);
+                return Ok(list);
+            }
+            else
+            {
+                List<string> hatalar = new();
+                hatalar.Add("Yetkiniz yetersiz.");
+                return BadRequest(hatalar);
+            }
+
+        }
+
+        /// <summary>
+        /// Cari ekleme sayfasi Tipe göre
+        /// </summary>
+        /// <param name="T"></param>
+        /// <returns></returns>
         [Route("Insert")]
         [HttpPost, Authorize]
         public async Task<ActionResult<ContactsList>> Insert(ContactsInsert T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.IletisimEkleyebilirVeDuzenleyebilir, Permison.IletisimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimEkleyebilirVeDuzenleyebilir, Permison.IletisimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -109,44 +136,26 @@ namespace Api.Controllers
             ValidationResult result = await _ContactsList.ValidateAsync(T);
             if (result.IsValid)
             {
-               
 
-                if (T.Tip == "Customer")
+
+                int id = await _contactsRepository.Insert(T, UserId);
+                int billing = await _contactsRepository.InsertAddress("BillingAddress");
+                int shipping = await _contactsRepository.InsertAddress("ShippingAddress");
+                await _db.ExecuteAsync($"Update  Cari set  FaturaAdresId={shipping},KargoAdresId={billing} where CariKod={id}");
+
+                var response = new ContactsFilters
                 {
-                    int id = await _contactsRepository.Insert(T, CompanyId);
-                    int billing = await _contactsRepository.InsertAddress(CompanyId, "BillingAddress");
-                    int shipping = await _contactsRepository.InsertAddress(CompanyId, "ShippingAddress");
-                    await _db.ExecuteAsync($"Update  Contacts set  ShippingLocationId={shipping},BillingLocationId={billing} where id={id} and CompanyId={CompanyId}");
+                    CariKod = id,
+                    CariTipId = T.CariTipId,
+                    ParaBirimiId = T.ParaBirimiId,
+                    AdSoyad = T.AdSoyad,
+                    Mail = T.Mail,
+                    Telefon = T.Telefon,
+                    VergiDairesi = T.VergiDairesi,
+                    VergiNumarası=T.VergiNumarası
 
-                    var response = new ContactsFilters
-                    {
-                        id = id,
-                        Tip = T.Tip,
-                        DisplayName = T.DisplayName,
-                        Mail = T.Mail,
-                        Phone = T.Phone,
-                        Comment = T.Comment,
-                        FirstName = T.FirstName,
-                        LastName = T.LastName,
-
-                    };
-                    return Ok(response);
-                }
-                else if (T.Tip == "Supplier")
-                {
-                    int id = await _contactsRepository.Insert(T, CompanyId);
-                    var response = new ContactsFilters
-                    {
-                        id = id,
-                        Mail = T.Mail,
-                        Comment = T.Comment,
-
-
-                    };
-                    return Ok(response);
-                }
-
-                return BadRequest("Hatalı tip değişkeni.");
+                };
+                return Ok(response);
 
             }
             else
@@ -154,16 +163,15 @@ namespace Api.Controllers
                 result.AddToModelState(this.ModelState);
                 return BadRequest(result.ToString());
             }
-            
+
         }
         [Route("Update")]
         [HttpPut, Authorize]
-        public async Task<ActionResult<ContactsAll>> Update(ContactsList T)
+        public async Task<ActionResult<ContactsAll>> Update(CariUpdate T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.IletisimEkleyebilirVeDuzenleyebilir, Permison.IletisimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimEkleyebilirVeDuzenleyebilir, Permison.IletisimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -173,25 +181,21 @@ namespace Api.Controllers
             ValidationResult result = await _contactupdate.ValidateAsync(T);
             if (result.IsValid)
             {
-               
-                var hata =await _contactcontrol.Update(T, CompanyId);
-                if (hata.Count()==0)
+
+                var hata = await _contactcontrol.Update(T);
+                if (hata.Count() == 0)
                 {
                     DynamicParameters prm = new DynamicParameters();
-                    prm.Add("@id", T.id); ;
-                    prm.Add("@CompanyId", CompanyId);
+                    prm.Add("@id", T.CariKod); ;
 
-                    await _contactsRepository.Update(T, CompanyId, T.id);
+                    await _contactsRepository.Update(T);
                     var response = new ContactsList
                     {
-                        id = T.id,
-                        FirstName = T.FirstName,
-                        LastName = T.LastName,
-                        CompanyName = T.CompanyName,
-                        DisplayName = T.DisplayName,
+                        CariKod = T.CariKod,
+                        CariTipId = T.CariTipId,
+                        AdSoyad = T.AdSoyad,
                         Mail = T.Mail,
-                        Phone = T.Phone,
-                        Comment = T.Comment,
+                        Telefon = T.Telefon,
 
                     };
                     return Ok(response);
@@ -200,8 +204,8 @@ namespace Api.Controllers
                 {
                     return BadRequest(hata);
                 }
-          
-                
+
+
 
             }
             else
@@ -224,9 +228,8 @@ namespace Api.Controllers
         public async Task<ActionResult<Contacts>> UpdateAddress(ContactsUpdateAddress T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.IletisimEkleyebilirVeDuzenleyebilir, Permison.IletisimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimEkleyebilirVeDuzenleyebilir, Permison.IletisimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -237,11 +240,11 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-              
-                var hata = await _contactcontrol.UpdateAddress(T, CompanyId);
-                if (hata.Count() != 0)
+
+                var hata = await _contactcontrol.UpdateAddress(T);
+                if (hata.Count() == 0)
                 {
-                    await _contactsRepository.UpdateAddress(T, CompanyId, T.id);
+                    await _contactsRepository.UpdateAddress(T, T.id);
                     return Ok("Başarılı");
                 }
                 else
@@ -267,9 +270,8 @@ namespace Api.Controllers
         public async Task<ActionResult<ContactsDelete>> Delete(ContactsDelete T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.IletisimSil, Permison.IletisimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.IletisimSil, Permison.IletisimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -279,19 +281,11 @@ namespace Api.Controllers
             ValidationResult result = await _ContactsDelete.ValidateAsync(T);
             if (result.IsValid)
             {
-                string tabloadi= "Contacts";
-               
-                var hata=await _Idcontrol.GetControl(tabloadi, T.id, CompanyId);
-                if (hata.Count()==0)
-                {
 
-                    await _contactsRepository.Delete(T, CompanyId);
+                    await _contactsRepository.Delete(T);
                     return Ok("Başarılı");
-                }
-                else
-                {
-                    return BadRequest(hata);
-                }
+                
+             
 
             }
             else

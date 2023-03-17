@@ -57,7 +57,7 @@ namespace DAL.Repositories
             float rate = await _db.QueryFirstAsync<int>($"select  Rate from Tax where id =@TaxId and CompanyId=@CompanyId", prm);
 
 
-            var PriceUnit = liste.First().DefaultPrice;
+            var PriceUnit = liste.First().VarsayilanFiyat;
 
             var TotalPrice = (T.Quantity * PriceUnit); //adet*fiyat
             float? PlusTax = (TotalPrice * rate) / 100; //tax fiyatı hesaplama
@@ -126,7 +126,7 @@ namespace DAL.Repositories
             (select Rate from Tax where id=(select DefaultTaxPurchaseOrderId from GeneralDefaultSettings where CompanyId=@CompanyId))as Rate,
             (select DefaultPrice from Items where id =@ItemId and CompanyId=@CompanyId)as DefaultPrice", prm);
                 prm.Add("@TaxId", T.TaxId);
-                var Birimfiyat = liste.First().DefaultPrice;
+                var Birimfiyat = liste.First().VarsayilanFiyat;
                 T.PricePerUnit = Birimfiyat;
 
             }
@@ -333,23 +333,23 @@ namespace DAL.Repositories
                 foreach (var item in Itemdegerler)
                 {
                     DynamicParameters param = new DynamicParameters();
-                    param.Add("@ItemId", item.ItemId);
+                    param.Add("@ItemId", item.StokId);
                     param.Add("@CompanyId", CompanyId);
                     param.Add("@location", T.LocationId);
                     param.Add("@id", T.id);
                     param.Add("@OrderItemId", item.id);
                     param.Add("@ContactId", T.ContactId);
 
-                    var RezerveCount = await _control.Count(item.ItemId, CompanyId, T.LocationId);
+                    var RezerveCount = await _control.Count(item.StokId, T.LocationId);
                     string sqla = $@"select
                      (Select ISNULL(Tip,'') from Items where id = @ItemId and CompanyId = @CompanyId)as Tip";
                     var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, param);
                     var Tip = sorgu.First().Tip;
                     SatısInsertItem A = new SatısInsertItem();
-                    A.ItemId = item.ItemId;
+                    A.ItemId = item.StokId;
                     A.LocationId = T.LocationId;
                     A.ContactId = T.ContactId;
-                    A.Quantity = item.Quantity;
+                    A.Quantity = item.Miktar;
 
 
 

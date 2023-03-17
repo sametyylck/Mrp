@@ -18,46 +18,35 @@ namespace BL.Services.Contact
             _db = db;
         }
 
-        public async Task<List<string>> Update(ContactDTO.ContactsList T, int CompanyId)
+        public async Task<List<string>> Update(ContactDTO.CariUpdate T)
         {
             List<string> list = new List<string>();
             DynamicParameters param = new DynamicParameters();
-            param.Add("@id", T.id);
-            param.Add("@CompanyId", CompanyId);
-            string sql = $"Select id from Contacts where id=@id and CompanyId = @CompanyId";
+            param.Add("@id", T.CariKod);
+            string sql = $"Select CariKod from Cari where CariKod=@id";
             var kontrol = await _db.QueryAsync<int>(sql, param);
             if (kontrol.Count() == 0)
             {
-                list.Add("Boyle bir id yok.");
+                list.Add("Boyle bir CariKod yok.");
             }
-            var tipbul = await _db.QueryAsync<ItemDTO.Items>($"Select Tip from Contacts where CompanyId = @CompanyId and id = @id", param);
-            string? tip = tipbul.First().Tip;
-            if (T.Tip==tip)
-            {
-                return list;
-            }
-            else
-            {
-                list.Add("Tip uyuşmazlığı.Tip hatası.");
-                return list;
 
-            }
+            return list;
+
 
         }
 
-        public async Task<List<string>> UpdateAddress(ContactDTO.ContactsUpdateAddress T, int CompanyId)
+        public async Task<List<string>> UpdateAddress(ContactDTO.ContactsUpdateAddress T)
         {
             List<string> list = new();
             DynamicParameters param = new DynamicParameters();
             param.Add("@id", T.id);
-            param.Add("@CompanyId", CompanyId);
-            string sql = $"Select id from Locations where id=@id and CompanyId = @CompanyId";
+            string sql = $"Select id from DepoVeAdresler where id=@id ";
             var kontrol = await _db.QueryAsync<int>(sql, param);
             if (kontrol.Count() == 0)
             {
                 list.Add(" Boyle bir id yok.");
             }
-            var tipbul = await _db.QueryAsync<ItemDTO.Items>($"Select Tip from Locations where CompanyId = @CompanyId and id = @id", param);
+            var tipbul = await _db.QueryAsync<ItemDTO.Items>($"Select Tip from DepoVeAdresler where  id = @id", param);
             string? tip = tipbul.First().Tip;
             if (T.Tip == tip)
             {

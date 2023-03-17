@@ -43,9 +43,8 @@ namespace Api.Controllers
         public async Task<ActionResult<PurchaseOrderId>> OrdersStock(PurchaseOrderId T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaTamamlama, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaTamamlama, Permison.SatinAlmaHepsi,UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -55,10 +54,10 @@ namespace Api.Controllers
             ValidationResult result = await _Purchase.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata =await _idcontrol.GetControl("Orders", T.id, CompanyId);
+                var hata =await _idcontrol.GetControl("SatinAlma", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _orderStockRepository.StockUpdate(T, CompanyId, UserId);
+                    await _orderStockRepository.StockUpdate(T,UserId);
                     return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
                 }
                 else
@@ -80,17 +79,16 @@ namespace Api.Controllers
         public async Task<ActionResult<PurchaseOrderLogsList>> List(PurchaseOrderLogsList T,int KAYITSAYISI,int SAYFA)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaGoruntule, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaGoruntule, Permison.SatinAlmaHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
-            var list = await _orderStockRepository.List(T, CompanyId, KAYITSAYISI, SAYFA);
-            var count = await _orderStockRepository.Count(T, CompanyId);
+            var list = await _orderStockRepository.List(T, KAYITSAYISI, SAYFA);
+            var count = list.Count();
             return Ok(new { list, count });
         }
 
@@ -99,17 +97,16 @@ namespace Api.Controllers
         public async Task<ActionResult<PurchaseOrderLogsList>> DoneList(PurchaseOrderLogsList T, int KAYITSAYISI, int SAYFA)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaGoruntule, Permison.SatinAlmaHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaGoruntule, Permison.SatinAlmaHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
-            var list = await _orderStockRepository.DoneList(T, CompanyId, KAYITSAYISI, SAYFA);
-            var count = await _orderStockRepository.DoneCount(T, CompanyId);
+            var list = await _orderStockRepository.DoneList(T,KAYITSAYISI, SAYFA);
+            var count = list.Count();
             return Ok(new { list, count });
         }
     }

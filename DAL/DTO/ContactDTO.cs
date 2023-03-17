@@ -32,113 +32,124 @@ namespace DAL.DTO
         {
             public int id { get; set; }
             public string Tip { get; set; } = string.Empty;
-            public string AddressFirstName { get; set; } = string.Empty;
-            public string AddressLastName { get; set; } = string.Empty;
-            public string AddressCompany { get; set; } = string.Empty;
-            public string AddressPhone { get; set; } = string.Empty;
-            public string AddressLine1 { get; set; } = string.Empty;
-            public string AddressLine2 { get; set; } = string.Empty;
-            public string AddressCityTown { get; set; } = string.Empty;
-            public string AddressStateRegion { get; set; } = string.Empty;
-            public int AddressZipPostal { get; set; }
-            public string AddressCountry { get; set; } = string.Empty;
+            public string AdresAd { get; set; } = string.Empty;
+            public string AdresSoyisim { get; set; } = string.Empty;
+            public string AdresSirket { get; set; } = string.Empty;
+            public string AdresTelefon { get; set; } = string.Empty;
+            public string Adres1 { get; set; } = string.Empty;
+            public string Adres2 { get; set; } = string.Empty;
+            public string AdresSehir { get; set; } = string.Empty;
+            public string AdresCadde { get; set; } = string.Empty;
+            public int AdresPostaKodu { get; set; }
+            public string AdresUlke { get; set; } = string.Empty;
 
         }
 
         public class ContactsAll
         {
 
-            public int CustomerId { get; set; }
+            public int CariKod { get; set; }
             public string Tip { get; set; } = string.Empty;
-            public string FirstName { get; set; } = string.Empty;
-            public string LastName { get; set; } = string.Empty;
-            public string CompanyName { get; set; } = string.Empty;
-            [Required]
-            public string DisplayName { get; set; } = string.Empty;
-            [EmailAddress]
+            public string AdSoyad { get; set; } = string.Empty;
+            public string VergiDairesi { get; set; } = string.Empty;
+            public string VergiNumarası { get; set; } = string.Empty;
+            public int CariTipId { get; set; }
             public string Mail { get; set; } = string.Empty;
-            public string Phone { get; set; } = string.Empty;
-            public string Comment { get; set; } = string.Empty;
-            public string BillingFirstName { get; set; } = string.Empty;
-            public string BillingLastName { get; set; } = string.Empty;
-            public string BillingCompanyName { get; set; } = string.Empty;
-            public string BillingPhone { get; set; } = string.Empty;
-            public string BillingAddressLine1 { get; set; } = string.Empty;
-            public string BillingAddressLine2 { get; set; } = string.Empty;
-            public string BillingCityTown { get; set; } = string.Empty;
-            public string BillingStateRegion { get; set; } = string.Empty;
-            public int BillingZipPostal { get; set; }
-            public string BillingCountry { get; set; } = string.Empty;
+            public string Telefon { get; set; } = string.Empty;
+            public string FaturaAdresIdAd { get; set; } = string.Empty;
+            public string FaturaAdresIdSoyIsim { get; set; } = string.Empty;
+            public string FaturaAdresIdSirketIsmi { get; set; } = string.Empty;
+            public string FaturaAdresIdTelefon { get; set; } = string.Empty;
+            public string FaturaAdresIdAdres1 { get; set; } = string.Empty;
+            public string FaturaAdresIdAdres2 { get; set; } = string.Empty;
+            public string FaturaAdresIdSehir { get; set; } = string.Empty;
+            public string FaturaAdresIdCadde { get; set; } = string.Empty;
+            public int FaturaAdresIdPostaKodu { get; set; }
+            public string FaturaAdresIdUlke { get; set; } = string.Empty;
 
-
-
-            public string ShippingFirstName { get; set; } = string.Empty;
-            public string ShippingLastName { get; set; } = string.Empty;
-            public string ShippingCompanyName { get; set; } = string.Empty;
-            public string ShippingPhone { get; set; } = string.Empty;
-            public string ShippingAddressLine1 { get; set; } = string.Empty;
-            public string ShippingAddressLine2 { get; set; } = string.Empty;
-            public string ShippingCityTown { get; set; } = string.Empty;
-            public string ShippingStateRegion { get; set; } = string.Empty;
-            public int ShippingZipPostal { get; set; }
-            public string ShippingCountry { get; set; } = string.Empty;
-            public int BillingLocationId { get; set; }
-            public int ShippingLocationId { get; set; }
-            public int? CompanyId { get; set; }
+            public string KargoAdresIdAdresIdAd { get; set; } = string.Empty;
+            public string KargoAdresIdAdresIdSoyIsim { get; set; } = string.Empty;
+            public string KargoAdresIdAdresIdSirketIsmi { get; set; } = string.Empty;
+            public string KargoAdresIdAdresIdTelefon { get; set; } = string.Empty;
+            public string KargoAdresIdAdresIdAdres1 { get; set; } = string.Empty;
+            public string KargoAdresIdAdresIdAdres2 { get; set; } = string.Empty;
+            public string KargoAdresIdAdresIdSehir { get; set; } = string.Empty;
+            public string KargoAdresIdAdresIdCadde { get; set; } = string.Empty;
+            public int KargoAdresIdPostaKodu { get; set; }
+            public string KargoAdresIdUlke { get; set; } = string.Empty;
+            public int FaturaAdresiId { get; set; }
+            public int KargoAdresiId { get; set; }
 
         }
 
         public class ContactsList
         {
-            public int id { get; set; }
-            public string Tip { get; set; } = string.Empty;
-            public string DisplayName { get; set; }=string.Empty;
+            public int CariKod { get; set; }
+            public int CariTipId { get; set; }
+            public string GorunenIsim { get; set; }=string.Empty;
             public string Mail { get; set; } = string.Empty;
-            public string Phone { get; set; } = string.Empty;
-            public string Comment { get; set; } = string.Empty;
-            public string FirstName { get; set; } = string.Empty;
-            public string LastName { get; set; } = string.Empty;
-            public string? CompanyName { get; set; }
+            public string Telefon { get; set; } = string.Empty;
+            public string AdSoyad { get; set; } = string.Empty;
+            public string? SirketIsmi { get; set; }
 
 
         }
         public class ContactsInsert
         {
-            public string Tip { get; set; } = string.Empty;
-            public string DisplayName { get; set; } = string.Empty;
+            public string AdSoyad { get; set; } = string.Empty;
+            public string VergiDairesi { get; set; } = string.Empty;
+            public string VergiNumarası { get; set; } = string.Empty;
+            public int CariTipId { get; set; }
             public string Mail { get; set; } = string.Empty;
-            public string Phone { get; set; } = string.Empty;
-            public string Comment { get; set; } = string.Empty;
-            public string FirstName { get; set; } = string.Empty;
-            public string LastName { get; set; } = string.Empty;
-            public string? CompanyName { get; set; }
+            public string Telefon { get; set; } = string.Empty;
+            public int? ParaBirimiId { get; set; }
 
 
 
 
         }
+        public class CariUpdate
+        {
+            public int CariKod { get; set; }
+            public string AdSoyad { get; set; } = string.Empty;
+            public string VergiDairesi { get; set; } = string.Empty;
+            public string VergiNumarası { get; set; } = string.Empty;
+            public int CariTipId { get; set; }
+            public string Mail { get; set; } = string.Empty;
+            public string Telefon { get; set; } = string.Empty;
+            public int? ParaBirimiId { get; set; }
+
+
+
+
+        }
+
 
         public class ContactsItemFilter
         {
-            public string? DisplayName { get; set; }
+            public string? GorunenIsim { get; set; }
+        }
+        public class CariTip
+        {
+            public int id { get; set; }
+            public string KartTipi { get; set; }
         }
         public class ContactsFilters
         {
-            public int id { get; set; }
-            public string Tip { get; set; }=string.Empty;
-            public string DisplayName { get; set; } = string.Empty;
+            public int CariKod { get; set; }
+            public string AdSoyad { get; set; } = string.Empty;
+            public string VergiDairesi { get; set; } = string.Empty;
+            public string VergiNumarası { get; set; } = string.Empty;
+            public int CariTipId { get; set; }
             public string Mail { get; set; } = string.Empty;
-            public string Phone { get; set; } = string.Empty;
-            public string Comment { get; set; } = string.Empty;
-            public string FirstName { get; set; } = string.Empty;
-            public string LastName { get; set; } = string.Empty;
-            public string? CompanyName { get; set; }
+            public string Telefon { get; set; } = string.Empty;
+            public int? ParaBirimiId { get; set; }
+
         }
 
         public class ContactsDelete
         {
             public int id { get; set; }
-            public string Tip { get; set; } = string.Empty;
         }
     }
 }

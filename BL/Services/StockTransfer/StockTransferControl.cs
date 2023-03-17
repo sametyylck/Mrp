@@ -27,13 +27,13 @@ namespace BL.Services.StockTransfer
             _control = control;
         }
 
-        public async Task<List<string>> Insert(StockTransferInsert T, int CompanyId)
+        public async Task<List<string>> Insert(StockTransferInsert T)
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<StockTransferAll>($@"select
-             (Select id  From Items where CompanyId = {CompanyId} and id={T.ItemId})as ItemId,
-            (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.DestinationId})as DestinationId,
-            (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.OriginId})as OriginId
+             (Select id  From Urunler where id={T.ItemId})as ItemId,
+            (Select id as varmi From DepoVeAdresler where id = {T.DestinationId})as DestinationId,
+            (Select id as varmi From DepoVeAdresler where id = {T.OriginId})as OriginId
 
             ");
             if (T.DestinationId!=T.OriginId)
@@ -69,12 +69,12 @@ namespace BL.Services.StockTransfer
 
         }
 
-        public async Task<List<string>> InsertItem(StockTransferInsertItem T, int CompanyId)
+        public async Task<List<string>> InsertItem(StockTransferInsertItem T)
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<StockTransferInsertItem>($@"select
-             (Select id  From Items where CompanyId = {CompanyId} and id={T.ItemId})as ItemId,
-            (Select id as varmi From StockTransfer where CompanyId = {CompanyId} and id = {T.StockTransferId} )as StockTransferId
+             (Select id  From Urunler where id={T.ItemId})as ItemId,
+            (Select id as varmi From StokAktarim where id = {T.StockTransferId} )as StockTransferId
             ");
             if (list.First().ItemId == null)
             {
@@ -93,20 +93,18 @@ namespace BL.Services.StockTransfer
             }
         }
 
-        public async Task Kontrol(int? Id, int? ItemId,int? StockTransferId, int CompanyId)
+        public async Task Kontrol(int? Id, int? ItemId,int? StockTransferId)
         {
             DynamicParameters prm1 = new();
-            prm1.Add("@CompanyId", CompanyId);
             prm1.Add("@ItemId", ItemId);
             prm1.Add("@id", Id);
-            var ItemIdeski = await _db.QueryFirstAsync<int>($"Select  StockTransferItems.ItemId from StockTransferItems where id=@id and CompanyId=@CompanyId", prm1);
+            var ItemIdeski = await _db.QueryFirstAsync<int>($"Select  StokAktarimDetay.StokId from StokAktarimDetay where id=@id ", prm1);
             if (ItemId!=ItemIdeski)
             {
                 DynamicParameters prm = new DynamicParameters();
                 prm.Add("@id", Id);
                 prm.Add("@StockTransferId", StockTransferId);
                 prm.Add("@ItemId", ItemIdeski);
-                prm.Add("@CompanyId", CompanyId);
                 string sqlf = $@"declare @@Origin int,@@Destination int
             set @@Origin=(Select OriginId from StockTransfer where id = @StockTransferId and CompanyId = @CompanyId)
             set @@Destination=(Select DestinationId from StockTransfer where id = @StockTransferId and CompanyId =  @CompanyId)
@@ -141,27 +139,26 @@ namespace BL.Services.StockTransfer
 
                 prm.Add("@NewOriginStock", NewOriginStock); //Yeni count değerini tabloya güncelleştiriyoruz.
                 prm.Add("@NewDestinationStock", NewDestinationStock);
-                prm.Add("@CompanyId", CompanyId);
 
-                await _db.ExecuteAsync($"Update LocationStock SET StockCount =@NewOriginStock where LocationId = @Origin and ItemId=@ItemId and CompanyId = @CompanyId", prm);
-                await _db.ExecuteAsync($"Update LocationStock SET StockCount =@NewDestinationStock where LocationId = @Destination and ItemId=@ItemId  and CompanyId = @CompanyId", prm);
+                await _db.ExecuteAsync($"Update DepoStoklar SET StockCount =@NewOriginStock where LocationId = @Origin and ItemId=@ItemId and CompanyId = @CompanyId", prm);
+                await _db.ExecuteAsync($"Update DepoStoklar SET StockCount =@NewDestinationStock where LocationId = @Destination and ItemId=@ItemId  and CompanyId = @CompanyId", prm);
 
-                string sql1 = $"Select Tip From Items where CompanyId = {CompanyId} and id = {ItemId}";
+                string sql1 = $"Select Tip From Urunler where  id = {ItemId}";
                 var yeniTip = await _db.QueryFirstAsync<string>(sql1);
-                await _loccontrol.Kontrol(ItemId, Origin, yeniTip, CompanyId);
-                await _loccontrol.Kontrol(ItemId, Destination, yeniTip, CompanyId);
+                await _loccontrol.Kontrol(ItemId, Origin, yeniTip);
+                await _loccontrol.Kontrol(ItemId, Destination, yeniTip);
 
             }
 
         }
 
-        public async Task<List<string>> UpdateItems(int? ItemId,int? StockTransferId, int? id,int CompanyId)
+        public async Task<List<string>> UpdateItems(int? ItemId,int? StockTransferId, int? id)
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<StockTransferItems>($@"select
-             (Select id  From StockTransferItems where CompanyId = {CompanyId} and ItemId={ItemId} and id={id})as ItemId,
-            (Select id as varmi From StockTransfer where CompanyId = {CompanyId} and id = {StockTransferId} and IsActive=1)as StockTransferId,
-            (Select id as varmi From StockTransferItems where CompanyId = {CompanyId} and id = {id} and StockTransferId={StockTransferId})as id ");
+             (Select id  From StokAktarimDetay where ItemId={ItemId} and id={id})as ItemId,
+            (Select id as varmi From StokAktarim where  id = {StockTransferId} and IsActive=1)as StockTransferId,
+            (Select id as varmi From StokAktarimDetay where  id = {id} and StockTransferId={StockTransferId})as id ");
            
             if (list.First().StockTransferId == null)
             {
@@ -182,23 +179,22 @@ namespace BL.Services.StockTransfer
             }
         }
 
-        public async Task<List<string>> AdresStokKontrol(int? Id,int? ItemId,int? StockTransferId, float? Quantity, int CompanyId)
+        public async Task<List<string>> AdresStokKontrol(int? Id,int? ItemId,int? StockTransferId, float? Quantity)
         {
             DynamicParameters prm = new();
             prm.Add("@StockTransferId", StockTransferId);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@id", Id);
 
             string sqlf = $@"select
-            (Select OriginId from StockTransfer where id = @StockTransferId and CompanyId = @CompanyId) as OriginId,
-            (Select DestinationId from StockTransfer where id = @StockTransferId and CompanyId =  @CompanyId) as DestinationId";
+            (Select OriginId from StokAktarim where id = @StockTransferId ) as OriginId,
+            (Select DestinationId from StokAktarim where id = @StockTransferId ) as DestinationId";
             var sorgu = await _db.QueryAsync<StockMergeSql>(sqlf, prm);
             int OriginId = sorgu.First().OriginId;
             int DestinationId = sorgu.First().DestinationId;
-            var deger = await _db.QueryAsync<int>($"Select  StockTransferItems.Quantity from StockTransferItems where id=@id and CompanyId=@CompanyId", prm);
+            var deger = await _db.QueryAsync<int>($"Select  StokAktarimDetay.Miktar from StokAktarimDetay where id=@id ", prm);
             List<string> hatalar = new();
-            var origincount = await _control.Count(ItemId, CompanyId, OriginId);
-            var DesCount = await _control.Count(ItemId, CompanyId, DestinationId);
+            var origincount = await _control.Count(ItemId, OriginId);
+            var DesCount = await _control.Count(ItemId, DestinationId);
             if (deger.First()<Quantity)
             {
                 if (origincount > 0)

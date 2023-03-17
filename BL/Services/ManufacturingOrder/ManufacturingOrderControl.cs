@@ -22,23 +22,23 @@ namespace BL.Services.ManufacturingOrder
             _db = db;
         }
 
-        public async Task<List<string>> DeleteItems(UretimDeleteItems T, int CompanyId)
+        public async Task<List<string>> DeleteItems(UretimDeleteItems T)
         {
             List<string> hatalar = new();
-            var LocationVarmi = await _db.QueryAsync<int>($"Select Count(*) as varmi From ManufacturingOrderItems where CompanyId = {CompanyId} and id = {T.id}");
+            var LocationVarmi = await _db.QueryAsync<int>($"Select Count(*) as varmi From UretimDetay where  id = {T.id}");
             if (LocationVarmi.Count() == 0)
             {
-                string hata = "Böyle Bir ManufacturingOrderItem id Yok";
+                string hata = "Böyle Bir UretimDetay id Yok";
                 hatalar.Add(hata);
             }
 
-            var varmi = await _db.QueryAsync<int>($"Select id  From ManufacturingOrder where CompanyId = {CompanyId} and id = {T.ManufacturingOrderId}");
+            var varmi = await _db.QueryAsync<int>($"Select id  From Uretim where  id = {T.UretimId}");
             if (varmi.Count() == 0)
             {
                 string hata = "Böyle Bir id Yok";
                 hatalar.Add(hata);
             }  
-            string Tip = await _db.QueryFirstAsync<string>($"Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId}");
+            string Tip = await _db.QueryFirstAsync<string>($"Select Tip  From Urunler where id={T.StokId}");
             if (Tip == "Material" || Tip == "SemiProduct")
             {
                 return hatalar;
@@ -55,11 +55,11 @@ namespace BL.Services.ManufacturingOrder
 
         }
 
-        public async Task<List<string>> DoneStock(UretimTamamlama T, int CompanyId)
+        public async Task<List<string>> DoneStock(UretimTamamlama T)
         {
             List<string> hatalar = new();
 
-            var LocationVarmi = await _db.QueryAsync<int>($"Select Count(*) as varmi From ManufacturingOrder where CompanyId = {CompanyId} and id = {T.id}");
+            var LocationVarmi = await _db.QueryAsync<int>($"Select Count(*) as varmi From Uretim where  id = {T.id}");
             if (LocationVarmi.Count() == 0)
             {
                 string hata = "Böyle Bir id Yok";
@@ -69,36 +69,36 @@ namespace BL.Services.ManufacturingOrder
 
         }
 
-        public async Task<List<string>> IngredientInsert(UretimIngredientsInsert T, int CompanyId)
+        public async Task<List<string>> IngredientInsert(UretimIngredientsInsert T)
         {
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<ManufacturingOrderItemsIngredientsInsert>($@"select
-            (Select id as varmi From ManufacturingOrder where CompanyId = {CompanyId} and id = {T.ManufacturingOrderId} and IsActive=1 and Status!=3)as OrderId,
-            (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId}) as LocationId 
+            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as OrderId,
+            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as LocationId 
 ");
 
 
-            if (list.First().OrderId==null)
+            if (list.First().UretimId==null)
             {
                 string hata = "Böyle Bir id Yok";
                 hatalar.Add(hata);
             }
           
-            if (list.First().LocationId==null)
+            if (list.First().DepoId==null)
             {
                 string hata = "Böyle Bir Lokasyon Yok";
                 hatalar.Add(hata);
                 
             }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
-            bool? make = Locaiton.First().Make;
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from DepoVeAdresler where id={T.DepoId} ")).ToList();
+            bool? make = Locaiton.First().Uretim;
             if (make != true)
             {
                 string hata = "Yetkiniz yok";
                 hatalar.Add(hata);
             }
-            string Tip = await _db.QueryFirstAsync<string>($"Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId}");
+            string Tip = await _db.QueryFirstAsync<string>($"Select Tip  From Urunler where  id={T.StokId}");
             if (Tip == "Material" || Tip == "SemiProduct")
             {
                 return hatalar;
@@ -112,19 +112,19 @@ namespace BL.Services.ManufacturingOrder
             }
         }
 
-        public async Task<List<string>> IngredientsUpdate(UretimIngredientsUpdate T, int CompanyId)
+        public async Task<List<string>> IngredientsUpdate(UretimIngredientsUpdate T)
         {
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<ManufacturingOrderItemsIngredientsUpdate>($@"select
-            (Select id as varmi From ManufacturingOrder where CompanyId = {CompanyId} and id = {T.OrderId} and IsActive=1 and Status!=3)as OrderId,
-            (Select id From ManufacturingOrderItems where CompanyId = {CompanyId} and id = {T.id} and OrderId={T.OrderId})    as  id,
-            (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId}) as LocationId
+            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as OrderId,
+            (Select id From UretimDetay where id = {T.id} and OrderId={T.UretimId})    as  id,
+            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as LocationId
                       
 ");
 
 
-            if (list.First().OrderId== null)
+            if (list.First().UretimId== null)
             {
                 string hata = "Böyle Bir OrderId Yok";
                 hatalar.Add(hata);
@@ -136,20 +136,20 @@ namespace BL.Services.ManufacturingOrder
                 hatalar.Add(hata);
             }
            
-            if (list.First().LocationId==null)
+            if (list.First().DepoId==null)
             {
                 string hata = "Böyle Bir Lokasyon Yok";
                 hatalar.Add(hata);
             }
 
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
-            bool? make = Locaiton.First().Make;
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from DepoVeAdresler where  id={T.DepoId} ")).ToList();
+            bool? make = Locaiton.First().Uretim;
             if (make != true)
             {
                 string hata = "Yetkiniz yok";
                 hatalar.Add(hata);
             }
-            string Tip = await _db.QueryFirstAsync<string>($"Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId}");
+            string Tip = await _db.QueryFirstAsync<string>($"Select Tip  From Urunler where  id={T.StokId}");
             if (Tip == "Material" || Tip == "SemiProduct")
             {
 
@@ -164,23 +164,23 @@ namespace BL.Services.ManufacturingOrder
             }
         }
 
-        public async Task<List<string>> Insert(UretimDTO T, int CompanyId)
+        public async Task<List<string>> Insert(UretimDTO T)
         {
             List<string> hatalar = new();
 
             //eklenen locationStock Varmi Kontrol Ediyoruz
             var list = await _db.QueryAsync<ManufacturingPurchaseOrder>($@"select
-            (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId}) as LocationId,
-            (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip    
+            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as LocationId,
+            (Select Tip  From Urunler where id={T.StokId})as Tip    
             ");
 
 
-            if (list.First().LocationId==null)
+            if (list.First().DepoId ==null)
             {
                 hatalar.Add("Böyle Bir Lokasyon Yok");
             }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
-            bool? make = Locaiton.First().Make;
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from DepoVeAdresler where  id={T.DepoId} ")).ToList();
+            bool? make = Locaiton.First().Uretim;
             if (make != true)
             {
                 string hata = "Uretim kismina yetkiniz yok";
@@ -205,28 +205,28 @@ namespace BL.Services.ManufacturingOrder
 
         }
 
-        public async Task<List<string>> OperationsInsert(UretimOperationsInsert T, int CompanyId)
+        public async Task<List<string>> OperationsInsert(UretimOperationsInsert T)
         {
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<ManufacturingOrderItemsOperationsUpdate>($@"select
-            (Select id as varmi From ManufacturingOrder where CompanyId = {CompanyId} and id = {T.ManufacturingOrderId} and IsActive=1 and Status!=3)as OrderId,
-            (Select id From Resources where CompanyId = {CompanyId} and id = {T.ResourceId} and IsActive=1)    as  ResourceId,
-            (Select id From Operations where CompanyId = {CompanyId} and id = {T.OperationId} and IsActive=1) as OperationId");
+            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as OrderId,
+            (Select id From Kaynaklar where  id = {T.KaynakId} and Aktif=1)    as  ResourceId,
+            (Select id From Operasyonlar where id = {T.OperasyonId} and Aktif=1) as OperationId");
 
-            if (list.First().OrderId==null)
+            if (list.First().UretimId==null)
             {
                 string hata = "OrderId,Böyle Bir id Yok";
                 hatalar.Add(hata);
             }
    
-            if (list.First().ResourceId== null)
+            if (list.First().KaynakId == null)
             {
                 string hata = "ResourceId bulunamıyor.";
                 hatalar.Add(hata);
               
             }
-            if (list.First().OperationId == null)
+            if (list.First().OperasyonId == null)
             {
                 string hata = "OperationId bulunamıyor.";
                 hatalar.Add(hata);
@@ -240,18 +240,18 @@ namespace BL.Services.ManufacturingOrder
             }
         }
 
-        public async Task<List<string>> OperationUpdate(UretimOperationsUpdate T, int CompanyId)
+        public async Task<List<string>> OperationUpdate(UretimOperationsUpdate T)
         {
             List<string> hatalar = new();
 
 
             var list = await _db.QueryAsync<ManufacturingOrderItemsOperationsUpdate>($@"select
-            (Select id From ManufacturingOrderItems where CompanyId = {CompanyId} and id = {T.id} and OrderId={T.OrderId})as id,
-            (Select id as varmi From ManufacturingOrder where CompanyId = {CompanyId} and id = {T.OrderId} and IsActive=1 and Status!=3)as OrderId,
-            (Select id From Resources where CompanyId = {CompanyId} and id = {T.ResourceId} and IsActive=1)    as  ResourceId,
-            (Select id From Operations where CompanyId = {CompanyId} and id = {T.OperationId} and IsActive=1) as OperationId");
+            (Select id From UretimDetay where id = {T.id} and OrderId={T.UretimId})as id,
+            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Status!=3)as OrderId,
+            (Select id From Kaynaklar where  id = {T.KaynakId} and Aktif=1)    as  ResourceId,
+            (Select id From Operasyonlar where  id = {T.OperasyonId} and Aktif=1) as OperationId");
 
-            if (list.First().OrderId == null)
+            if (list.First().UretimId == null)
             {
                 string hata = "Böyle Bir Orderid Yok";
                 hatalar.Add(hata);
@@ -261,13 +261,13 @@ namespace BL.Services.ManufacturingOrder
                 string hata = "id ve OrderId eşleşmiyor.İki id'nin ilişkisi yok.";
                 hatalar.Add(hata);
             }
-            if (list.First().ResourceId== null)
+            if (list.First().KaynakId == null)
             {
                 string hata = "ResourceId bulunamıyor...";
                 hatalar.Add(hata);
               
             }
-            if (list.First().OperationId == null)
+            if (list.First().OperasyonId == null)
             {
                 string hata = "OperationId bulunamıyor..";
                 hatalar.Add(hata);
@@ -280,36 +280,36 @@ namespace BL.Services.ManufacturingOrder
             }
         }
 
-        public async Task<List<string>> PurchaseOrder(PurchaseBuy T, int CompanyId)
+        public async Task<List<string>> PurchaseOrder(PurchaseBuy T)
         {
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<ManufacturingPurchaseOrder>($@"select
-            (Select id From ManufacturingOrder where CompanyId = {CompanyId} and id = {T.ManufacturingOrderId} and IsActive=1 and Status!=3)as ManufacturingOrderId,
-            (Select id From ManufacturingOrderItems where CompanyId = {CompanyId} and id = {T.ManufacturingOrderItemId} and OrderId={T.ManufacturingOrderId})    as  ManufacturingOrderItemId,
-            (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId}) as LocationId,
-            (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip
+            (Select id From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as ManufacturingOrderId,
+            (Select id From UretimDetay where id = {T.UretimDetayId} and OrderId={T.UretimId})    as  ManufacturingOrderItemId,
+            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as LocationId,
+            (Select Tip  From Urunler where  id={T.StokId})as Tip
             ");
 
 
-            if (list.First().ManufacturingOrderId==null)
+            if (list.First().UretimId==null)
             {
                 string hata = "Böyle Bir id Yok";
                 hatalar.Add(hata);
             }
-            if (list.First().ManufacturingOrderItemId == 0)
+            if (list.First().UretimDetayId == 0)
             {
                 string hata = "id ve OrderId eşleşmiyor.İki id'nin ilişkisi yok.";
                 hatalar.Add(hata);
             }
           
-            if (list.First().LocationId==null)
+            if (list.First().DepoId==null)
             {
                 string hata = "Böyle Bir Lokasyon Yok";
                 hatalar.Add(hata);
             }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
-            bool? make = Locaiton.First().Make;
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from DepoVeAdresler where  id={T.DepoId} ")).ToList();
+            bool? make = Locaiton.First().Uretim;
             if (make != true)
             {
                 string hata = "Uretim kismina yetkiniz yok";
@@ -325,41 +325,33 @@ namespace BL.Services.ManufacturingOrder
                 string hata = "Tip değişkeni,tip hatasi";
                 hatalar.Add(hata);
             }
-            string contact = await _db.QueryFirstAsync<string>($"Select Tip  From Contacts where CompanyId = {CompanyId} and id = {T.ContactId}");
-            if (contact!="Supplier")
-            {
-                string hata = "ContactId,Böyle Bir Tedarikci Yok";
-                hatalar.Add(hata);
-            }
-
-
             return hatalar;
 
         }
 
-        public async Task<List<string>> Update(UretimUpdate T, int CompanyId)
+        public async Task<List<string>> Update(UretimUpdate T)
         {
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<ManufacturingPurchaseOrder>($@"select
-            (Select id From ManufacturingOrder where CompanyId = {CompanyId} and id = {T.id} and IsActive=1 and Status!=3)as ManufacturingOrderId,
-            (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId}) as LocationId,
-            (Select Tip  From Items where CompanyId = {CompanyId} and id={T.ItemId})as Tip
+            (Select id From Uretim where - id = {T.id} and Aktif=1 and Durum!=3)as ManufacturingOrderId,
+            (Select id as varmi From DepoVeAdresler where  id = {T.DepoId}) as LocationId,
+            (Select Tip  From Urunler where  id={T.StokId})as Tip
 
             ");
 
-            if (list.First().ManufacturingOrderId == null)
+            if (list.First().UretimId == null)
             {
                 string hata = "Böyle Bir id Yok";
                 hatalar.Add(hata);
             }
-            if (list.First().LocationId==null)
+            if (list.First().DepoId==null)
             {
                 string hata = "Böyle Bir Lokasyon Yok";
                 hatalar.Add(hata);
             }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from Locations where CompanyId={CompanyId} and id={T.LocationId} ")).ToList();
-            bool? make = Locaiton.First().Make;
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from DepoVeAdresler where  id={T.DepoId} ")).ToList();
+            bool? make = Locaiton.First().Uretim;
             if (make != true)
             {
                 string hata = "Yetkiniz yok";
@@ -381,16 +373,16 @@ namespace BL.Services.ManufacturingOrder
 
         }
 
-        public async Task<List<string>> DeleteKontrol(List<UretimDeleteKontrol> T , int CompanyId)
+        public async Task<List<string>> DeleteKontrol(List<UretimDeleteKontrol> T)
         {
 
             List<string> hatalar = new();
             foreach (var item in T)
             {
-                var list = await _db.QueryAsync<UretimDeleteKontrolClas>($@"select * from ManufacturingOrder where id={item.id} and CompanyId={CompanyId}");
-                if (list.First().SalesOrderId != null)
+                var list = await _db.QueryAsync<UretimDeleteKontrolClas>($@"select * from Uretim where id={item.id}");
+                if (list.First().SatisId != null)
                 {
-                    string hata = @$"{list.First().Name} isimli üretim bir satişa bağlı. ";
+                    string hata = @$"{list.First().Isim} isimli üretim bir satişa bağlı. ";
                     hatalar.Add(hata);
                 }
             }

@@ -48,7 +48,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -67,7 +67,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -78,13 +78,8 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                 int id = await _operationsRepository.Insert(T, CompanyId);
-                string sql = $"Select * From Operations where CompanyId = {CompanyId} and id = {id}";
-                var eklenen = await _db.QueryAsync<OperitaonsDTO>(sql);
-                if (eklenen.Count() == 0)
-                {
-                    return BadRequest("Operasyon Eklenirken Bir Hata Oluştu.");
-                }
-                return Ok(eklenen.First());
+                var list = await _db.QueryAsync<OperitaonsDTO>($"Select id,Isim From Operasyonlar where id={id} and Aktif = 1");
+                return Ok(list);
             }
             else
             {
@@ -103,7 +98,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -113,11 +108,12 @@ namespace Api.Controllers
             ValidationResult result = await _OperationsUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _idcontrol.GetControl("Operations", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("Operasyonlar", T.id);
                 if (hata.Count()==0)
                 {
                     await _operationsRepository.Update(T, CompanyId);
-                    return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
+                    var list = await _db.QueryAsync<OperitaonsDTO>($"Select id,Isim  From Operasyonlar where id={T.id} and Aktif = 1");
+                    return Ok(list);
                 }
                 else
                 {
@@ -142,7 +138,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOperasyonlar, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -152,8 +148,8 @@ namespace Api.Controllers
             ValidationResult result = await _delete.ValidateAsync(T);
             if (result.IsValid)
             {
-                string tablo = "Operations";
-                var hata=await _idcontrol.GetControl(tablo, T.id, CompanyId);
+                string tablo = "Operasyonlar";
+                var hata=await _idcontrol.GetControl(tablo, T.id);
                 if (hata.Count() == 0)
                 {
                     await _operationsRepository.Delete(T, CompanyId);

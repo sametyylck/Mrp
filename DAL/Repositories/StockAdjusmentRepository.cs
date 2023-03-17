@@ -47,7 +47,7 @@ namespace DAL.Repositories
             var sqlsorgu = await _db.QueryAsync<LocaVarmı>(sqls, prm);//
             foreach (var item in sqlsorgu)
             {
-                prm.Add("@ItemId", item.ItemId);
+                prm.Add("@ItemId", item.StokId);
                 prm.Add("@itemid", item.id);
                 string sql = $@"declare @@locationId int 
             set @@locationId=(Select LocationId From StockAdjusment where CompanyId = @CompanyId and id = @id)
@@ -59,7 +59,7 @@ namespace DAL.Repositories
             (Select id from LocationStock where ItemId = @ItemId and LocationId = @@locationId and CompanyId =   @CompanyId)   as    LocationStockId
             ";
                 var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sql, prm);//
-                float? adjusment = item.Quantity;
+                float? adjusment = item.Miktari;
                 float? LocationId = sorgu.First().StockId;//locationid cekiyorz.
                 float? stockQuantity = sorgu.First().Quantity;
                 float? NewQuantity = stockQuantity - adjusment; //Tablodaki değer ile itemdeki değeri toplayarak yeni bir stok(quanitity) elde ediyoruz.
@@ -232,20 +232,20 @@ namespace DAL.Repositories
             (Select Tip from Items where CompanyId=@CompanyId and id=@ItemId)as Tip";
             var locationStockVarmı =await _db.QueryAsync<LocaVarmı>(sqlh, prm);
             var tip1 = locationStockVarmı.First().Tip;
-            if (locationStockVarmı.First().LocationStockId == 0)
+            if (locationStockVarmı.First().DepoStokId == 0)
             {
-             await   _locationStockRepository.Insert(tip1, T.ItemId, CompanyId,T.LocationId);
+             await   _locationStockRepository.Insert(tip1, T.ItemId,T.LocationId);
             }
 
 
             string sqlv = $@"select Tip,DefaultPrice from Items where CompanyId=@CompanyId and id=@ItemId";
             var itembul =await _db.QueryAsync<LocaVarmı>(sqlv, prm);
             var tip = itembul.First().Tip;
-            var defaultprice = itembul.First().DefaultPrice;
+            var defaultprice = itembul.First().VarsayilanFiyat;
 
-            var items =await _itemsRepository.Detail(T.ItemId, CompanyId);
-            var IngredientCost = items.First().IngredientsCost;
-            float? operioncost = items.First().OperationsCost;
+            var items =await _itemsRepository.Detail(T.ItemId);
+            var IngredientCost = items.First().MalzemeTutarı;
+            float? operioncost = items.First().OperasyonTutarı;
             float? AdjusmentValue = 0;
             if (tip == "Material")
             {
@@ -298,7 +298,7 @@ namespace DAL.Repositories
             var stocklocationId = sorgu.First().LocationStockId;
             if (stocklocationId == 0)
             {
-              await  _locationStockRepository.Insert(tip, T.ItemId, CompanyId, T.LocationId);
+              await  _locationStockRepository.Insert(tip, T.ItemId,  T.LocationId);
             }
 
             prm.Add("@stocklocationId", stocklocationId);
@@ -355,7 +355,7 @@ namespace DAL.Repositories
             string sqlv = $@"select Tip,DefaultPrice from Items where CompanyId=@CompanyId and id=@ItemId";
             var itembul =await _db.QueryAsync<LocaVarmı>(sqlv, prm);
             var tip = itembul.First().Tip;
-            var defaultprice = itembul.First().DefaultPrice;
+            var defaultprice = itembul.First().VarsayilanFiyat;
 
 
             prm.Add("@id", T.id);
@@ -363,9 +363,9 @@ namespace DAL.Repositories
             var sorgu2 =await _db.QueryAsync<float>(sql1, prm);
             float adjusment = sorgu2.First();
 
-            var items =await _itemsRepository.Detail(T.ItemId, CompanyId);
-            var IngredientCost = items.First().IngredientsCost;
-            float? operioncost = items.First().OperationsCost;
+            var items =await _itemsRepository.Detail(T.ItemId);
+            var IngredientCost = items.First().MalzemeTutarı;
+            float? operioncost = items.First().OperasyonTutarı;
             float? CostPerUnit = IngredientCost + operioncost;
             float? AdjusmentValue = 0;
             if (tip == "Material")

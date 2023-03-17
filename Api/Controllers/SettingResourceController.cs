@@ -40,6 +40,10 @@ namespace Api.Controllers
             _idcontrol = idcontrol;
             _izinkontrol = izinkontrol;
         }
+        /// <summary>
+        /// Kaynak Liste
+        /// </summary>
+        /// <returns></returns>
         [Route("List")]
         [HttpGet, Authorize]
         public async Task<ActionResult<ResourcesDTO>> List()
@@ -47,7 +51,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -59,6 +63,12 @@ namespace Api.Controllers
             return Ok(list);
         }
 
+
+        /// <summary>
+        /// Kaynak ekleme saatlik ücret ve ismi ile
+        /// </summary>
+        /// <param name="T"></param>
+        /// <returns></returns>
         [Route("Insert")]
         [HttpPost, Authorize]
         public async Task<ActionResult<ResourcesDTO>> Insert(ResourcesInsert T)
@@ -66,7 +76,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -82,8 +92,8 @@ namespace Api.Controllers
                 DynamicParameters param = new DynamicParameters();
                 param.Add("@CompanyId", CompanyId);
                 param.Add("@id", id);
-                var list = await _db.QueryAsync<ResourcesDTO>($"Select * From Resources where CompanyId = @CompanyId and id = @id", param);
-                return Ok(list.First());
+                var list = await _db.QueryAsync<ResourcesDTO>($"Select id,Isim ,VarsayilanSaatlikUcret From Kaynaklar where id = @id", param);
+                return Ok(list);
             }
             else
             {
@@ -94,7 +104,11 @@ namespace Api.Controllers
       
 
         }
-
+        /// <summary>
+        /// kaynak update isim ve varsayilan ücret
+        /// </summary>
+        /// <param name="T"></param>
+        /// <returns></returns>
         [Route("Update")]
         [HttpPut, Authorize]
         public async Task<ActionResult<ResourcesDTO>> Update(ResourcesUpdate T)
@@ -102,7 +116,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -112,11 +126,12 @@ namespace Api.Controllers
             ValidationResult result = await _ResourceUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _idcontrol.GetControl("Resources", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("Kaynaklar", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _resource.Update(T, CompanyId);
-                    return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
+                    await _resource.Update(T);
+                    var list = await _db.QueryAsync<ResourcesDTO>($"Select id,Isim ,VarsayilanSaatlikUcret From Kaynaklar where id = {T.id}");
+                    return Ok(list);
                 }
                 else
                 {
@@ -132,6 +147,11 @@ namespace Api.Controllers
     
 
         }
+        /// <summary>
+        /// silme işlemi id ile
+        /// </summary>
+        /// <param name="T"></param>
+        /// <returns></returns>
         [Route("Delete")]
         [HttpDelete, Authorize]
         public async Task<ActionResult<ResourcesDTO>> Delete(IdControl T)
@@ -139,7 +159,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKaynaklar, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -150,7 +170,7 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                 
-                var hata = await _idcontrol.GetControl("Resources", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("Kaynaklar", T.id);
                 if (hata.Count() == 0)
                 {
                     await _resource.Delete(T, CompanyId);

@@ -119,7 +119,7 @@ builder.Services.AddScoped<IValidator<CompanyUpdate>, CompanyUpdateValidations>(
 builder.Services.AddScoped<IValidator<UserDto>, AuthLoginValidations>();
 builder.Services.AddScoped<IValidator<ContactsInsert>, ContactInsertValidations>();
 builder.Services.AddScoped<IValidator<ContactsDelete>, ContactDeleteValidations>();
-builder.Services.AddScoped<IValidator<ContactsList>, ContactUpdateValidations>();
+builder.Services.AddScoped<IValidator<CariUpdate>, ContactUpdateValidations>();
 builder.Services.AddScoped<IValidator<ContactsUpdateAddress>, ContactUpdateAddressValidations>();
 builder.Services.AddScoped<IValidator<GeneralDefaultSettings>, GeneralDefaultValidations>();
 builder.Services.AddScoped<IValidator<ItemsListele>, ItemsListeValidations>();
@@ -193,16 +193,12 @@ builder.Services.AddScoped<IGeneralDefaultRepository, GeneralDefaultSettingsRepo
 builder.Services.AddScoped<ILocationStockRepository, LocationStockRepository>();
 builder.Services.AddScoped<ILocationsRepository, LocationsRepository>();
 builder.Services.AddScoped<IItemsRepository, ItemsRepository>();
-builder.Services.AddScoped<IManufacturingOrderRepository, ManufacturingOrderRepository>();
-builder.Services.AddScoped<IManufacturingOrderItemRepository, ManufacturingOrderItemRepository>();
 builder.Services.AddScoped<IMeasureRepository, MeasureRepository>();
 builder.Services.AddScoped<IOperationsRepository, OperationsRepository>();
 builder.Services.AddScoped<IOrdersRepository, OrdersRepository>();
 builder.Services.AddScoped<IOrderStockRepository, OrderStockRepository>();
 builder.Services.AddScoped<IProductOperationsBomRepository, ProductOperationsBomRepository>();
 builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
-builder.Services.AddScoped<ISalesOrderRepository, SalesOrderRepository>();
-builder.Services.AddScoped<ISalesOrderItemRepository, SalesOrderItemRepository>();
 builder.Services.AddScoped<IStockAdjusmentRepository, StockAdjusmentRepository>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddScoped<IStockTakesRepository, StockTakesRepository>();

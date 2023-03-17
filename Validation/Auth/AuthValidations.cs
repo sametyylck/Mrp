@@ -32,7 +32,7 @@ namespace Validation.Auth
             {
                 DynamicParameters prm = new();
                 prm.Add("@mail", mail);
-                string sqlquery = $@"Select Count(*)as varmı from Users where Mail=@mail";
+                string sqlquery = $@"Select Count(*)as varmı from Kullanıcılar where Mail=@mail";
                 var list =_db.Query<int>(sqlquery,prm);
                
                 return true;
@@ -58,7 +58,7 @@ namespace Validation.Auth
             public AuthLoginValidations()
             {
                 //RuleFor(x => x.Mail).NotEmpty().WithMessage("Mail bos gecilemez").EmailAddress().WithMessage("Mail formati yanlıs");
-                RuleFor(x => x.Password).NotEmpty().WithMessage("Password bos gecilemez");
+                RuleFor(x => x.Sifre).NotEmpty().WithMessage("Password bos gecilemez");
 
             }
         }

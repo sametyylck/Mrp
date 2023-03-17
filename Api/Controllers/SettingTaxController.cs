@@ -40,6 +40,10 @@ namespace Api.Controllers
             _idcontrol = idcontrol;
             _izinkontrol = izinkontrol;
         }
+        /// <summary>
+        /// vergiler listelenir
+        /// </summary>
+        /// <returns></returns>
         [Route("List")]
         [HttpGet, Authorize]
         public async Task<ActionResult<TaxClas>> List()
@@ -48,17 +52,22 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
-            var list = await _tax.List(CompanyId);
+            var list = await _tax.List();
             return Ok(list);
 
         }
+        /// <summary>
+        /// vergi ekleme degeri ve ismi
+        /// </summary>
+        /// <param name="T"></param>
+        /// <returns></returns>
         [Route("Insert")]
         [HttpPost, Authorize]
         public async Task<ActionResult<TaxClas>> Insert(TaxInsert T)
@@ -66,7 +75,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -83,8 +92,8 @@ namespace Api.Controllers
                 DynamicParameters param = new DynamicParameters();
                 param.Add("@CompanyId", CompanyId);
                 param.Add("@id", id);
-                var list = await _db.QueryAsync<TaxClas>($"Select * From Tax where CompanyId = @CompanyId and id = @id ", param);
-                return Ok(list.First());
+                var list = await _db.QueryAsync<TaxClas>($"Select id,VergiDegeri,VergiIsim  From Vergi where id = @id ", param);
+                return Ok(list);
             }
             else
             {
@@ -94,7 +103,11 @@ namespace Api.Controllers
 
 
         }
-
+        /// <summary>
+        /// vergi duzenleme degeri ve ismi
+        /// </summary>
+        /// <param name="T"></param>
+        /// <returns></returns>
         [Route("Update")]
         [HttpPut, Authorize]
         public async Task<ActionResult<TaxClas>> Update(TaxUpdate T)
@@ -102,7 +115,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -113,11 +126,12 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                 
-                var hata = await _idcontrol.GetControl("Tax", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("Vergi", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _tax.Update(T, CompanyId);
-                    return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
+                    await _tax.Update(T);
+                    var list = await _db.QueryAsync<TaxClas>($"Select id,VergiDegeri ,VergiIsim  From Vergi where id = {T.id} ");
+                    return Ok(list);
                 }
                 else
                 {
@@ -141,7 +155,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarVergi, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -153,10 +167,10 @@ namespace Api.Controllers
             {
                 
 
-                var hata = await _idcontrol.GetControl("Tax", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("Vergi", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _tax.Delete(T, CompanyId);
+                    await _tax.Delete(T);
                     return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
 
                 }

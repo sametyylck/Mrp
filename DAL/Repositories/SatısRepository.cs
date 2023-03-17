@@ -60,7 +60,7 @@ namespace DAL.Repositories
             float rate = await _db.QueryFirstAsync<int>($"select  Rate from Tax where id =@TaxId and CompanyId=@CompanyId", prm);
 
 
-            var PriceUnit = liste.First().DefaultPrice;
+            var PriceUnit = liste.First().VarsayilanFiyat;
 
             var TotalPrice = (T.Quantity * PriceUnit); //adet*fiyat
             float? PlusTax = (TotalPrice * rate) / 100; //tax fiyatı hesaplama
@@ -83,7 +83,7 @@ namespace DAL.Repositories
                 (Select ISNULL(id,0) from LocationStock where ItemId =  @ItemId  and LocationId = @location and CompanyId = @CompanyId)   as    LocationStockId,
                (select ISNULL(SUM(ManufacturingOrder.PlannedQuantity),0) as Quantity from ManufacturingOrder where     ManufacturingOrder.ItemId=@ItemId and ManufacturingOrder.CompanyId=@CompanyId and   ManufacturingOrder.CustomerId=@ContactId )as ManufacturingQuantity";
             var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, prm);
-            var Stock =await _control.Count(T.ItemId, CompanyId, T.LocationId);
+            var Stock =await _control.Count(T.ItemId,  T.LocationId);
             var locationStockId = sorgu.First().LocationStockId;
             var tip = sorgu.First().Tip;
             prm.Add("@LocationStockId", locationStockId);
@@ -249,7 +249,7 @@ namespace DAL.Repositories
             prm.Add("@Tip", Tip);
 
             //kullanılabilir stok sayisi
-            var rezervecount = await _control.Count(T.ItemId, CompanyId, T.LocationId);
+            var rezervecount = await _control.Count(T.ItemId, T.LocationId);
             rezervecount = rezervecount >= 0 ? rezervecount : 0;
 
             if (rezervecount >= T.Quantity)//Stok sayısı istesnilenden büyük ise rezerve sayısı adet olur
@@ -294,8 +294,7 @@ namespace DAL.Repositories
             {
 
                 DynamicParameters prm2 = new DynamicParameters();
-                prm2.Add("@ItemId", item.MaterialId);
-                prm2.Add("@CompanyId", item.CompanyId);
+                prm2.Add("@ItemId", item.MalzemeId);
                 prm2.Add("@location", T.LocationId);
                 string sqlb = $@"select
                 (Select ISNULL(Tip,'') from Items where id = @ItemId and CompanyId = @CompanyId)as Tip,
@@ -304,10 +303,10 @@ namespace DAL.Repositories
                 prm2.Add("@LocationStockId", sorgu1.First().LocationStockId);
                 prm2.Add("@stockId", sorgu1.First().StockId);
 
-                var RezerveCount = await _control.Count(item.MaterialId, CompanyId, T.LocationId);//stocktaki adet
+                var RezerveCount = await _control.Count(item.MalzemeId, T.LocationId);//stocktaki adet
                 RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
 
-                var stokcontrol = T.Quantity * item.Quantity; //bir materialin kaç tane gideceği hesaplanıyor
+                var stokcontrol = T.Quantity * item.Miktar; //bir materialin kaç tane gideceği hesaplanıyor
                 if (RezerveCount >= stokcontrol) //yeterli stok var mı
                 {
                     var yenistockdeğeri = RezerveCount - stokcontrol;
@@ -372,7 +371,7 @@ namespace DAL.Repositories
                 List<Manufacturing> ItemsCount = (await _db.QueryAsync<Manufacturing>($"select ItemId,RezerveCount from Rezerve where SalesOrderId=@id and CompanyId=@CompanyId and Status=1", prm)).ToList();
                 foreach (var item in ItemsCount)
                 {
-                    prm.Add("@ItemId", item.ItemId);
+                    prm.Add("@ItemId", item.StokId);
                     await _db.ExecuteAsync($"Delete from Rezerve where SalesOrderId=@id and CompanyId=@CompanyId and ItemId=@ItemId", prm);
 
                 }
@@ -382,7 +381,7 @@ namespace DAL.Repositories
                 foreach (var item in Itemdegerler)
                 {
                     DynamicParameters param = new DynamicParameters();
-                    param.Add("@ItemId", item.ItemId);
+                    param.Add("@ItemId", item.StokId);
                     param.Add("@CompanyId", CompanyId);
                     param.Add("@location", T.LocationId);
                     param.Add("@id", T.id);
@@ -394,19 +393,19 @@ namespace DAL.Repositories
                     (Select ISNULL(id,0) from LocationStock where ItemId=@ItemId and LocationId = @location and CompanyId = @CompanyId)   as    LocationStockId,
                      (select ISNULL(SUM(ManufacturingOrder.PlannedQuantity),0) as Quantity from ManufacturingOrder where  ManufacturingOrder.ItemId=@ItemId and ManufacturingOrder.CompanyId=@CompanyId and   ManufacturingOrder.CustomerId=@ContactId )as ManufacturingQuantity";
                     var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, param);
-                    var RezerveCount = await _control.Count(item.ItemId, CompanyId, T.LocationId);
+                    var RezerveCount = await _control.Count(item.StokId, T.LocationId);
                     RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
 
                     var locationStockId = sorgu.First().LocationStockId;
                     var tip = sorgu.First().Tip;
                     param.Add("@LocationStockId", locationStockId);
-                    var stokkontrol = await _control.Count(item.ItemId, CompanyId, T.LocationId);
+                    var stokkontrol = await _control.Count(item.StokId, T.LocationId);
                     int rezervid = 0;
                     SatısInsertItem A = new SatısInsertItem();
-                    A.ItemId = item.ItemId;
+                    A.ItemId = item.StokId;
                     A.LocationId = T.LocationId;
                     A.ContactId = T.ContactId;
-                    A.Quantity = item.Quantity;
+                    A.Quantity = item.Miktar;
                     if (RezerveCount > 0)
                     {
 
@@ -496,14 +495,14 @@ namespace DAL.Repositories
                 List<Manufacturing> ItemsCount = (await _db.QueryAsync<Manufacturing>($"select ItemId,RezerveCount from Rezerve where SalesOrderId=@id and CompanyId=@CompanyId and SalesOrderItemId=@OrderItemId  and Status=@Status", prm)).ToList();
                 foreach (var item in ItemsCount)
                 {
-                    prm.Add("@ItemId", item.ItemId);
+                    prm.Add("@ItemId", item.StokId);
                     await _db.ExecuteAsync($"Delete from  Rezerve where SalesOrderId=@id and SalesOrderItemId=@OrderItemId and CompanyId=@CompanyId and ItemId=@ItemId", prm);
                 }
                 var liste = await _db.QueryAsync<LocaVarmı>($@"select 
             (select Rate from Tax where id=(select DefaultTaxPurchaseOrderId from GeneralDefaultSettings where CompanyId=@CompanyId))as Rate,
             (select DefaultPrice from Items where id =@ItemId and CompanyId=@CompanyId)as DefaultPrice", prm);
                 prm.Add("@TaxId", T.TaxId);
-                var Birimfiyat = liste.First().DefaultPrice;
+                var Birimfiyat = liste.First().VarsayilanFiyat;
                 T.PricePerUnit = Birimfiyat;
 
             }
@@ -562,7 +561,7 @@ namespace DAL.Repositories
                   (Select ISNULL(Tip,'') from Items where id = @ItemId and CompanyId = @CompanyId)as Tip,
                   (Select ISNULL(id,0) from LocationStock where ItemId = @ItemId  and LocationId = @location and CompanyId = @CompanyId)   as    LocationStockId ";
                 var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, prm);
-                var RezerveCount = await _control.Count(T.ItemId, CompanyId, T.LocationId);
+                var RezerveCount = await _control.Count(T.ItemId, T.LocationId);
                 RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
                 var locationStockId = sorgu.First().LocationStockId;
                 var tip = sorgu.First().Tip;
@@ -660,7 +659,7 @@ namespace DAL.Repositories
                 else if (T.Tip == "Material")
                 {
                     await _db.ExecuteAsync($@"Update SalesOrderItem set Quantity=@Quantity,TotalAll=@TotalAll,PricePerUnit=@PricePerUnit,TaxId=@TaxId,TaxValue=@TaxValue where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
-                    var StokMiktari = await _control.Count(T.ItemId, CompanyId, T.LocationId);
+                    var StokMiktari = await _control.Count(T.ItemId,T.LocationId);
                     StokMiktari = StokMiktari >= 0 ? StokMiktari : 0;
                     //stocktaki adet
 
@@ -669,7 +668,7 @@ namespace DAL.Repositories
                     int rezerveid = deger.First().id;
                     prm.Add("@rezerveid", rezerveid);
 
-                    float? rezervecount = deger.First().RezerveCount;
+                    float? rezervecount = deger.First().RezerveDeger;
 
                     string sqlb = $@"select ISNULL(SUM(Quantity),0) from Orders 
                 left join OrdersItem on OrdersItem.OrdersId = Orders.id and Orders.LocationId=@location
@@ -749,7 +748,7 @@ namespace DAL.Repositories
                 await _db.ExecuteAsync($"Update Locations set Tip=@Tip,FirstName=@FirstName,LastName=@LastName,CompanyName=@CompanyName,Phone=@Phone, AddressLine1=@AddressLine1,AddressLine2=@AddressLine2,CityTown=@CityTown,StateRegion=@StateRegion,ZipPostalCode=@ZipPostal,Country=@Country where CompanyId=@CompanyId and id=@id", prm);
             }
         }
-        public async Task<int> InsertAddress(SalesOrderCloneAddress A, int CompanyId, int id)
+        public async Task<int> InsertAddress(SalesOrderCloneAddress A,  int id)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@Tip", A.Tip);
@@ -763,7 +762,6 @@ namespace DAL.Repositories
             prm.Add("StateRegion", A.StateRegion);
             prm.Add("ZipPostal", A.ZipPostal);
             prm.Add("Country", A.Country);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@IsActive", true);
             int adressid = 0;
             if (A.Tip == "BillingAddress")
@@ -809,7 +807,7 @@ namespace DAL.Repositories
                         var BomList = await _db.QueryAsync<BOM>($"Select * From Bom where CompanyId =@CompanyId and ProductId =@ItemId  and IsActive = 1", prm);
                         foreach (var item in BomList)
                         {
-                            prm.Add("@MaterialId", item.MaterialId);
+                            prm.Add("@MaterialId", item.MalzemeId);
 
                             prm.Add("@Status", 4);
                             await _db.ExecuteAsync($"Delete from  Rezerve where SalesOrderId=@OrdersId and SalesOrderItemId=@id and CompanyId=@CompanyId and ItemId=@MaterialId", prm);
@@ -870,7 +868,7 @@ namespace DAL.Repositories
                     await _db.ExecuteAsync($"Update SalesOrder Set IsActive=@IsActive,DeleteDate=@Date,DeletedUser=@User where id = @id and CompanyId = @CompanyId ", param);
                     foreach (var item in ItemsCount)
                     {
-                        param.Add("@ItemId", item.ItemId);
+                        param.Add("@ItemId", item.StokId);
                         await _db.ExecuteAsync($"Delete from  Rezerve where SalesOrderId=@id and CompanyId=@CompanyId and ItemId=@ItemId", param);
                     }
                 }
@@ -913,26 +911,26 @@ namespace DAL.Repositories
                 param.Add("@id", T.SalesOrderId);
                 param.Add("@CompanyId", CompanyId);
                 param.Add("@OrderItemId", T.id);
-                param.Add("@ItemId", item.MaterialId);
-                param.Add("@Notes", item.Note);
+                param.Add("@ItemId", item.MalzemeId);
+                param.Add("@Notes", item.Bilgi);
                 if (adet == eski)
                 {
-                    param.Add("@PlannedQuantity", item.Quantity);
+                    param.Add("@PlannedQuantity", item.Miktar);
                 }
                 else if (adet > eski)
                 {
-                    float anadeger = item.Quantity / eski;
+                    float anadeger = item.Miktar / eski;
                     float yenideger = adet - eski;
                     var artışdegeri = yenideger * anadeger;
-                    item.Quantity = item.Quantity + artışdegeri;
-                    param.Add("@PlannedQuantity", item.Quantity);
+                    item.Miktar = item.Miktar + artışdegeri;
+                    param.Add("@PlannedQuantity", item.Miktar);
                 }
                 else
                 {
-                    var yenideger = item.Quantity / eski;
+                    var yenideger = item.Miktar / eski;
                     var deger = eski - adet;
-                    item.Quantity = item.Quantity - (yenideger * deger);
-                    param.Add("@PlannedQuantity", item.Quantity);
+                    item.Miktar = item.Miktar - (yenideger * deger);
+                    param.Add("@PlannedQuantity", item.Miktar);
                 }
 
 
@@ -952,9 +950,9 @@ namespace DAL.Repositories
 
 
                 List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(id, 0) from LocationStock where ItemId=@ItemId and LocationId = @LocationId and CompanyId = @CompanyId)   as LocationStockId, (select ISNULL(DefaultPrice, 0) From Items where CompanyId = @CompanyId and id = @ItemId)as  DefaultPrice", param)).ToList();
-                float DefaultPrice = sorgu.First().DefaultPrice;
-                param.Add("@Cost", DefaultPrice * item.Quantity);
-                param.Add("@LocationStockId", sorgu.First().LocationStockId);
+                float DefaultPrice = sorgu.First().VarsayilanFiyat;
+                param.Add("@Cost", DefaultPrice * item.Miktar);
+                param.Add("@LocationStockId", sorgu.First().DepoStokId);
 
                 string sqlTY = $@"select
            (moi.PlannedQuantity-SUM(ISNULL(OrdersItem.Quantity,0))-ISNULL((Rezerve.RezerveCount),0))as Missing
@@ -982,7 +980,7 @@ namespace DAL.Repositories
                 }
 
 
-                float RezerveStockCount = await _control.Count(item.MaterialId, CompanyId, LocationId);
+                float RezerveStockCount = await _control.Count(item.MalzemeId, LocationId);
                 RezerveStockCount = RezerveStockCount >= 0 ? RezerveStockCount : 0;
                 List<int> Count = (await _db.QueryAsync<int>($"Select ISNULL(Rezerve.RezerveCount,0)as Count from Rezerve where CompanyId=@CompanyId and ItemId=@ItemId and ManufacturingOrderId=@ManufacturingOrderId and ManufacturingOrderItemId=@ManufacturingOrderItemId and ItemId=@ItemId and SalesOrderId=@id and SalesOrderItemId=@OrderItemId and Rezerve.Status=1", param)).ToList();
                 float Counts;
@@ -995,7 +993,7 @@ namespace DAL.Repositories
                     Counts = Count[0];
                 }
                 float newQuantity;
-                if (Counts >= item.Quantity)
+                if (Counts >= item.Miktar)
                 {
                     newQuantity = Count[0];
                     param.Add("@RezerveCount", newQuantity);//Stok sayısı adetten kücük ise rezer sayısıStokadeti kadar olur.
@@ -1003,10 +1001,10 @@ namespace DAL.Repositories
                     param.Add("@Availability", 2);
                 }
 
-                else if (RezerveStockCount >= item.Quantity - Counts)
+                else if (RezerveStockCount >= item.Miktar - Counts)
                 {
 
-                    param.Add("@RezerveCount", item.Quantity);
+                    param.Add("@RezerveCount", item.Miktar);
                     param.Add("@LocationStockCount", RezerveStockCount);
                     param.Add("@Availability", 2);
                 }
@@ -1021,10 +1019,14 @@ namespace DAL.Repositories
                     if (missingcount * (-1) <= expected && degeryok != 1 && missingcount * (-1) > 0 && expected > 0)
                     {
                         param.Add("@Availability", 1);
+                        param.Add("@RezerveCount", RezerveStockCount+Counts);
+
                     }
                     else
                     {
                         param.Add("@Availability", 0);
+                        param.Add("@RezerveCount", RezerveStockCount+ Counts);
+
                     }
 
                 }
@@ -1074,30 +1076,30 @@ namespace DAL.Repositories
                 DynamicParameters param = new DynamicParameters();
                 param.Add("@Tip", "Operations");
                 param.Add("@OrderId", T.SalesOrderId);
-                param.Add("@OperationId", item.OperationId);
-                param.Add("@ResourceId", item.ResourceId);
+                param.Add("@OperationId", item.OperasyonId);
+                param.Add("@ResourceId", item.KaynakId);
                 if (adet == eski)
                 {
-                    param.Add("@PlannedQuantity", item.OperationTime);
+                    param.Add("@PlannedQuantity", item.OperasyonZamani);
                 }
                 else if (adet > eski)
                 {
                     float yenideger = adet - eski;
-                    float artışdegeri = yenideger * item.OperationTime;
-                    item.OperationTime = item.OperationTime + artışdegeri;
+                    float artışdegeri = yenideger * item.OperasyonZamani;
+                    item.OperasyonZamani = item.OperasyonZamani + artışdegeri;
 
                 }
                 else
                 {
-                    float yenideger = item.OperationTime / eski;
+                    float yenideger = item.OperasyonZamani / eski;
                     float deger = eski - adet;
-                    item.OperationTime = item.OperationTime - (yenideger * deger);
+                    item.OperasyonZamani = item.OperasyonZamani - (yenideger * deger);
 
                 }
 
-                param.Add("@PlannedTime ", item.OperationTime);
+                param.Add("@PlannedTime ", item.OperasyonZamani);
                 param.Add("@Status", 0);
-                param.Add("@Cost", (item.CostHour / 60 / 60) * item.OperationTime);
+                param.Add("@Cost", (item.SaatlikUcret / 60 / 60) * item.OperasyonZamani);
                 param.Add("@CompanyId", CompanyId);
 
                 string sql = $@"Update ManufacturingOrderItems Set Tip=@Tip,OrderId=@OrderId,OperationId=@OperationId,ResourceId=@ResourceId,PlannedTime=@PlannedTime,Status=@Status,Cost=@Cost where CompanyId=@CompanyId and OrderId=@OrderId and OperationId=@OperationId and ResourceId=ResourceId  ";
@@ -1152,7 +1154,7 @@ namespace DAL.Repositories
                 degerler = deger.First();
             }
 
-            var RezerveCount = await _control.Count(T.ItemId, CompanyId, LocationId);//stocktaki adet
+            var RezerveCount = await _control.Count(T.ItemId, LocationId);//stocktaki adet
             RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
 
             if (degerler > T.Quantity)
@@ -1334,10 +1336,9 @@ namespace DAL.Repositories
             {
 
                 DynamicParameters prm2 = new DynamicParameters();
-                prm2.Add("@ItemId", item.MaterialId);
+                prm2.Add("@ItemId", item.MalzemeId);
                 prm2.Add("@SalesOrderId", OrdersId);
                 prm2.Add("@OrderItemId", T.id);
-                prm2.Add("@CompanyId", item.CompanyId);
                 prm2.Add("@location", T.LocationId);
                 string sqlb = $@"select
                 (Select ISNULL(Tip,'') from Items where id = @ItemId and CompanyId = @CompanyId)as Tip,
@@ -1358,17 +1359,16 @@ namespace DAL.Repositories
 
 
 
-                var RezerveCount = await _control.Count(item.MaterialId, CompanyId, T.LocationId);
+                var RezerveCount = await _control.Count(item.MalzemeId, T.LocationId);
                 RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
                 //stocktaki adet
-                var stokcontrol = T.Quantity * item.Quantity; //bir materialin kaç tane gideceği hesaplanıyor
+                var stokcontrol = T.Quantity * item.Miktar; //bir materialin kaç tane gideceği hesaplanıyor
                 if (deger.Count() == 0)
                 {
 
 
                     DynamicParameters param2 = new DynamicParameters();
-                    param2.Add("@ItemId", item.MaterialId);
-                    param2.Add("@CompanyId", item.CompanyId);
+                    param2.Add("@ItemId", item.MalzemeId);
                     param2.Add("@location", T.LocationId);
                     if (RezerveCount >= stokcontrol) //yeterli stok var mı
                     {
@@ -1492,13 +1492,13 @@ namespace DAL.Repositories
             var ItemId = T.ItemId;
             int id = 0;
             UretimDTO A = new UretimDTO();
-            A.ItemId = T.ItemId;
-            A.PlannedQuantity = T.PlannedQuantity;
-            A.LocationId = T.LocationId;
+            A.StokId = T.ItemId;
+            A.PlananlananMiktar = T.PlannedQuantity;
+            A.DepoId = T.LocationId;
             A.Tip = T.Tip;
-            A.ExpectedDate = T.ExpectedDate;
-            A.CreatedDate = T.CreatedDate;
-            A.ProductionDeadline = T.ProductionDeadline;
+            A.BeklenenTarih = T.ExpectedDate;
+            A.OlusturmTarihi = T.CreatedDate;
+            A.UretimTarihi = T.ProductionDeadline;
             if (T.Tip == "MakeBatch")
             {
                 if (T.SalesOrderId != 0)
@@ -1508,7 +1508,7 @@ namespace DAL.Repositories
                 id = await _manufacturingOrderItem.Insert(A, CompanyId);
                 prm.Add("@Manufacid", id);
                 await _db.ExecuteAsync($"Update ManufacturingOrder set SalesOrderId=@SalesOrderId , SalesOrderItemId=@SalesOrderItemId , CustomerId=@CustomerId where id=@Manufacid and  CompanyId=@CompanyId", prm);
-                await _manufacturingOrderItem.InsertOrderItems(id, T.ItemId, T.LocationId, T.PlannedQuantity, CompanyId, T.SalesOrderId, T.SalesOrderItemId);
+                await _manufacturingOrderItem.InsertOrderItems(id, T.ItemId, T.LocationId, T.PlannedQuantity,T.SalesOrderId, T.SalesOrderItemId);
 
             }
             else if (T.Tip == "MakeOrder")
@@ -1518,8 +1518,8 @@ namespace DAL.Repositories
                     await _db.ExecuteAsync($"Update SalesOrderItem set Tip=@Tip where CompanyId=@CompanyId and id=@SalesOrderItemId and SalesOrderId=@SalesOrderId ", prm);
                 }
                 List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(id, 0) from LocationStock where ItemId =  @ItemId  and LocationId = @location and CompanyId = @CompanyId)   as LocationStockId, (select ISNULL(DefaultPrice, 0) From Items where CompanyId = @CompanyId and id = @ItemId)as  DefaultPrice,(select Rezerve.RezerveCount from Rezerve where CompanyId=@CompanyId and ItemId=@ItemId and CustomerId=@CustomerId and LocationId=@location and SalesOrderId=@SalesOrderId and SalesOrderItemId=@SalesOrderItemId)as RezerveCount", prm)).ToList();
-                float? rezervecount = sorgu.First().RezerveCount;
-                float LocationStockId = sorgu.First().LocationStockId;
+                float? rezervecount = sorgu.First().RezerveDeger;
+                float LocationStockId = sorgu.First().DepoStokId;
                 prm.Add("@LocationStockId", LocationStockId);
                 var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id from ManufacturingOrder mo where SalesOrderId=@SalesOrderId and SalesOrderItemId=@SalesOrderItemId and CompanyId=@CompanyId  and IsActive=1 and Status!=3", prm);
 
@@ -1542,7 +1542,7 @@ namespace DAL.Repositories
                     prm.Add("@Manufacid", id);
 
                     await _db.ExecuteAsync($"Update ManufacturingOrder set SalesOrderId=@SalesOrderId , SalesOrderItemId=@SalesOrderItemId , CustomerId=@CustomerId where id=@Manufacid and  CompanyId=@CompanyId", prm);
-                    await _manufacturingOrderItem.InsertOrderItems(id, T.ItemId, T.LocationId, T.PlannedQuantity, CompanyId, T.SalesOrderId, T.SalesOrderItemId);
+                    await _manufacturingOrderItem.InsertOrderItems(id, T.ItemId, T.LocationId, T.PlannedQuantity, T.SalesOrderId, T.SalesOrderItemId);
                 }
                 else
                 {
@@ -1550,7 +1550,7 @@ namespace DAL.Repositories
                     prm.Add("@Manufacid", id);
 
                     await _db.ExecuteAsync($"Update ManufacturingOrder set SalesOrderId=@SalesOrderId , SalesOrderItemId=@SalesOrderItemId , CustomerId=@CustomerId where id=@Manufacid and  CompanyId=@CompanyId", prm);
-                    await _manufacturingOrderItem.InsertOrderItems(id, T.ItemId, T.LocationId, T.PlannedQuantity, CompanyId, T.SalesOrderId, T.SalesOrderItemId);
+                    await _manufacturingOrderItem.InsertOrderItems(id, T.ItemId, T.LocationId, T.PlannedQuantity, T.SalesOrderId, T.SalesOrderItemId);
                 }
 
 
@@ -1619,7 +1619,7 @@ namespace DAL.Repositories
                                     UretimTamamlama tamam = new();
                                     tamam.id = items.id;
                                     tamam.Status = Status;
-                                    await _manufacturingOrderItem.DoneStock(tamam, CompanyId, UserId);
+                                    await _manufacturingOrderItem.DoneStock(tamam, UserId);
                                 }
 
                             }
@@ -1697,7 +1697,7 @@ namespace DAL.Repositories
                                     UretimTamamlama tamam = new();
                                     tamam.id = items.id;
                                     tamam.Status=Status;    
-                                    await _manufacturingOrderItem.DoneStock(tamam, CompanyId, UserId);
+                                    await _manufacturingOrderItem.DoneStock(tamam, UserId);
                                 }
 
                             }
@@ -1713,7 +1713,7 @@ namespace DAL.Repositories
                             await _db.ExecuteAsync($"Update Rezerve set Status=@Status where CompanyId=@CompanyId and SalesOrderId=@id and SalesOrderItemId=@SalesOrderItemId", param);
 
                             List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(AllStockQuantity, 0) from Items where id = @ItemId  and CompanyId = @CompanyId)as Quantity, (Select ISNULL(StockCount, 0) from LocationStock where ItemId = @ItemId  and LocationId = @LocationId and CompanyId = @CompanyId) as LocationStock, (Select ISNULL(id, 0) from LocationStock where ItemId = @ItemId and LocationId = @LocationId and CompanyId = @CompanyId)   as LocationStockId,(select RezerveCount from Rezerve where CompanyId=@CompanyId and SalesOrderId=@id and ItemId=@ItemId and Status!=4) as RezerveCount ", param)).ToList();
-                            var stockall = sorgu.First().Quantity;
+                            var stockall = sorgu.First().Miktari;
                             float? stockcount = stockall - item.Quantity;
                             param.Add("@StockCount", stockcount);
                             await _db.ExecuteAsync($"Update Items set AllStockQuantity=@StockCount where CompanyId=@CompanyId and  id=@ItemId", param);
@@ -1731,7 +1731,7 @@ namespace DAL.Repositories
 
                             float? newstock = sorgu.First().LocationStock - item.Quantity;
                             param.Add("@LocationStockCount", newstock);
-                            param.Add("@LocationStockId", sorgu.First().LocationStockId);
+                            param.Add("@LocationStockId", sorgu.First().DepoStokId);
                             await _db.ExecuteAsync($"Update LocationStock set StockCount=@LocationStockCount where CompanyId=@CompanyId and  id=@LocationStockId", param);
 
                             param.Add("@PreviousValue", sorgu.First().LocationStock);

@@ -18,16 +18,15 @@ namespace BL.Services.Bom
             _db = db;
         }
 
-        public async Task<List<string>> Insert(BomDTO.BOMInsert T, int CompanyId)
+        public async Task<List<string>> Insert(BomDTO.BOMInsert T)
         {
 
             List<string> hatalar = new();
             DynamicParameters param = new DynamicParameters();
-            param.Add("@CompanyId", CompanyId);
-            param.Add("@ProductId", T.ProductId);
+            param.Add("@ProductId", T.MamulId);
 
-            param.Add("@MaterialId", T.MaterialId);//materyal id yi alıp aşağıda sorgulatıyoruz
-            string sql = $"Select Tip From Items where CompanyId = @CompanyId and id  = @MaterialId";
+            param.Add("@MaterialId", T.MalzemeId);//materyal id yi alıp aşağıda sorgulatıyoruz
+            string sql = $"Select Tip From Urunler where id  = @MaterialId";
             var Materialtipdogrumukontrol = await _db.QueryAsync<ItemDTO.Items>(sql, param);
 
             if (Materialtipdogrumukontrol.Count()==0)
@@ -52,14 +51,13 @@ namespace BL.Services.Bom
 
             //burda eşlenmesi istenen Product Id nin tipi Product mu diye kontrol ediyoruz.
             DynamicParameters param1 = new DynamicParameters();
-            param1.Add("@CompanyId", CompanyId);
-            param1.Add("@ProductId", T.ProductId);//Product id yi alıp aşağıda sorgulatıyoruz
+            param1.Add("@ProductId", T.MamulId);//Product id yi alıp aşağıda sorgulatıyoruz
 
 
             string? ProductTip;
             if (T.Tip == "SemiProduct")
             {
-                string sql1 = $"Select Tip,DefaultPrice From Items where CompanyId = @CompanyId and id = @ProductId and Tip='SemiProduct' and Tip!='Product'";
+                string sql1 = $"Select Tip,VarsayilanFiyat From Urunler where  id = @ProductId and Tip='SemiProduct' and Tip!='Product'";
                 var ProductTipDogrumuKontrol = await _db.QueryAsync<ItemDTO.Items>(sql1, param1);
                 if (ProductTipDogrumuKontrol.Count() == 0)
                 {
@@ -74,10 +72,9 @@ namespace BL.Services.Bom
 
                 }   
                 DynamicParameters param2 = new DynamicParameters();
-                param2.Add("@CompanyId", CompanyId);
-                param2.Add("@ProductId", T.ProductId);
-                param2.Add("@MaterialId", T.MaterialId);
-                string sql2 = $"Select COUNT(*) as Eklimi From BOM where CompanyId = @CompanyId and ProductId = @ProductId and MaterialId = @MaterialId";
+                param2.Add("@ProductId", T.MamulId);
+                param2.Add("@MaterialId", T.MalzemeId);
+                string sql2 = $"Select COUNT(*) as Eklimi From UrunRecetesi where  MamulId = @ProductId and MalzemeId = @MaterialId";
                 var EklimiKontrol = await _db.QueryAsync<int>(sql2, param2);
                 int eklimi = EklimiKontrol.First();
 
@@ -102,7 +99,7 @@ namespace BL.Services.Bom
             }
             else if (T.Tip == "Product")
             {
-                string sql1 = $"Select Tip,DefaultPrice From Items where CompanyId = @CompanyId and id = @ProductId";
+                string sql1 = $"Select Tip,VarsayilanFiyat From Urunler where id = @ProductId";
                 var ProductTipDogrumuKontrol = await _db.QueryAsync<ItemDTO.Items>(sql1, param1);
                 if (ProductTipDogrumuKontrol.Count() == 0)
                 {
@@ -118,10 +115,9 @@ namespace BL.Services.Bom
            
                 //Burda eşlemek istenilen material eklenmek istediği producta eklimi diye kontrol ediyoruz.
                 DynamicParameters param2 = new DynamicParameters();
-                param2.Add("@CompanyId", CompanyId);
-                param2.Add("@ProductId", T.ProductId);
-                param2.Add("@MaterialId", T.MaterialId);
-                string sql2 = $"Select COUNT(*) as Eklimi From BOM where CompanyId = @CompanyId and ProductId = @ProductId and MaterialId = @MaterialId";
+                param2.Add("@ProductId", T.MamulId);
+                param2.Add("@MaterialId", T.MalzemeId);
+                string sql2 = $"Select COUNT(*) as Eklimi From UrunRecetesi where  MamulId = @ProductId and MalzemeId = @MaterialId";
                 var EklimiKontrol = await _db.QueryAsync<int>(sql2, param2);
                 int eklimi = EklimiKontrol.First();
 
@@ -146,23 +142,22 @@ namespace BL.Services.Bom
             return hatalar;
         }
 
-        public async Task<List<string>> Update(BomDTO.BOMUpdate T, int CompanyId)
+        public async Task<List<string>> Update(BomDTO.BOMUpdate T)
         {
             List<string> hatalar = new(); 
             DynamicParameters param = new DynamicParameters();
-            param.Add("@CompanyId", CompanyId);
-            param.Add("@ProductId", T.ProductId);
+            param.Add("@ProductId", T.MamulId);
 
-            param.Add("@MaterialId", T.MaterialId);//materyal id yi alıp aşağıda sorgulatıyoruz
+            param.Add("@MaterialId", T.MalzemeId);//materyal id yi alıp aşağıda sorgulatıyoruz
             param.Add("@id", T.id);
-            string sqlquery = $"Select id from Bom where id=@id and CompanyId = @CompanyId";
+            string sqlquery = $"Select id from UrunRecetesi where id=@id";
             var kontrol = await _db.QueryAsync(sqlquery, param);
             if (kontrol.Count() == 0)
             {
                 hatalar.Add("Boyle bir id yok.");
             }
      
-            string sql = $"Select Tip From Items where CompanyId = @CompanyId and id  = @MaterialId";
+            string sql = $"Select Tip From Urunler where  id  = @MaterialId";
             var Materialtipdogrumukontrol = await _db.QueryAsync<ItemDTO.Items>(sql, param);
             if (Materialtipdogrumukontrol.Count() == 0)
             {
@@ -173,7 +168,7 @@ namespace BL.Services.Bom
 
             if (T.Tip == "SemiProduct")
             {
-                string sql1 = $"Select Tip,DefaultPrice From Items where CompanyId = @CompanyId and id = @ProductId and Tip='SemiProduct' and Tip!='Product'";
+                string sql1 = $"Select Tip,VarsayilanFiyat From Urunler where  id = @ProductId and Tip='SemiProduct' and Tip!='Product'";
                 var ProductTipDogrumuKontrol = await _db.QueryAsync<ItemDTO.Items>(sql1, param);
                 if (ProductTipDogrumuKontrol.Count() == 0)
                 {
@@ -202,10 +197,9 @@ namespace BL.Services.Bom
             {
                 //burda eşlenmesi istenen Product Id nin tipi Product mu diye kontrol ediyoruz.
                 DynamicParameters param1 = new DynamicParameters();
-                param1.Add("@CompanyId", CompanyId);
                 param1.Add("@id", T.id);
-                param1.Add("@ProductId", T.ProductId);//Product id yi alıp aşağıda sorgulatıyoruz
-                string sql1 = $"Select Tip,DefaultPrice From Items where CompanyId = @CompanyId and id = @ProductId";
+                param1.Add("@ProductId", T.MamulId);//Product id yi alıp aşağıda sorgulatıyoruz
+                string sql1 = $"Select Tip,VarsayilanFiyat From Urunler where id = @ProductId";
                 var ProductTipDogrumuKontrol = await _db.QueryAsync<ItemDTO.Items>(sql1, param1);
                 if (ProductTipDogrumuKontrol.Count() == 0)
                 {

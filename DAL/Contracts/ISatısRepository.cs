@@ -22,6 +22,7 @@ namespace DAL.Contracts
         Task DoneSellOrder(SalesDone T, int CompanyId, int UserId);
         Task<int> Control(SatısInsertItem T, int OrdersId, string? Tip, int CompanyId);
         Task IngredientsControl(SatısInsertItem T, int OrdersId, int CompanyId);
+        Task<int> InsertAddress(SalesOrderCloneAddress A,int id);
 
     }
 }

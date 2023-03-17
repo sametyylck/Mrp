@@ -33,7 +33,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -54,7 +54,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -75,7 +75,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();

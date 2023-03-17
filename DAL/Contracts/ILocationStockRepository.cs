@@ -10,8 +10,8 @@ namespace DAL.Contracts
 {
     public interface ILocationStockRepository
     {
-        Task<int> Insert(string Tip, int? ItemId, int CompanyId,  int? LocationId);
-        Task Delete(int LocationStockId, int CompanyId);
+        Task<int> Insert(string Tip, int? ItemId,  int? LocationId);
+        Task Delete(int StokId,int LocationStockId);
 
 
     }

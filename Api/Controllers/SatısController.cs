@@ -60,7 +60,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisEkleyebilirVeDuzenleyebilir, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisEkleyebilirVeDuzenleyebilir, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -71,13 +71,13 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-                var hata = await _salescontrol.Insert(T, CompanyId);
+                var hata = await _salescontrol.Insert(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
                 }
                 int id = await _satıs.Insert(T, CompanyId);
-                await _salescontrol.Adress(id, T.ContactId, CompanyId);
+                await _salescontrol.Adress(id, T.ContactId);
                 var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from SalesOrder where id={id} ");
                 return Ok(list);
             }
@@ -96,7 +96,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisEkleyebilirVeDuzenleyebilir, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisEkleyebilirVeDuzenleyebilir, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -106,7 +106,7 @@ namespace Api.Controllers
             ValidationResult result = await _SalesOrderInsertItem.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _salescontrol.InsertItem(T, CompanyId);
+                var hata = await _salescontrol.InsertItem(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
@@ -131,7 +131,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisEkleyebilirVeDuzenleyebilir, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisEkleyebilirVeDuzenleyebilir, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -142,7 +142,7 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-                var hata = await _salescontrol.Update(T, CompanyId);
+                var hata = await _salescontrol.Update(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
@@ -167,7 +167,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisEkleyebilirVeDuzenleyebilir, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisEkleyebilirVeDuzenleyebilir, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -178,7 +178,7 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-                var hata = await _salescontrol.UpdateItem(T, CompanyId);
+                var hata = await _salescontrol.UpdateItem(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
@@ -201,7 +201,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisEkleyebilirVeDuzenleyebilir, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisEkleyebilirVeDuzenleyebilir, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -219,7 +219,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisSilebilir, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisSilebilir, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -239,7 +239,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisSilebilir, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisSilebilir, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -250,7 +250,7 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-                var hata = await _salescontrol.DeleteItems(T, CompanyId);
+                var hata = await _salescontrol.DeleteItems(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
@@ -272,7 +272,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -282,7 +282,7 @@ namespace Api.Controllers
             ValidationResult result = await _SalesOrderMake.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _salescontrol.Make(T, CompanyId);
+                var hata = await _salescontrol.Make(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
@@ -305,7 +305,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisTamamlama, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisTamamlama, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -334,7 +334,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisGoruntule, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisGoruntule, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -351,7 +351,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisGoruntule, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisGoruntule, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -369,7 +369,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisGoruntule, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisGoruntule, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -387,7 +387,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisGoruntule, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisGoruntule, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -406,7 +406,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.SatisGoruntule, Permison.SatisHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.SatisGoruntule, Permison.SatisHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();

@@ -12,20 +12,20 @@ namespace DAL.DTO
         public class TaxClas
         {
             public int id { get; set; }
-            public float Rate { get; set; }
-            public string TaxName { get; set; } = string.Empty;
+            public float VergiDegeri { get; set; }
+            public string VergiIsim { get; set; } = string.Empty;
         }
         public class TaxInsert
         {
-            public float Rate { get; set; }
-            public string TaxName { get; set; } = string.Empty;
+            public float VergiDegeri { get; set; }
+            public string VergiIsim { get; set; } = string.Empty;
 
         }
         public class TaxUpdate
         {
             public int id { get; set; }
-            public float Rate { get; set; }
-            public string TaxName { get; set; } = string.Empty;
+            public float VergiDegeri { get; set; }
+            public string VergiIsim { get; set; } = string.Empty;
         }
     }
 }

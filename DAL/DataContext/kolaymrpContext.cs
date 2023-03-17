@@ -596,24 +596,15 @@ namespace DAL.Models
             {
                 entity.Property(e => e.Id).HasColumnName("id");
 
-                entity.Property(e => e.FirstName).HasMaxLength(50);
+                entity.Property(e => e.Ad).HasMaxLength(50);
 
-                entity.Property(e => e.LastName).HasMaxLength(50);
+                entity.Property(e => e.Soyisim).HasMaxLength(50);
 
                 entity.Property(e => e.Mail).HasMaxLength(50);
 
-                entity.Property(e => e.PasswordSalt).HasMaxLength(16);
 
-                entity.Property(e => e.PasswordHash).HasMaxLength(16);
-
-                entity.Property(e => e.PhoneNumber).HasMaxLength(18);
-
-                entity.Property(e => e.Role).HasMaxLength(5);
-
-                entity.HasOne(d => d.Company)
-                    .WithMany(p => p.Users)
-                    .HasForeignKey(d => d.CompanyId)
-                    .HasConstraintName("FK_Users_Company");
+                entity.Property(e => e.Telefon).HasMaxLength(18);
+                
             });
 
             OnModelCreatingPartial(modelBuilder);

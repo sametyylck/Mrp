@@ -50,16 +50,15 @@ namespace Api.Controllers
         public async Task<ActionResult<CategoryClass>> List()
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKategori, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKategori, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
-            var list = await _categoty.List(CompanyId);
+            var list = await _categoty.List();
             return Ok(list);
         }
         [Route("Insert")]
@@ -67,9 +66,8 @@ namespace Api.Controllers
         public async Task<ActionResult<CategoryClass>> Insert(CategoryInsert T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKategori, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKategori, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -79,13 +77,9 @@ namespace Api.Controllers
             ValidationResult result = await _CategoryInsert.ValidateAsync(T);
             if (result.IsValid)
             {
-                int id = await _categoty.Insert(T, CompanyId);
-                string sql = $"Select * From Categories where CompanyId = {CompanyId} and id = {id}";
+                int id = await _categoty.Insert(T, UserId);
+                string sql = $"Select Isim From Kategoriler where id = {id}";
                 var eklenen = await _db.QueryAsync<CategoryClass>(sql);
-                if (eklenen.Count() == 0)
-                {
-                    return BadRequest("Category Eklenirken Bir Hata Oluştu.");
-                }
                 return Ok(eklenen.First());
             }
             else
@@ -102,9 +96,8 @@ namespace Api.Controllers
         public async Task<ActionResult<CategoryClass>> Update(CategoryUpdate T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKategori, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKategori, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -115,11 +108,13 @@ namespace Api.Controllers
             if (result.IsValid)
             {
               
-                var hata = await _idcontrol.GetControl("Categories", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("Kategoriler", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _categoty.Update(T, CompanyId);
-                    return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
+                    await _categoty.Update(T);
+                    string sql = $"Select Isim From Kategoriler where id = {T.id}";
+                    var eklenen = await _db.QueryAsync<CategoryClass>(sql);
+                    return Ok(eklenen);
                 }
                 else
                 {
@@ -142,7 +137,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKategori, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarKategori, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -152,10 +147,10 @@ namespace Api.Controllers
             ValidationResult result = await _CategoryDelete.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _idcontrol.GetControl("Categories", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("Kategoriler", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _categoty.Delete(T, CompanyId);
+                    await _categoty.Delete(T);
                     return Ok("Silme İşlemi Başarıyla Gerçekleşti");
                 }
                 else

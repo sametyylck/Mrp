@@ -39,18 +39,17 @@ namespace DAL.Repositories
                 prm.Add("@id", id);
 
                 string sql1 = $@"  select moi.id,moi.Tip,moi.ItemId,Items.Name,ISNULL(Notes,'')AS Note,moi.PlannedQuantity as Quantity,moi.Cost,moi.Availability,
-            (ISNULL(LocationStock.StockCount,0)-ISNULL(SUM(DISTINCT(Rezerve.RezerveCount)),0))+(ISNULL(rez.RezerveCount,0))-(ISNULL(moi.PlannedQuantity,0))+ISNULL(SUM(DISTINCT(case when Orders.DeliveryId=1 then OrdersItem.Quantity else 0 end)),0)AS missing
-            from ManufacturingOrderItems moi
-            left join ManufacturingOrder mao on mao.id=moi.OrderId
-            left join Items on Items.id=moi.ItemId
-            left join LocationStock on LocationStock.ItemId=moi.ItemId and LocationStock.LocationId=@LocationId
-            left join OrdersItem on OrdersItem.ItemId=moi.ItemId 
-            right join Orders on Orders.id=OrdersItem.OrdersId and Orders.ManufacturingOrderId=mao.id 
-            left join Rezerve on Rezerve.ItemId=Items.id  and Rezerve.Status=1  and Rezerve.LocationId=@LocationId
-			 left join Rezerve rez on rez.ManufacturingOrderId=mao.id and rez.ManufacturingOrderItemId=moi.id  and rez.Status=1  and rez.LocationId=@LocationId
-            where mao.id=@id and moi.Tip='Ingredients' and mao.LocationId=@LocationId  and mao.Status!=3 and mao.CompanyId=@CompanyId
-            Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi.Cost,moi.Availability,
-            moi.PlannedQuantity,LocationStock.StockCount,rez.RezerveCount,orders.DeliveryId,OrdersItem.Quantity   
+ISNULL(SUM(DISTINCT(case when Orders.DeliveryId=1 then OrdersItem.Quantity else 0 end)),0)-ISNULL(moi.PlannedQuantity,0)+ISNULL(rez.RezerveCount,0) as Missing
+from ManufacturingOrderItems moi
+left join ManufacturingOrder mao on mao.id=moi.OrderId
+left join Items on Items.id=moi.ItemId
+left join LocationStock on LocationStock.ItemId=moi.ItemId and LocationStock.LocationId=@LocationId
+left join Rezerve rez on rez.ManufacturingOrderId=mao.id and rez.ManufacturingOrderItemId=moi.id  and rez.Status=1  and rez.LocationId=@LocationId
+left join Orders on Orders.ManufacturingOrderId=mao.id and Orders.ManufacturingOrderItemId=moi.id 
+left join OrdersItem on OrdersItem.OrdersId=Orders.id
+where mao.id=@id and moi.Tip='Ingredients' and mao.CompanyId=@CompanyId and mao.LocationId=@LocationId
+Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi.Cost,moi.Availability,
+ moi.PlannedQuantity,rez.RezerveCount,orders.DeliveryId,OrdersItem.Quantity   
             ";
                 var IngredientsDetail = await _db.QueryAsync<ManufacturingOrderItemsIngredientsDetail>(sql1, prm);
                 string sql2 = $@"Select moi.id,
@@ -114,7 +113,7 @@ namespace DAL.Repositories
             return OperationDetail.ToList();
         }
 
-        public async Task<IEnumerable<ManufacturingOrderDoneList>> ScheludeDoneList(ManufacturingOrderDoneList T, int CompanyId, int? KAYITSAYISI, int? SAYFA)
+        public async Task<IEnumerable<ManufacturingOrderDoneList>> ScheludeDoneList(ManufacturingOrderDoneListArama T, int CompanyId, int? KAYITSAYISI, int? SAYFA)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@CompanyId", CompanyId);
@@ -159,7 +158,7 @@ namespace DAL.Repositories
             Locations.LocationName , Items.[Name],Categories.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.[Status],ManufacturingOrder.ExpectedDate) x
             where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND  ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
             ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-             ISNULL(Status,'') like '%{T.Status}%' and    ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
+             ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
 			 and    ISNULL(TotalCost,'') like '%{T.TotalCost}%'
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
                 }
@@ -189,7 +188,7 @@ namespace DAL.Repositories
             Locations.LocationName , Items.[Name],Categories.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.[Status],ManufacturingOrder.ExpectedDate) x
 			 where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND  ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
             ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-             ISNULL(Status,'') like '%{T.Status}%' and    ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
+             ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
 			 and    ISNULL(TotalCost,'') like '%{T.TotalCost}%'
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
                 }
@@ -228,7 +227,7 @@ namespace DAL.Repositories
             Locations.LocationName , Items.[Name],Categories.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.[Status],ManufacturingOrder.ExpectedDate) x
             where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND  ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
             ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-             ISNULL(Status,'') like '%{T.Status}%' and    ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
+             ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
 			 and    ISNULL(TotalCost,'') like '%{T.TotalCost}%' and x.DoneDate BETWEEN '{ilkgun}' and '{songun}'
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
                 }
@@ -258,7 +257,7 @@ namespace DAL.Repositories
             Locations.LocationName , Items.[Name],Categories.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.[Status],ManufacturingOrder.ExpectedDate) x
 			 where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND  ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
             ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-             ISNULL(Status,'') like '%{T.Status}%' and    ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
+             ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
 			 and    ISNULL(TotalCost,'') like '%{T.TotalCost}%' and x.DoneDate BETWEEN '{ilkgun}' and '{songun}'
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
                 }
@@ -272,7 +271,7 @@ namespace DAL.Repositories
         }
 
 
-        public async Task<IEnumerable<ManufacturingOrderList>> ScheludeOpenList(ManufacturingOrderList T, int CompanyId, int? KAYITSAYISI, int? SAYFA)
+        public async Task<IEnumerable<ManufacturingOrderList>> ScheludeOpenList(ManufacturingOrderListArama T, int CompanyId, int? KAYITSAYISI, int? SAYFA)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@CompanyId", CompanyId);
@@ -410,7 +409,7 @@ namespace DAL.Repositories
         }
 
 
-        public async Task<IEnumerable<ManufacturingTask>> TaskDoneList(ManufacturingTask T, int CompanyId, int? KAYITSAYISI, int? SAYFA)
+        public async Task<IEnumerable<ManufacturingTask>> TaskDoneList(ManufacturingTaskArama T, int CompanyId, int? KAYITSAYISI, int? SAYFA)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@CompanyId", CompanyId);
@@ -462,7 +461,7 @@ namespace DAL.Repositories
         }
 
 
-        public async Task<IEnumerable<ManufacturingTask>> TaskOpenList(ManufacturingTask T, int CompanyId, int? KAYITSAYISI, int? SAYFA)
+        public async Task<IEnumerable<ManufacturingTask>> TaskOpenList(ManufacturingTaskArama T, int CompanyId, int? KAYITSAYISI, int? SAYFA)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@CompanyId", CompanyId);

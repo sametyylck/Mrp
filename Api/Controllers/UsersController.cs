@@ -38,15 +38,14 @@ namespace Api.Controllers
         public async Task<ActionResult<User>> KullanıcıInsert(UserInsert T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var hata = await _kullanıcıkontrol.KullanıcıInsertKontrol(T.Mail, T.RoleId, CompanyId);
+            var hata = await _kullanıcıkontrol.KullanıcıInsertKontrol(T.Mail, T.RoleId);
             if (hata.Count()!=0)
             {
                 return BadRequest(hata);
             }
-            int id = await _kullanıcı.KullanıcıInsert(T, CompanyId, UserId);
-            var list = await _kullanıcı.KullanıcıDetail(id,CompanyId);
+            int id = await _kullanıcı.KullanıcıInsert(T, UserId);
+            var list = await _kullanıcı.KullanıcıDetail(id);
             return Ok(list);
         }
         [Route("KullanıcıUpdate")]
@@ -56,13 +55,13 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var hata = await _kullanıcıkontrol.KullanıcıUpdateKontrol(T.id, T.Mail,T.RoleId, CompanyId);
+            var hata = await _kullanıcıkontrol.KullanıcıUpdateKontrol(T.id, T.Mail,T.RoleId);
             if (hata.Count() !=0)
             {
                 return BadRequest(hata);
             }
-            await _kullanıcı.KullanıcıUpdate(T, CompanyId, UserId);
-            var list = await _kullanıcı.KullanıcıDetail(T.id, CompanyId);
+            await _kullanıcı.KullanıcıUpdate(T, UserId);
+            var list = await _kullanıcı.KullanıcıDetail(T.id);
             return Ok(list);
         }
         [Route("KullanıcıDelete")]
@@ -70,14 +69,13 @@ namespace Api.Controllers
         public async Task<ActionResult<User>> KullanıcıDelete(int id)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var hata = await _kullanıcıkontrol.KullanıcıDelete(id, CompanyId);
+            var hata = await _kullanıcıkontrol.KullanıcıDelete(id);
             if (hata.Count() != 0)
             {
                 return BadRequest(hata);
             }
-            await _kullanıcı.KullanıcıDelete(id, CompanyId, UserId);
+            await _kullanıcı.KullanıcıDelete(id, UserId);
             return Ok("Başarılı");
         }
         [Route("KullanıcıDetay")]
@@ -85,14 +83,13 @@ namespace Api.Controllers
         public async Task<ActionResult<User>> KullanıcıDetay(int id)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var hata = await _idcontrol.GetControl("Users", id, CompanyId);
+            var hata = await _idcontrol.GetControl("Kullanıcılar", id);
             if (hata.Count() != 0)
             {
                 return BadRequest(hata);
             }
-            var list= await _kullanıcı.KullanıcıDetail(id, CompanyId);
+            var list= await _kullanıcı.KullanıcıDetail(id);
             return Ok(list);
         }
         [Route("KullanıcıList")]
@@ -100,9 +97,8 @@ namespace Api.Controllers
         public async Task<ActionResult<User>> KullanıcıList(string? kelime, int KAYITSAYISI, int SAYFA)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var list=await _kullanıcı.KullanıcıList(kelime, CompanyId, UserId);
+            var list=await _kullanıcı.KullanıcıList(kelime, UserId);
             return Ok(list);
         }
         [Route("RoleInsert")]
@@ -110,15 +106,14 @@ namespace Api.Controllers
         public async Task<ActionResult<User>> RoleInsert(RoleInsert T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var hata = await _kullanıcıkontrol.RoleInsert(T, CompanyId);
+            var hata = await _kullanıcıkontrol.RoleInsert(T);
             if (hata.Count()!=0)
             {
                 return BadRequest(hata);
             }
-            int id=await _kullanıcı.RoleInsert(T, CompanyId, UserId);
-            var list = await _kullanıcı.RoleDetail(id, CompanyId, UserId); ;
+            int id=await _kullanıcı.RoleInsert(T, UserId);
+            var list = await _kullanıcı.RoleDetail(id, UserId); ;
 
             return Ok(list);
         }
@@ -127,15 +122,14 @@ namespace Api.Controllers
         public async Task<ActionResult<User>> RoleUpdate(RoleUpdate T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var hata = await _idcontrol.GetControl("Role", T.id, CompanyId);
+            var hata = await _idcontrol.GetControl("Role", T.id);
             if (hata.Count() != 0)
             {
                 return BadRequest(hata);
             }
-            await _kullanıcı.RoleUpdate(T, CompanyId, UserId);
-            var list = await _kullanıcı.RoleDetail(T.id, CompanyId, UserId); ;
+            await _kullanıcı.RoleUpdate(T, UserId);
+            var list = await _kullanıcı.RoleDetail(T.id,UserId); ;
 
             return Ok(list);
         }
@@ -144,15 +138,14 @@ namespace Api.Controllers
         public async Task<ActionResult<User>> RoleDelete(int id)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var hata = await _kullanıcıkontrol.RoleDelete(id, CompanyId);
+            var hata = await _kullanıcıkontrol.RoleDelete(id);
             if (hata.Count() != 0)
             {
                 return BadRequest(hata);
             }
 
-            await _kullanıcı.RoleDelete(id, CompanyId, UserId);
+            await _kullanıcı.RoleDelete(id, UserId);
 
             return Ok("Basarili");
         }
@@ -161,9 +154,8 @@ namespace Api.Controllers
         public async Task<ActionResult<User>> RoleList(string? kelime)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var list= await _kullanıcı.RoleList(kelime, CompanyId, UserId); ;
+            var list= await _kullanıcı.RoleList(kelime, UserId); ;
 
             return Ok(list);
         }
@@ -174,12 +166,12 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var hata = await _idcontrol.GetControl("Role", id, CompanyId);
+            var hata = await _idcontrol.GetControl("Role", id);
             if (hata.Count() != 0)
             {
                 return BadRequest(hata);
             }
-            var list=await _kullanıcı.RoleDetail(id, CompanyId, UserId); ;
+            var list=await _kullanıcı.RoleDetail(id, UserId); ;
 
             return Ok(list);
         }
@@ -190,12 +182,12 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var hata = await _kullanıcıkontrol.PermisionKontrol(T.PermisionId, T.RoleId, CompanyId);
+            var hata = await _kullanıcıkontrol.PermisionKontrol(T.PermisionId, T.RoleId);
             if (hata.Count() != 0)
             {
                 return BadRequest(hata);
             }
-            await _kullanıcı.PermisionInsert(T, CompanyId, UserId); ;
+            await _kullanıcı.PermisionInsert(T, UserId); ;
 
             return Ok();
         }
@@ -206,12 +198,12 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var hata = await _kullanıcıkontrol.PermisionKontrol(T.PermisionId, T.RoleId, CompanyId);
+            var hata = await _kullanıcıkontrol.PermisionKontrol(T.PermisionId, T.RoleId);
             if (hata.Count() != 0)
             {
                 return BadRequest(hata);
             }
-            await _kullanıcı.PermisionDelete(T, CompanyId, UserId); ;
+            await _kullanıcı.PermisionDelete(T, UserId); ;
 
             return Ok();
         }

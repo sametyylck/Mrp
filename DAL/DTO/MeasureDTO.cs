@@ -9,16 +9,16 @@ namespace DAL.DTO
     public class MeasureDTO
     {
         public int id { get; set; }
-        public string Name { get; set; } = null!;
+        public string Isim { get; set; } = null!;
     }
     public class MeasureUpdate
     {
         public int id { get; set; }
-        public string Name { get; set; } = null!;
+        public string Isim { get; set; } = null!;
     }
     public class MeasureInsert
     {
-        public string Name { get; set; } = null!;
+        public string Isim { get; set; } = null!;
     }
 
 }

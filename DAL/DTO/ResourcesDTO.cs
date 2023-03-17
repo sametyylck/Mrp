@@ -11,25 +11,25 @@ namespace DAL.DTO
     {
         public int id { get; set; }
 
-        public string Name { get; set; } = string.Empty;
+        public string Isim { get; set; } = string.Empty;
 
-        public double? DefaultCostHour { get; set; }
+        public double? VarsayilanSaatlikUcret { get; set; }
     }
     public class ResourcesInsert
     {
 
-        public string Name { get; set; } = string.Empty;
+        public string Isim { get; set; } = string.Empty;
 
-        public double? DefaultCostHour { get; set; }
+        public double? VarsayilanSaatlikUcret { get; set; }
 
     }
     public class ResourcesUpdate
     {
         public int id { get; set; }
 
-        public string Name { get; set; } = string.Empty;
+        public string Isim { get; set; } = string.Empty;
 
-        public double? DefaultCostHour { get; set; }
+        public double? VarsayilanSaatlikUcret { get; set; }
 
     }
 }

@@ -20,48 +20,46 @@ namespace DAL.Repositories
             _connection = connection;
         }
 
-        public async Task Delete(IdControl T, int CompanyId)
+        public async Task Delete(IdControl T)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@CompanyId", CompanyId);
             //Burda Silinen Measure ye ait Item ların MeasureId lerini Null Yapıyoruz
-            await _connection.ExecuteAsync($"Update Items Set MeasureId = null where MeasureId = @id and CompanyId = @CompanyId", prm);
+            await _connection.ExecuteAsync($"Update Urunler Set OlcuId = null where OlcuId = @id", prm);
             //Burda Normal Measure Kaydını Siliyoruz
-           await _connection.ExecuteAsync($"Delete From Measure where id = @id and CompanyId = @CompanyId", prm);
+           await _connection.ExecuteAsync($"Delete From Olcu where id = @id", prm);
         }
 
-        public async Task<int> Insert(MeasureInsert T, int CompanyId)
+        public async Task<int> Insert(MeasureInsert T, int UserId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@Name", T.Name);
-            prm.Add("@CompanyId", CompanyId);
-            return await _connection.QuerySingleAsync<int>($"Insert into Measure (Name, CompanyId) OUTPUT INSERTED.[id] values (@Name, @CompanyId)", prm);
+            prm.Add("@Name", T.Isim);
+            prm.Add("@UserId", UserId);
+            return await _connection.QuerySingleAsync<int>($"Insert into Olcu (Isim, KullaniciId) OUTPUT INSERTED.[id] values (@Name, @UserId)", prm);
         }
 
-        public async Task<IEnumerable<MeasureDTO>> List(int CompanyId)
+        public async Task<IEnumerable<MeasureDTO>> List()
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
-            var list = await _connection.QueryAsync<MeasureDTO>($"Select * From Measure where CompanyId = @CompanyId", prm);
+            var list = await _connection.QueryAsync<MeasureDTO>($"Select id,Isim From Olcu", prm);
             return list.ToList();
         }
 
-        public async Task Register(int id)
+        public async Task Register(int UserId)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@Name", "Mt");
-            prm.Add("@CompanyId", id);
-          await _connection.QuerySingleOrDefaultAsync($"Insert into Measure (Name,CompanyId) values  (@Name,@CompanyId)", prm);
+            prm.Add("@UserId", UserId);
+          await _connection.QuerySingleOrDefaultAsync($"Insert into Olcu (Isim,KullaniciId) values  (@Name,@UserId)", prm);
         }
 
-        public async Task Update(MeasureUpdate T, int CompanyId)
+        public async Task Update(MeasureUpdate T)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@Name", T.Name);
-            prm.Add("@CompanyId", CompanyId);
-          await _connection.ExecuteAsync($"Update Measure SET Name = @Name where id = @id  and CompanyId = @CompanyId", prm);
+            prm.Add("@Name", T.Isim);
+            prm.Add("@CompanyId");
+          await _connection.ExecuteAsync($"Update Olcu SET Isim = @Name where id = @id", prm);
         }
     }
 }

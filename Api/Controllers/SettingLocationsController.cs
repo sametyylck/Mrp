@@ -52,14 +52,14 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
-            var list = await _location.List(CompanyId);
+            var list = await _location.List();
             return Ok(list);
         }
 
@@ -70,7 +70,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -84,7 +84,7 @@ namespace Api.Controllers
                 DynamicParameters param = new DynamicParameters();
                 param.Add("@CompanyId", CompanyId);
                 param.Add("@id", id);
-                var list = await _db.QueryAsync<LocationsDTO>($"Select * From Locations where CompanyId = @CompanyId and id = @id", param);
+                var list = await _db.QueryAsync<LocationsDTO>($"Select * From DepoVeAdresler where id = @id", param);
                 return Ok(list.First());
 
             }
@@ -102,7 +102,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -112,10 +112,10 @@ namespace Api.Controllers
             ValidationResult result = await _LocationDTO.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _idcontrol.GetControl("Locations", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("DepoVeAdresler", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _location.Update(T, CompanyId);
+                    await _location.Update(T);
                     return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
                 }
                 else
@@ -138,7 +138,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarAdresler, Permison.AyarlarHepsi,UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -148,10 +148,10 @@ namespace Api.Controllers
             ValidationResult result = await _Idcontrol.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _idcontrol.GetControl("Locations", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("DepoVeAdresler", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _location.Delete(T, CompanyId);
+                    await _location.Delete(T);
                     return Ok("Silme İşlemi Başarıyla Gerçekleşti");
                 }
                 else

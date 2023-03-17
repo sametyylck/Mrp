@@ -24,10 +24,10 @@ namespace BL.Services.Items
             _db = db;
         }
 
-        public async Task<List<string>> Delete(ItemsDelete T, int CompanyId)
+        public async Task<List<string>> Delete(ItemsDelete T)
         {
             List<string> hatalar = new();
-            string sql = $"select(Select id from Items where id={T.id} and CompanyId = {CompanyId})as id,(Select Tip from Items where id={T.id} and CompanyId = {CompanyId})as Tip";
+            string sql = $"select(Select id from Urunler where id={T.id})as id,(Select Tip from Urunler where id={T.id})as Tip";
             var kontrol = await _db.QueryAsync<PurchaseOrderDTO.PurchaseOrderLogsList>(sql);
             if (kontrol.First().id == null)
             {
@@ -46,29 +46,28 @@ namespace BL.Services.Items
 
         }
 
-        public async Task<List<string>> Insert(ItemsInsert T, int CompanyId)
+        public async Task<List<string>> Insert(ItemsInsert T)
         {
             List<string> hatalar = new();
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@MeasureId", T.MeasureId);
-            prm.Add("@CategoryId", T.CategoryId);
-            prm.Add("@CompanyId", CompanyId);
-            prm.Add("@ContactId", T.ContactId);
+            prm.Add("@MeasureId", T.OlcuId);
+            prm.Add("@CategoryId", T.KategoriId);
+            prm.Add("@ContactId", T.TedarikciId);
 
 
             if (T.Tip == "Material" || T.Tip == "Product" || T.Tip == "SemiProduct")
             {
                 var tipbul = await _db.QueryAsync<ItemsInsert>($@"select
-                (select id from Measure where id=@MeasureId and CompanyId=@CompanyId)as MeasureId,
-                (select id from Categories where id=@CategoryId and CompanyId=@CompanyId)as CategoryId,
-                (select id from Contacts where id=@ContactId and CompanyId=@CompanyId) as ContactId", prm);
-                var measureid = tipbul.First().MeasureId;
-                var categoryid = tipbul.First().CategoryId;
-                var contactid = tipbul.First().ContactId;
+                (select id from Olcu where id=@MeasureId)as OlcuId,
+                (select id from Kategoriler where id=@CategoryId)as KategoriId,
+                (select CariKod from Cari where CariKod=@ContactId ) as TedarikciId", prm);
+                var measureid = tipbul.First().OlcuId;
+                var categoryid = tipbul.First().KategoriId;
+                var contactid = tipbul.First().TedarikciId;
           
-                if (T.ContactId!=0)
+                if (T.TedarikciId!=0)
                 {
-                    if (T.ContactId!=null)
+                    if (T.TedarikciId!=null)
                     {
                         if (contactid == null)
                         {
@@ -77,18 +76,18 @@ namespace BL.Services.Items
                     }
                   
                 }
-                else if(T.ContactId==0)
+                else if(T.TedarikciId==0)
                 {
-                    T.ContactId = null;
+                    T.TedarikciId = null;
                 }
            
                 if (measureid == null)
                 {
                     hatalar.Add("measureid bulunamadi");
                 }
-                if (T.CategoryId !=0)
+                if (T.KategoriId !=0)
                 {
-                    if(T.CategoryId!=null)
+                    if(T.KategoriId!=null)
                     {
                         if (categoryid == null)
                         {

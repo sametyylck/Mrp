@@ -71,7 +71,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi,CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, UserId);
             if (!izin)
             {
                 List<string> izinhatasi = new();
@@ -83,13 +83,13 @@ namespace Api.Controllers
             {
                
            
-                var hata = await _control.Insert(T, CompanyId);
+                var hata = await _control.Insert(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
                 }
                 int id = await _uretim.Insert(T, CompanyId);
-                await _uretim.InsertOrderItems(id, T.ItemId, T.LocationId, T.PlannedQuantity, CompanyId, 0, 0);
+                await _uretim.InsertOrderItems(id, T.StokId, T.DepoId, T.PlananlananMiktar, 0, 0);
                 var list = await _uretimlist.Detail(CompanyId, id);
                 return Ok(list);
             }
@@ -106,9 +106,8 @@ namespace Api.Controllers
         public async Task<IActionResult> IngredientsInsert([FromBody] UretimIngredientsInsert T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -119,12 +118,12 @@ namespace Api.Controllers
             if (result.IsValid)
             {
             
-                var hata = await _control.IngredientInsert(T, CompanyId);
+                var hata = await _control.IngredientInsert(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
                 }
-                await _uretim.IngredientsInsert(T, CompanyId);
+                await _uretim.IngredientsInsert(T);
                 return Ok();
             }
             else
@@ -140,9 +139,8 @@ namespace Api.Controllers
         public async Task<IActionResult> OperationsInsert([FromBody] UretimOperationsInsert T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -153,12 +151,12 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-                var hata = await _control.OperationsInsert(T, CompanyId);
+                var hata = await _control.OperationsInsert(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
                 }
-                await _uretim.OperationsInsert(T, CompanyId);
+                await _uretim.OperationsInsert(T);
             return Ok();
             }
             else
@@ -177,7 +175,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -188,13 +186,13 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-                var hata = await _control.Update(T, CompanyId);
+                var hata = await _control.Update(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
                 }
-                await _uretim.Update(T, CompanyId);
-                await _uretim.UpdateOrderItems(T.id, T.LocationId, T.PlannedQuantity, T.eskiPlanned, CompanyId);
+                await _uretim.Update(T);
+                await _uretim.UpdateOrderItems(T.id, T.DepoId, T.PlanlananMiktar, T.eskiPlanned);
                 return Ok();
             }
             else
@@ -212,7 +210,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -223,12 +221,12 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-                var hata = await _control.IngredientsUpdate(T, CompanyId);
+                var hata = await _control.IngredientsUpdate(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
                 }
-                await _uretim.IngredientsUpdate(T, CompanyId);
+                await _uretim.IngredientsUpdate(T);
                 return Ok();
             }
             else
@@ -245,7 +243,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimEkleyebilirVeDuzenleyebilir, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -256,12 +254,12 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-                var hata = await _control.OperationUpdate(T, CompanyId);
+                var hata = await _control.OperationUpdate(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
                 }
-                await _uretim.OperationsUpdate(T, CompanyId);
+                await _uretim.OperationsUpdate(T);
                 return Ok();
             }
             else
@@ -278,19 +276,19 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimSilebilir, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimSilebilir, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
-            var hata = await _control.DeleteKontrol(T, CompanyId);
+            var hata = await _control.DeleteKontrol(T);
             if (hata.Count() != 0)
             {
                 return BadRequest(hata);
             }
-            await _uretim.Delete(T, CompanyId, UserId);
+            await _uretim.Delete(T,UserId);
             return Ok();
 
         }
@@ -303,7 +301,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimSilebilir, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimSilebilir, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -313,12 +311,12 @@ namespace Api.Controllers
             ValidationResult result = await _ManufacturingItemsDelete.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _control.DeleteItems(T, CompanyId);
+                var hata = await _control.DeleteItems(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
                 }
-                await _uretim.DeleteItems(T, CompanyId);
+                await _uretim.DeleteItems(T);
                 return Ok();
             }
             else
@@ -337,7 +335,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimTamamlama, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimTamamlama, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -347,13 +345,13 @@ namespace Api.Controllers
             ValidationResult result = await _ManufacturingDoneStock.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _control.DoneStock(T, CompanyId);
+                var hata = await _control.DoneStock(T);
                 if (hata.Count() != 0)
                 {
                     return BadRequest(hata);
                 }
                 int User = user[1];
-                await _uretim.DoneStock(T, CompanyId, User);
+                await _uretim.DoneStock(T, User);
                 return Ok();
             }
             else
@@ -373,7 +371,7 @@ namespace Api.Controllers
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
                 int UserId = user[1];
-                var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaEkleyebilirVeDuzenleyebilir, Permison.SatinAlmaHepsi, CompanyId, UserId);
+                var izin = await _izinkontrol.Kontrol(Permison.SatinAlmaEkleyebilirVeDuzenleyebilir, Permison.SatinAlmaHepsi, UserId);
                 if (izin == false)
                 {
                     List<string> izinhatasi = new();
@@ -385,17 +383,17 @@ namespace Api.Controllers
                 if (result.IsValid)
                 {
                  
-                    var hata = await _control.PurchaseOrder(T, CompanyId);
+                    var hata = await _control.PurchaseOrder(T);
                     if (hata.Count() != 0)
                     {
                         return BadRequest(hata);
                     }
                     DynamicParameters prm = new();
                     prm.Add("@CompanyId", CompanyId);
-                    prm.Add("@OrderId", T.ManufacturingOrderId);
-                    prm.Add("@id", T.ManufacturingOrderItemId);
-                    prm.Add("@LocationId", T.LocationId);
-                    prm.Add("@ItemId", T.ItemId);
+                    prm.Add("@OrderId", T.UretimId);
+                    prm.Add("@id", T.UretimDetayId);
+                    prm.Add("@LocationId", T.DepoId);
+                    prm.Add("@ItemId", T.StokId);
 
 
 
@@ -423,28 +421,28 @@ namespace Api.Controllers
 
 
                     PurchaseOrderInsert insert = new();
-                    insert.ManufacturingOrderId = T.ManufacturingOrderId;
-                    insert.ManufacturingOrderItemId = T.ManufacturingOrderItemId;
-                    insert.LocationId = T.LocationId;
-                    insert.ContactId = T.ContactId;
-                    insert.ExpectedDate = T.ExpectedDate;
+                    insert.UretimId = T.UretimId;
+                    insert.UretimDetayId = T.UretimDetayId;
+                    insert.DepoId = T.DepoId;
+                    insert.TedarikciId = T.TedarikciId;
+                    insert.BeklenenTarih = T.BeklenenTarih;
                     insert.Tip = T.Tip;
-                    insert.ItemId = T.ItemId;
-                    insert.SalesOrderItemId = 0;
-                    insert.SalesOrderId = 0;
+                    insert.StokId = T.StokId;
+                    insert.SatisDetayId = 0;
+                    insert.SatisId = 0;
 
-                    insert.Info = "";
+                    insert.Bilgi = "";
 
-                    int id = await _order.Insert(insert, CompanyId);
+                    int id = await _order.Insert(insert,UserId);
                     PurchaseOrderInsertItem insertitem = new();
-                    insertitem.MeasureId = degerler.First().MeasureId;
-                    insertitem.ItemId = T.ItemId;
-                    insertitem.Quantity = T.Quantity;
-                    insertitem.OrderId = id;
-                    insertitem.TaxId = degerler.First().TaxId;
+                    insertitem.OlcuId = degerler.First().MeasureId;
+                    insertitem.StokId = T.StokId;
+                    insertitem.Miktar = T.Miktar;
+                    insertitem.SatinAlmaId = id;
+                    insertitem.VergiId = degerler.First().TaxId;
 
-                    int inserid = await _order.InsertPurchaseItem(insertitem, id, CompanyId);
-                    await _uretim.BuyStockControl(insert, missingdeger, CompanyId);
+                    int inserid = await _order.InsertPurchaseItem(insertitem, id);
+                    await _uretim.BuyStockControl(insert, missingdeger);
 
 
                     return Ok("true");
@@ -472,16 +470,16 @@ namespace Api.Controllers
             int UserId = user[1];
 
             UretimDTO insert = new();
-            insert.PlannedQuantity = T.PlannedQuantity;
-            insert.Private = true;
-            insert.CreatedDate=DateTime.Now;
-            insert.ItemId = T.ItemId;
+            insert.PlananlananMiktar = T.PlannedQuantity;
+            insert.Ozel = true;
+            insert.OlusturmTarihi=DateTime.Now;
+            insert.StokId = T.ItemId;
             insert.ParentId = T.ParentId;
-            insert.Name = T.Name;
-            insert.ExpectedDate = T.ExpectedDate;
-            insert.LocationId = T.LocationId;
+            insert.Isim = T.Name;
+            insert.BeklenenTarih = T.ExpectedDate;
+            insert.DepoId = T.LocationId;
             int id = await _uretim.Insert(insert,CompanyId);
-            await _uretim.InsertOrderItems(id, insert.ItemId, insert.LocationId, insert.PlannedQuantity, CompanyId, 0, 0);
+            await _uretim.InsertOrderItems(id, insert.StokId, insert.DepoId, insert.PlananlananMiktar, 0, 0);
             var list = await _uretimlist.Detail(CompanyId, id);
             return Ok(list);
         }

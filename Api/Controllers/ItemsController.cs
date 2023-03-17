@@ -65,7 +65,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -78,20 +78,20 @@ namespace Api.Controllers
                 
                 if (T.Tip == "Product")
                 {
-                    var list = await _item.ListProduct(CompanyId, T, KAYITSAYISI, SAYFA);
-                    var count = await _item.Count(T, CompanyId);
+                    var list = await _item.ListProduct(T, KAYITSAYISI, SAYFA);
+                    var count = list.Count();
                     return Ok(new { list, count });
                 }
                 else if (T.Tip == "Material")
                 {
-                    var list = await _item.ListMaterial(CompanyId, T, KAYITSAYISI, SAYFA);
-                    var count = await _item.Count(T, CompanyId);
+                    var list = await _item.ListMaterial(T, KAYITSAYISI, SAYFA);
+                    var count = list.Count();
                     return Ok(new { list, count });
                 }
                 else if (T.Tip == "SemiProduct")
                 {
-                    var list = await _item.ListSemiProduct(CompanyId, T, KAYITSAYISI, SAYFA);
-                    var count = await _item.Count(T, CompanyId);
+                    var list = await _item.ListSemiProduct(T, KAYITSAYISI, SAYFA);
+                    var count = list.Count();
                     return Ok(new { list, count });
                 }
                 else
@@ -112,9 +112,8 @@ namespace Api.Controllers
         public async Task<ActionResult<Items>> Insert(ItemsInsert T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.ItemEkleyebilirVeGuncelleyebilir, Permison.ItemlerHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.ItemEkleyebilirVeGuncelleyebilir, Permison.ItemlerHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -124,18 +123,18 @@ namespace Api.Controllers
             ValidationResult result = await _ItemsInsert.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata=await _itemcontrol.Insert(T, CompanyId);
+                var hata=await _itemcontrol.Insert(T);
                 if (hata.Count()==0)
                 {
                     //item eklendiği zmana eklenen itemin ıd ve tipini alarak stok tablosuna ekliyor...
-                    int ItemId = await _item.Insert(T, CompanyId);
+                    int ItemId = await _item.Insert(T, UserId);
                     //Girilen iteme ait company nin default locasyonunu buluyoruz.
-                    var LocationIdBul = await _db.QueryAsync<LocationsDTO>($"Select id From Locations where CompanyId = {CompanyId}");
+                    var LocationIdBul = await _db.QueryAsync<LocationsDTO>($"Select id From DepoVeAdresler");
                     int LocationId = LocationIdBul.First().id;
-                    int id = await _loc.Insert(T.Tip, ItemId, CompanyId, LocationId);
+                    int id = await _loc.Insert(T.Tip, ItemId, LocationId);
                     //eklenen itemi response olarak dönüyoruz
-                    var eklenen = await _db.QueryAsync<ListItems>($"Select * From Items where CompanyId = {CompanyId} and id = {ItemId}");
-                    return Ok(eklenen.First());
+                    var eklenen = await _item.Detail(ItemId);
+                    return Ok(eklenen);
                 }
                 else
                 {
@@ -159,7 +158,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.ItemEkleyebilirVeGuncelleyebilir, Permison.ItemlerHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.ItemEkleyebilirVeGuncelleyebilir, Permison.ItemlerHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -169,19 +168,20 @@ namespace Api.Controllers
             ValidationResult result = await _ItemsUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata= await _idcontrol.GetControl("Items", T.id, CompanyId);
+                var hata= await _idcontrol.GetControl("Urunler", T.id);
                 if (hata.Count()==0)
                 {
                     ItemsInsert A = new ItemsInsert();
                     A.Tip = T.Tip;
-                    A.ContactId = T.ContactId;
-                    A.MeasureId = T.MeasureId;
-                    A.CategoryId = T.CategoryId;
-                   var hata2= await _itemcontrol.Insert(A, CompanyId);
+                    A.TedarikciId = T.TedarikciId;
+                    A.OlcuId = T.OlcuId;
+                    A.KategoriId = T.KategoriId;
+                   var hata2= await _itemcontrol.Insert(A);
                     if (hata2.Count() == 0)
                     {
-                        await _item.Update(T, CompanyId);
-                        return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
+                        await _item.Update(T);
+                        var list = await _item.Detail(T.id);
+                        return Ok(list);
                     }
                     else
                     {
@@ -214,7 +214,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.ItemSilebilir, Permison.ItemlerHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.ItemSilebilir, Permison.ItemlerHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -225,13 +225,13 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-                var hata = await _control.Delete(T, CompanyId);
+                var hata = await _control.Delete(T);
                 if (hata.Count() == 0)
                 {
-                    string sql = $"select id from Locations where CompanyId={CompanyId} and LocationName='Ana Konum'";
+                    string sql = $"select id from DepoVeAdresler where Isim='Ana Konum'";
                     var LocationStockId = await _db.QueryFirstAsync<int>(sql);
-                    await _loc.Delete(LocationStockId, CompanyId);
-                    await _item.Delete(T, CompanyId);
+                    await _loc.Delete(T.id,LocationStockId);
+                    await _item.Delete(T);
                     return Ok("Silme İşlemi Başarıyla Gerçekleşti");
                 }
                 else
@@ -256,14 +256,14 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.ItemGoruntule, Permison.ItemlerHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
-            var itemDetail = await _item.Detail(id, CompanyId);
+            var itemDetail = await _item.Detail(id);
             if (itemDetail.Count() == 0)
             {
                 return Ok("Böyle Bir İtem Yok");

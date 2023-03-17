@@ -12,16 +12,16 @@ namespace Validation.Tax
     {
         public TaxInsertValidations()
         {
-            RuleFor(x => x.Rate).NotEmpty().WithMessage("rate boş gecilemez").NotNull().WithMessage("rate zorunlu alan");
-            RuleFor(x => x.TaxName).NotEmpty().WithMessage("TaxName boş gecilemez").NotNull().WithMessage("TaxName zorunlu alan");
+            RuleFor(x => x.VergiDegeri).NotEmpty().WithMessage("rate boş gecilemez").NotNull().WithMessage("rate zorunlu alan");
+            RuleFor(x => x.VergiIsim).NotEmpty().WithMessage("TaxName boş gecilemez").NotNull().WithMessage("TaxName zorunlu alan");
         }
     }
     public class TaxUpdateValidations : AbstractValidator<TaxUpdate>
     {
         public TaxUpdateValidations()
         {
-            RuleFor(x => x.Rate).NotEmpty().WithMessage("rate boş gecilemez").NotNull().WithMessage("rate zorunlu alan");
-            RuleFor(x => x.TaxName).NotEmpty().WithMessage("TaxName boş gecilemez").NotNull().WithMessage("TaxName zorunlu alan");
+            RuleFor(x => x.VergiDegeri).NotEmpty().WithMessage("rate boş gecilemez").NotNull().WithMessage("rate zorunlu alan");
+            RuleFor(x => x.VergiIsim).NotEmpty().WithMessage("TaxName boş gecilemez").NotNull().WithMessage("TaxName zorunlu alan");
 
             RuleFor(x => x.id).NotEmpty().WithMessage("id boş gecilemez").NotNull().WithMessage("id zorunlu alan");
         }

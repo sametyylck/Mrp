@@ -23,14 +23,14 @@ namespace BL.Services.StockAdjusment
             _control = control;
         }
 
-        public async Task<List<string>> DeleteItems(StockAdjusmentItemDelete T, int CompanyId)
+        public async Task<List<string>> DeleteItems(StockAdjusmentItemDelete T)
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<StockAdjusmentUpdateItems>($@"select
-             (Select id  From StockAdjusmentItems where CompanyId = {CompanyId} and id={T.id} and  StockAdjusmentId={T.StockAdjusmentId})as id,
+             (Select id  From StokDuzenlemeDetay where id={T.id} and  StokDuzenlemeId={T.StockAdjusmentId})as id,
 
-            (Select id as varmi From StockAdjusment where CompanyId = {CompanyId} and id = {T.StockAdjusmentId})as StockAdjusmentId,
-             (Select id  From StockAdjusmentItems where CompanyId = {CompanyId} and ItemId={T.ItemId} and StockAdjusmentId={T.StockAdjusmentId})as ItemId
+            (Select id as varmi From StokDuzenleme where  id = {T.StockAdjusmentId})as StockAdjusmentId,
+             (Select id  From StokDuzenlemeDetay where  StokId={T.ItemId} and StokDuzenlemeId={T.StockAdjusmentId})as ItemId
 
             ");
             if (list.First().StockAdjusmentId == null)
@@ -53,13 +53,13 @@ namespace BL.Services.StockAdjusment
             }
         }
 
-        public async Task<List<string>> Insert(StockAdjusmentInsert T, int CompanyId)
+        public async Task<List<string>> Insert(StockAdjusmentInsert T)
         {
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<StockAdjusmentInsert>($@"select
-             (Select id  From StockTakes where CompanyId = {CompanyId} and id={T.StockTakesId})as StockTakesId,
-            (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId
+             (Select id  From StokSayim where id={T.StockTakesId})as StockTakesId,
+            (Select id as varmi From DepoVeAdresler where id = {T.LocationId})as LocationId
             ");
             if (T.StockTakesId!=0)
             {
@@ -86,16 +86,16 @@ namespace BL.Services.StockAdjusment
             }
         }
 
-        public async Task<List<string>> InsertItem(StockAdjusmentInsertItem T, int CompanyId)
+        public async Task<List<string>> InsertItem(StockAdjusmentInsertItem T)
         {
             List<string> hatalar = new();
 
-            var stokcount = await _control.Count(T.ItemId, CompanyId, T.LocationId);
+            var stokcount = await _control.Count(T.ItemId, T.LocationId);
             var list = await _db.QueryAsync<StockAdjusmentInsertItem>($@"select
-             (Select id  From Items where CompanyId = {CompanyId} and id={T.ItemId} and IsActive=1)as ItemId,
-             (Select id  From StockAdjusment where CompanyId = {CompanyId} and id={T.StockAdjusmentId} and IsActive=1)as StockAdjusmentId,
+             (Select id  From Urunle where  id={T.ItemId} and IsActive=1)as ItemId,
+             (Select id  From StokDuzenleme where  id={T.StockAdjusmentId} and Aktif=1)as StockAdjusmentId,
 
-            (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId
+            (Select id as varmi From DepoVeAdresler where  id = {T.LocationId})as LocationId
             ");
             if (list.First().ItemId == null)
             {
@@ -130,14 +130,14 @@ namespace BL.Services.StockAdjusment
 
         }
 
-        public async Task<List<string>> Update(StockAdjusmentUpdate T, int CompanyId)
+        public async Task<List<string>> Update(StockAdjusmentUpdate T)
         {
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<StockAdjusmentUpdate>($@"select
-             (Select id  From StockAdjusment where CompanyId = {CompanyId} and id={T.id} and IsActive=1)as id,
+             (Select id  From StokDuzenleme where  id={T.id} and Aktif=1)as id,
 
-            (Select id  From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId
+            (Select id  From DepoVeAdresler where  id = {T.LocationId})as LocationId
             ");
             if (list.First().id==null)
             {
@@ -157,23 +157,23 @@ namespace BL.Services.StockAdjusment
 
         }
 
-        public async Task<List<string>> UpdateStockAdjusment(StockAdjusmentUpdateItems T, int CompanyId)
+        public async Task<List<string>> UpdateStockAdjusment(StockAdjusmentUpdateItems T)
         {
             List<string> hatalar = new();
 
-            string sql1 = $@"Select Adjusment from StockAdjusmentItems where id={T.id} and CompanyId={CompanyId}";
+            string sql1 = $@"Select Miktar from StokDuzenlemeDetay where id={T.id}";
             var sorgu2 = await _db.QueryAsync<float>(sql1);
             float adjusment = sorgu2.First();
             var adjusmentcount = T.Adjusment - adjusment;
             var liste = await _db.QueryAsync<StockAdjusmentUpdate>($@"
-            Select LocationId  From StockAdjusment where CompanyId = {CompanyId} and id = {T.StockAdjusmentId}
+            Select LocationId  From StokDuzenleme where id = {T.StockAdjusmentId}
             ");
-            var stokcount = await _control.Count(T.ItemId, CompanyId, liste.First().LocationId);
+            var stokcount = await _control.Count(T.ItemId,liste.First().LocationId);
             var list = await _db.QueryAsync<StockAdjusmentUpdateItems>($@"select
-             (Select id  From StockAdjusmentItems where CompanyId = {CompanyId} and id={T.id} and  StockAdjusmentId={T.StockAdjusmentId})as id,
+             (Select id  From StokDuzenlemeDetay where id={T.id} and  StokDuzenlemeId={T.StockAdjusmentId})as id,
 
-            (Select id as varmi From StockAdjusment where CompanyId = {CompanyId} and id = {T.StockAdjusmentId})as StockAdjusmentId,
-             (Select id  From StockAdjusmentItems where CompanyId = {CompanyId} and id={T.ItemId} and StockAdjusmentId={T.StockAdjusmentId} )as ItemId
+            (Select id as varmi From StokDuzenleme where  id = {T.StockAdjusmentId})as StockAdjusmentId,
+             (Select id  From StokDuzenlemeDetay where  id={T.ItemId} and StokDuzenlemeId={T.StockAdjusmentId} )as ItemId
 
             ");
             if (list.First().StockAdjusmentId==null)

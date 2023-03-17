@@ -98,7 +98,7 @@ namespace Api.Controllers
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
                 int UserId = user[1];
-                var hata = await _stocktakes.StockTakesDone(T, CompanyId);
+                var hata = await _stocktakes.StockTakesDone(T);
                 if (hata.Count()==0)
                 {
                     await _takes.StockTakesDone(T, CompanyId, UserId);
@@ -128,13 +128,12 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                 List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                var hata = await _stocktakes.Insert(T, CompanyId);
+                int UserId = user[1];
+                var hata = await _stocktakes.Insert(T);
                 if (hata.Count() == 0)
                 {
                     DynamicParameters param = new DynamicParameters();
-                    int id = await _takes.Insert(T, CompanyId);
-                    param.Add("@CompanyId", CompanyId);
+                    int id = await _takes.Insert(T, UserId);
                     param.Add("@id", id);
 
                     string sql = $"Select * from StockTakes where CompanyId=@CompanyId and id=@id";
@@ -169,7 +168,7 @@ namespace Api.Controllers
                 if (result.IsValid)
                 {
 
-                    var hata = await _stocktakes.InsertItem(T, CompanyId);
+                    var hata = await _stocktakes.InsertItem(T);
                     if (hata.Count() == 0)
                     {
                         await _takes.InsertItem(T, CompanyId);
@@ -210,13 +209,13 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                 List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                var hata = await _idcontrol.GetControl("StockTakes", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("StockTakes", T.id);
                 if (hata.Count() == 0)
                 {
                     DynamicParameters param = new DynamicParameters();
-                    param.Add("@CompanyId", CompanyId);
-                    await _takes.Update(T, T.id, CompanyId);
+                    int CompanyId = user[1];
+
+                    await _takes.Update(T, T.id,CompanyId);
                     param.Add("@id", T.id);
                     string sql = @$"select id,StockTake,CreatedDate,StartedDate,CompletedDate,Reason,Info from StockTakes where id=@id";
                     var response = await _db.QueryAsync<StockTakesUpdate>(sql, param);
@@ -248,7 +247,7 @@ namespace Api.Controllers
             {
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
-                var hata = await _stocktakes.UpdateItem(T, CompanyId);
+                var hata = await _stocktakes.UpdateItem(T);
                 if (hata.Count() == 0)
                 {
                     DynamicParameters param = new DynamicParameters();
@@ -286,7 +285,7 @@ namespace Api.Controllers
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
                 int User = user[1];
-                var hata = await _idcontrol.GetControl("StockTakes", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("StockTakes", T.id);
                 if (hata.Count() == 0)
                 {
                     DynamicParameters param = new DynamicParameters();
@@ -317,7 +316,7 @@ namespace Api.Controllers
             {
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
-                var hata = await _stocktakes.DeleteItem(T, CompanyId);
+                var hata = await _stocktakes.DeleteItem(T);
                 if (hata.Count() == 0)
                 {
                     DynamicParameters param = new DynamicParameters();

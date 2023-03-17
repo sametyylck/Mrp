@@ -9,9 +9,8 @@ namespace DAL.DTO
 {
     public class UserDto
     {
-        public string Mail { get; set; }=string.Empty;
-        public string Password { get; set; }= string.Empty;
-        public int CompanyId { get; set; }
+        public string Mail { get; set; }
+        public string Sifre { get; set; }
     }
     public partial class Users
     {
@@ -59,8 +58,8 @@ namespace DAL.DTO
     public class PermisionDetay
     {
         public int id { get; set; }
-        public int PermisionId { get; set; }
-        public string PermisionName { get; set; }
+        public int IzinId { get; set; }
+        public string IzinIsmi { get; set; }
     }
     public class RoleDetay
     {

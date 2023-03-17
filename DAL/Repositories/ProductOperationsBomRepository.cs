@@ -20,52 +20,49 @@ namespace DAL.Repositories
             _db = db;
         }
 
-        public async Task Delete(IdControl T, int CompanyId)
+        public async Task Delete(IdControl T)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@id", T.id);
-            param.Add("@CompanyId", CompanyId);
-            string sql = $"Delete From ProductOperationsBom where CompanyId = @CompanyId and id = @id";
+            string sql = $"Delete From UrunKaynakRecetesi where  id = @id";
            await _db.ExecuteAsync(sql, param);
         }
 
-        public async Task<int> Insert(ProductOperationsBOMInsert T, int CompanyId)
+        public async Task<int> Insert(ProductOperationsBOMInsert T, int KullanıcıId)
         {
             DynamicParameters param = new DynamicParameters();
-            param.Add("@OperationId", T.OperationId);
-            param.Add("@ResourceId", T.ResourceId);
-            param.Add("@CostHour", T.CostHour);
-            param.Add("@OperationTime", T.OperationTime);
-            param.Add("@ItemId", T.ItemId);
+            param.Add("@OperationId", T.OperasyonId);
+            param.Add("@ResourceId", T.KaynakId);
+            param.Add("@CostHour", T.SaatlikUcret);
+            param.Add("@OperationTime", T.OperasyonZamani);
+            param.Add("@ItemId", T.StokId);
             param.Add("@IsActive", true);
-            param.Add("@CompanyId", CompanyId);
-            string sql = $" Insert into ProductOperationsBOM (OperationId, ResourceId,CostHour,OperationTime,ItemId,IsActive,CompanyId) OUTPUT INSERTED.[id]  values (@OperationId, @ResourceId,@CostHour,@OperationTime,@ItemId,@IsActive,@CompanyId)";
+            param.Add("@KullanıcıId", KullanıcıId);
+            string sql = $" Insert into UrunKaynakRecetesi (OperasyonId, KaynakId,SaatlikUcret,OperasyonZamani,StokId,Aktif,KullaniciId) OUTPUT INSERTED.[id]  values (@OperationId, @ResourceId,@CostHour,@OperationTime,@ItemId,@IsActive,@KullanıcıId)";
             return await _db.QuerySingleAsync<int>(sql, param);
         }
 
-        public async Task<IEnumerable<ProductOperationsBOMList>> List(int CompanyId, int ItemId)
+        public async Task<IEnumerable<ProductOperationsBOMList>> List(int ItemId)
         {
             DynamicParameters param = new DynamicParameters();
-            param.Add("@CompanyId", CompanyId);
             param.Add("@ItemId", ItemId);
-            string sql = $"Select a.id,a.IsActive,a.OperationId,Operations.Name as OperationName,a.ResourceId,Resources.Name as ResourcesName,a.CostHour,a.OperationTime,a.ItemId,a.ItemId,((a.CostHour / 60 / 60) * a.OperationTime) as Cost,a.CompanyId From ProductOperationsBom a " +
-                $"inner join Operations on a.OperationId = Operations.id and Operations.CompanyId = @CompanyId " +
-                $"inner join Resources on a.ResourceId = Resources.id and Resources.CompanyId = @CompanyId " +
-                $"where a.CompanyId = @CompanyId and a.ItemId = @ItemId and a.IsActive=1";
+            string sql = $"Select a.id,a.OperasyonId,Operations.Name as OperasyonIsmi,a.KaynakId,Resources.Name as KaynakIsmi,a.SaatlikUcret,a.OperasyonZamani,a.StokId,((a.SaatlikUcret / 60 / 60) * a.OperasyonZamani) as Cost,From UrunKaynakRecetesi a " +
+                $"inner join Operasyonlar on a.OperasyonId = Operasyonlar.id " +
+                $"inner join Kaynaklar on a.ResourceId = Kaynaklar.id " +
+                $"where a.StokId = @ItemId and a.Aktif=1";
             var list = await _db.QueryAsync<ProductOperationsBOMList>(sql, param);
             return list.ToList();
         }
 
-        public async Task Update(ProductOperationsBOMUpdate T, int CompanyId)
+        public async Task Update(ProductOperationsBOMUpdate T)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@id", T.id);
-            param.Add("@OperationId", T.OperationId);
-            param.Add("@ResourceId", T.ResourceId);
-            param.Add("@CostHour", T.CostHour);
-            param.Add("@OperationTime", T.OperationTime);
-            param.Add("@CompanyId", CompanyId);
-            string sql = $" Update ProductOperationsBOM SET OperationId = @OperationId, ResourceId = @ResourceId,CostHour = @CostHour ,OperationTime = @OperationTime where CompanyId = @CompanyId and id = @id";
+            param.Add("@OperationId", T.OperasyonId);
+            param.Add("@ResourceId", T.KaynakId);
+            param.Add("@CostHour", T.SaatlikUcret);
+            param.Add("@OperationTime", T.OperasyonZamani);
+            string sql = $" Update UrunKaynakRecetesi SET OperasyonId = @OperationId, KaynakId = @ResourceId,SaatlikUcret = @CostHour ,OperasyonZamani = @OperationTime where  id = @id";
             await _db.ExecuteAsync(sql, param);
         }
     }

@@ -20,49 +20,47 @@ namespace DAL.Repositories
             _db = db;
         }
 
-        public async Task Delete(IdControl tax, int CompanyId)
+        public async Task Delete(IdControl tax)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", tax.id);
-            prm.Add("@CompanyId", CompanyId);
-           await _db.ExecuteAsync($"Delete From Tax where id = @id and CompanyId = @CompanyId", prm);
+           await _db.ExecuteAsync($"Delete From Vergi where id = @id", prm);
         }
 
-        public Task<int> Insert(TaxInsert T, int CompanyId)
+        public Task<int> Insert(TaxInsert T,int UserId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@Rate", T.Rate);
-            prm.Add("@TaxName", T.TaxName);
-            prm.Add("@CompanyId", CompanyId);
-            return _db.QuerySingleAsync<int>($"Insert into Tax (Rate, TaxName, CompanyId) OUTPUT INSERTED.[id] values (@Rate, @TaxName, @CompanyId)", prm);
+            prm.Add("@Rate", T.VergiDegeri);
+            prm.Add("@TaxName", T.VergiIsim);
+            prm.Add("@UserId", UserId);
+
+            return _db.QuerySingleAsync<int>($"Insert into Vergi (VergiDegeri, VergiIsim,KullaniciId) OUTPUT INSERTED.[id] values (@Rate, @TaxName,@UserId)", prm);
         }
 
-        public async Task<IEnumerable<TaxClas>> List(int CompanyId)
+        public async Task<IEnumerable<TaxClas>> List()
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
-            var list =await _db.QueryAsync<TaxClas>($"Select * From Tax where CompanyId = @CompanyId", prm);
+            var list =await _db.QueryAsync<TaxClas>($"Select id,VergiDegeri ,VergiIsim  From Vergi", prm);
             return  list.ToList();
         }
 
         public async Task<int> Register(int id)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@Rate", 18);
-            prm.Add("@TaxName", "KDV");
+            prm.Add("@VergiDegeri", 18);
+            prm.Add("@VergiIsim", "KDV");
             prm.Add("@CompanyId", id);
-            string sql = @"Insert into Tax (Rate, TaxName, CompanyId) OUTPUT INSERTED.[id] values (@Rate, @TaxName, @CompanyId)";
+            string sql = @"Insert into Vergi (VergiDegeri, VergiIsim) OUTPUT INSERTED.[id] values (@VergiDegeri, @VergiIsim)";
             return await _db.QuerySingleAsync<int>(sql,prm);
         }
 
-        public async Task Update(TaxUpdate T, int CompanyId)
+        public async Task Update(TaxUpdate T)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@Rate", T.Rate);
-            prm.Add("@TaxName", T.TaxName);
-            prm.Add("@CompanyId", CompanyId);
-           await _db.ExecuteAsync($"Update Tax SET Rate = @Rate , TaxName = @TaxName where id = @id  and CompanyId = @CompanyId", prm);
+            prm.Add("@Rate", T.VergiDegeri);
+            prm.Add("@TaxName", T.VergiIsim);
+           await _db.ExecuteAsync($"Update Vergi SET VergiDegeri = @Rate , VergiIsim = @TaxName where id = @id", prm);
         }
     }
 }

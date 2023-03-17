@@ -14,10 +14,10 @@ namespace Validation.ManufacturingOrderItem
         public ManufacturingOrderItemIngredientUpdateValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id boş geçilemez").NotNull().WithMessage("id alanı zorunlu");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId boş geçilemez").NotNull().WithMessage("ItemId alanı zorunlu");
-            RuleFor(x => x.OrderId).NotEmpty().WithMessage("OrderId boş geçilemez").NotNull().WithMessage("OrderId alanı zorunlu");
-            RuleFor(x => x.LocationId).NotEmpty().WithMessage("LocationId boş geçilemez").NotNull().WithMessage("LocationId alanı zorunlu");
-            RuleFor(x => x.Quantity).NotEmpty().WithMessage("Quantity boş geçilemez").NotNull().WithMessage("Quantity alanı zorunlu");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId boş geçilemez").NotNull().WithMessage("ItemId alanı zorunlu");
+            RuleFor(x => x.UretimId).NotEmpty().WithMessage("OrderId boş geçilemez").NotNull().WithMessage("OrderId alanı zorunlu");
+            RuleFor(x => x.DepoId).NotEmpty().WithMessage("LocationId boş geçilemez").NotNull().WithMessage("LocationId alanı zorunlu");
+            RuleFor(x => x.Miktar).NotEmpty().WithMessage("Quantity boş geçilemez").NotNull().WithMessage("Quantity alanı zorunlu");
 
         }
     }
@@ -26,10 +26,10 @@ namespace Validation.ManufacturingOrderItem
     {
         public ManufacturingOrderItemIngredientInsertValidations()
         {
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId boş geçilemez").NotNull().WithMessage("ItemId alanı zorunlu");
-            RuleFor(x => x.ManufacturingOrderId).NotEmpty().WithMessage("OrderId boş geçilemez").NotNull().WithMessage("OrderId alanı zorunlu");
-            RuleFor(x => x.LocationId).NotEmpty().WithMessage("LocationId boş geçilemez").NotNull().WithMessage("LocationId alanı zorunlu");
-            RuleFor(x => x.Quantity).NotEmpty().WithMessage("Quantity boş geçilemez").NotNull().WithMessage("Quantity alanı zorunlu");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId boş geçilemez").NotNull().WithMessage("ItemId alanı zorunlu");
+            RuleFor(x => x.UretimId).NotEmpty().WithMessage("OrderId boş geçilemez").NotNull().WithMessage("OrderId alanı zorunlu");
+            RuleFor(x => x.DepoId).NotEmpty().WithMessage("LocationId boş geçilemez").NotNull().WithMessage("LocationId alanı zorunlu");
+            RuleFor(x => x.Miktar).NotEmpty().WithMessage("Quantity boş geçilemez").NotNull().WithMessage("Quantity alanı zorunlu");
 
         }
     }
@@ -39,12 +39,12 @@ namespace Validation.ManufacturingOrderItem
         public ManufacturingOrderItemOperationUpdateValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id boş geçilemez").NotNull().WithMessage("id alanı zorunlu");
-            RuleFor(x => x.OrderId).NotEmpty().WithMessage("OrderId boş geçilemez").NotNull().WithMessage("OrderId alanı zorunlu");
-            RuleFor(x => x.OperationId).NotEmpty().WithMessage("OperationId boş geçilemez").NotNull().WithMessage("OperationId alanı zorunlu");
-            RuleFor(x => x.ResourceId).NotEmpty().WithMessage("ResourceId boş geçilemez").NotNull().WithMessage("ResourceId alanı zorunlu");
-            RuleFor(x => x.PlannedTime).NotEmpty().WithMessage("PlannedTime boş geçilemez").NotNull().WithMessage("PlannedTime alanı zorunlu");
-            RuleFor(x => x.CostPerHour).NotEmpty().WithMessage("CostPerHour boş geçilemez").NotNull().WithMessage("CostPerHour alanı zorunlu");
-            RuleFor(x => x.Status).NotEmpty().WithMessage("Status boş geçilemez").NotNull().WithMessage("Status alanı zorunlu");
+            RuleFor(x => x.UretimId).NotEmpty().WithMessage("OrderId boş geçilemez").NotNull().WithMessage("OrderId alanı zorunlu");
+            RuleFor(x => x.OperasyonId).NotEmpty().WithMessage("OperationId boş geçilemez").NotNull().WithMessage("OperationId alanı zorunlu");
+            RuleFor(x => x.KaynakId).NotEmpty().WithMessage("ResourceId boş geçilemez").NotNull().WithMessage("ResourceId alanı zorunlu");
+            RuleFor(x => x.PlanlananZaman).NotEmpty().WithMessage("PlannedTime boş geçilemez").NotNull().WithMessage("PlannedTime alanı zorunlu");
+            RuleFor(x => x.SaatlikUcret).NotEmpty().WithMessage("CostPerHour boş geçilemez").NotNull().WithMessage("CostPerHour alanı zorunlu");
+            RuleFor(x => x.Durum).NotEmpty().WithMessage("Status boş geçilemez").NotNull().WithMessage("Status alanı zorunlu");
         }
     }
 
@@ -52,25 +52,25 @@ namespace Validation.ManufacturingOrderItem
     {
         public ManufacturingOrderItemOperationInsertValidations()
         {
-            RuleFor(x => x.ManufacturingOrderId).NotEmpty().WithMessage("OrderId boş geçilemez").NotNull().WithMessage("OrderId alanı zorunlu");
-            RuleFor(x => x.OperationId).NotEmpty().WithMessage("OperationId boş geçilemez").NotNull().WithMessage("OperationId alanı zorunlu");
-            RuleFor(x => x.ResourceId).NotEmpty().WithMessage("ResourceId boş geçilemez").NotNull().WithMessage("ResourceId alanı zorunlu");
-            RuleFor(x => x.PlannedTime).NotEmpty().WithMessage("PlannedTime boş geçilemez").NotNull().WithMessage("PlannedTime alanı zorunlu");
+            RuleFor(x => x.UretimId).NotEmpty().WithMessage("OrderId boş geçilemez").NotNull().WithMessage("OrderId alanı zorunlu");
+            RuleFor(x => x.OperasyonId).NotEmpty().WithMessage("OperationId boş geçilemez").NotNull().WithMessage("OperationId alanı zorunlu");
+            RuleFor(x => x.KaynakId).NotEmpty().WithMessage("ResourceId boş geçilemez").NotNull().WithMessage("ResourceId alanı zorunlu");
+            RuleFor(x => x.PlanlananZaman).NotEmpty().WithMessage("PlannedTime boş geçilemez").NotNull().WithMessage("PlannedTime alanı zorunlu");
         }
     }
     public class ManufacturingOrderPurchaseOrderValidations : AbstractValidator<PurchaseBuy>
     {
         public ManufacturingOrderPurchaseOrderValidations()
         {
-        RuleFor(x => x.ManufacturingOrderId).NotEmpty().WithMessage("ManufacturingOrderId boş geçilemez").NotNull().WithMessage("ManufacturingOrderId alanı zorunlu");
-        RuleFor(x => x.ManufacturingOrderItemId).NotEmpty().WithMessage("ManufacturingOrderItemId boş geçilemez").NotNull().WithMessage("ManufacturingOrderItemId alanı zorunlu");
-        RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId boş geçilemez").NotNull().WithMessage("ItemId alanı zorunlu");
-        RuleFor(x => x.LocationId).NotEmpty().WithMessage("LocationId boş geçilemez").NotNull().WithMessage("LocationId alanı zorunlu");
+        RuleFor(x => x.UretimId).NotEmpty().WithMessage("ManufacturingOrderId boş geçilemez").NotNull().WithMessage("ManufacturingOrderId alanı zorunlu");
+        RuleFor(x => x.UretimDetayId).NotEmpty().WithMessage("ManufacturingOrderItemId boş geçilemez").NotNull().WithMessage("ManufacturingOrderItemId alanı zorunlu");
+        RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId boş geçilemez").NotNull().WithMessage("ItemId alanı zorunlu");
+        RuleFor(x => x.DepoId).NotEmpty().WithMessage("LocationId boş geçilemez").NotNull().WithMessage("LocationId alanı zorunlu");
 
-            RuleFor(x => x.Quantity).NotEmpty().WithMessage("Quantity boş geçilemez").NotNull().WithMessage("Quantity alanı zorunlu");
-            RuleFor(x => x.ExpectedDate).NotEmpty().WithMessage("ExpectedDate boş geçilemez").NotNull().WithMessage("ExpectedDate alanı zorunlu");
-            RuleFor(x => x.OrderName).NotEmpty().WithMessage("OrderName boş geçilemez").NotNull().WithMessage("OrderName alanı zorunlu");
-            RuleFor(x => x.ContactId).NotEmpty().WithMessage("ContactId boş geçilemez").NotNull().WithMessage("ContactId alanı zorunlu");
+            RuleFor(x => x.Miktar).NotEmpty().WithMessage("Quantity boş geçilemez").NotNull().WithMessage("Quantity alanı zorunlu");
+            RuleFor(x => x.BeklenenTarih).NotEmpty().WithMessage("ExpectedDate boş geçilemez").NotNull().WithMessage("ExpectedDate alanı zorunlu");
+            RuleFor(x => x.SatinAlmaIsim).NotEmpty().WithMessage("OrderName boş geçilemez").NotNull().WithMessage("OrderName alanı zorunlu");
+            RuleFor(x => x.TedarikciId).NotEmpty().WithMessage("ContactId boş geçilemez").NotNull().WithMessage("ContactId alanı zorunlu");
             RuleFor(x => x.Tip).NotEmpty().WithMessage("Tip boş geçilemez").NotNull().WithMessage("Tip alanı zorunlu");
         }
     }

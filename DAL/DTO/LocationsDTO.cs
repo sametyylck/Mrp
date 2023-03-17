@@ -11,39 +11,39 @@ namespace DAL.DTO
     {
         public int id { get; set; }
         public string Tip { get; set; } = string.Empty;
-        public string LocationName { get; set; } = string.Empty;
-        public string AddressLine1 { get; set; } = string.Empty;
-        public string AddressLine2 { get; set; } = string.Empty;
-        public string CityTown { get; set; } = string.Empty;
-        public string StateRegion { get; set; } = string.Empty;
-        public int? ZipPostalCode { get; set; }
-        public string Country { get; set; } = string.Empty;
-        public string LegalName { get; set; } = string.Empty;
-        public bool? Sell { get; set; }
-        public bool? Make { get; set; }
-        public bool? Buy { get; set; }
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string CompanyName { get; set; } = string.Empty;
-        public string Phone { get; set; } = string.Empty;
+        public string Isim { get; set; } = string.Empty;
+        public string Adres1 { get; set; } = string.Empty;
+        public string Adres2 { get; set; } = string.Empty;
+        public string Sehir { get; set; } = string.Empty;
+        public string Cadde { get; set; } = string.Empty;
+        public int? PostaKodu { get; set; }
+        public string Ulke { get; set; } = string.Empty;
+        public string GercekIsim { get; set; } = string.Empty;
+        public bool? Satis { get; set; }
+        public bool? Uretim { get; set; }
+        public bool? SatinAlma { get; set; }
+        public string Ad { get; set; } = string.Empty;
+        public string Soyisim { get; set; } = string.Empty;
+        public string SirketIsmi { get; set; } = string.Empty;
+        public string Telefon { get; set; } = string.Empty;
     }
     public class LocationsInsert
     {
         public string Tip { get; set; } = string.Empty;
-        public string LocationName { get; set; } = string.Empty;
-        public string AddressLine1 { get; set; } = string.Empty;
-        public string AddressLine2 { get; set; } = string.Empty;
-        public string CityTown { get; set; } = string.Empty;
-        public string StateRegion { get; set; } = string.Empty;
-        public int? ZipPostalCode { get; set; }
-        public string Country { get; set; } = string.Empty;
-        public string LegalName { get; set; } = string.Empty;
-        public bool? Sell { get; set; }
-        public bool? Make { get; set; }
-        public bool? Buy { get; set; }
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string CompanyName { get; set; } = string.Empty;
-        public string Phone { get; set; } = string.Empty;
+        public string Isim { get; set; } = string.Empty;
+        public string Adres1 { get; set; } = string.Empty;
+        public string Adres2 { get; set; } = string.Empty;
+        public string Sehir { get; set; } = string.Empty;
+        public string Cadde { get; set; } = string.Empty;
+        public int? PostaKodu { get; set; }
+        public string Ulke { get; set; } = string.Empty;
+        public string GercekIsim { get; set; } = string.Empty;
+        public bool? Satis { get; set; }
+        public bool? Uretim { get; set; }
+        public bool? SatinAlma { get; set; }
+        public string Ad { get; set; } = string.Empty;
+        public string Soyisim { get; set; } = string.Empty;
+        public string SirketIsmi { get; set; } = string.Empty;
+        public string Telefon { get; set; } = string.Empty;
     }
 }

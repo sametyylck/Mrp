@@ -9,13 +9,12 @@ namespace DAL.Contracts
 {
     public interface IItemsRepository
     {
-        Task<int> Insert(ItemsInsert T, int CompanyId);
-        Task Update(ItemsUpdate T, int CompanyId);
-        Task Delete(ItemsDelete T, int CompanyId);
-        Task<IEnumerable<ListItems>> Detail(int id, int CompanyId);
-        Task<IEnumerable<ItemsListele>> ListProduct(int CompanyId, ItemsListele T, int KAYITSAYISI, int SAYFA);
-        Task<IEnumerable<ItemsListele>> ListSemiProduct(int CompanyId, ItemsListele T, int KAYITSAYISI, int SAYFA);
-        Task<IEnumerable<ItemsListele>> ListMaterial(int CompanyId, ItemsListele T, int KAYITSAYISI, int SAYFA);
-        Task<int> Count(ItemsListele T, int CompanyId);
+        Task<int> Insert(ItemsInsert T,int UserId);
+        Task Update(ItemsUpdate T);
+        Task Delete(ItemsDelete T);
+        Task<IEnumerable<ListItems>> Detail(int id);
+        Task<IEnumerable<ItemsListele>> ListProduct(ItemsListele T, int KAYITSAYISI, int SAYFA);
+        Task<IEnumerable<ItemsListele>> ListSemiProduct(ItemsListele T, int KAYITSAYISI, int SAYFA);
+        Task<IEnumerable<ItemsListele>> ListMaterial( ItemsListele T, int KAYITSAYISI, int SAYFA);
     }
 }

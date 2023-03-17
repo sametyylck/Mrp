@@ -9,8 +9,8 @@ namespace BL.Services.LocationStock
 {
     public interface ILocationStockControl
     {
-        Task Kontrol(int? ItemId,int LocationId,string Tip, int CompanyId);
-        Task<List<string>> AdresStokKontrol(int? ItemId, int OriginId, int DesId, float? Quantity, int CompanyId);
+        Task Kontrol(int? ItemId,int LocationId,string Tip);
+        Task<List<string>> AdresStokKontrol(int? ItemId, int OriginId, int DesId, float? Quantity);
 
     }
 }

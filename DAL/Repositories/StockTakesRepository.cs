@@ -154,7 +154,7 @@ namespace DAL.Repositories
                     var degerler = await _db.QueryAsync<StockTakeItems>($@"select * from StockTakesItem where CompanyId={CompanyId} and StockTakesId={T.id}");
                     foreach (var item in degerler)
                     {
-                        var stokdeger = await _control.Count(item.ItemId, CompanyId, Locations);
+                        var stokdeger = await _control.Count(item.ItemId, Locations);
                         var Discrepancy = item.CountedQuantity - stokdeger;
                         string sqlquery = $@"Update StockTakesItem Set Discrepancy={Discrepancy}  where id = {item.id} and CompanyId = {CompanyId}";
                         await _db.ExecuteAsync(sqlquery);
@@ -181,7 +181,7 @@ namespace DAL.Repositories
                     int id = await _adjusment.Insert(stockAdjusmentAll, CompanyId);
                     foreach (var item in degerler)
                     {
-                        var stokdeger = await _control.Count(item.ItemId, CompanyId, Locations);
+                        var stokdeger = await _control.Count(item.ItemId, Locations);
 
                         var Discrepancys = item.CountedQuantity - stokdeger;
                         _db.Execute($"Update StockTakesItem Set Discrepancy={Discrepancys} where id = {item.id} and CompanyId = {CompanyId} ");

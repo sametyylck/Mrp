@@ -12,8 +12,8 @@ namespace Validation.Resource
     {
         public ResourceInsertValidations()
         {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("name bos gecilemez").NotNull().WithMessage("name zorunlu alan");
-            RuleFor(x => x.DefaultCostHour).NotEmpty().WithMessage("DefaultCostHour bos gecilemez").NotNull().WithMessage("DefaultCostHour zorunlu alan");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("name bos gecilemez").NotNull().WithMessage("name zorunlu alan");
+            RuleFor(x => x.VarsayilanSaatlikUcret).NotEmpty().WithMessage("DefaultCostHour bos gecilemez").NotNull().WithMessage("DefaultCostHour zorunlu alan");
         }
     }
     public class ResourceUpdateValidations : AbstractValidator<ResourcesUpdate>
@@ -21,8 +21,8 @@ namespace Validation.Resource
         public ResourceUpdateValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilemez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.Name).NotEmpty().WithMessage("name bos gecilemez").NotNull().WithMessage("name zorunlu alan");
-            RuleFor(x => x.DefaultCostHour).NotEmpty().WithMessage("DefaultCostHour bos gecilemez").NotNull().WithMessage("DefaultCostHour zorunlu alan");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("name bos gecilemez").NotNull().WithMessage("name zorunlu alan");
+            RuleFor(x => x.VarsayilanSaatlikUcret).NotEmpty().WithMessage("DefaultCostHour bos gecilemez").NotNull().WithMessage("DefaultCostHour zorunlu alan");
         }
     }
 }

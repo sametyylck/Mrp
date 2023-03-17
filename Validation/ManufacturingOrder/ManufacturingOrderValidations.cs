@@ -18,9 +18,9 @@ namespace Validation.ManufacturingOrder
         }
         public ManufacturingOrderInsertOrderValidations()
         {
-            RuleFor(x => x.PlannedQuantity).NotEmpty().WithMessage("PlannedQuantity bos gecilemez").NotNull().WithMessage("PlannedQuantity zorunlu alan");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId bos gecilemez").NotNull().WithMessage("ItemId zorunlu alan");
-            RuleFor(x => x.LocationId).NotEmpty().WithMessage("LocationId bos gecilemez").NotNull().WithMessage("LocationId zorunlu alan");
+            RuleFor(x => x.PlananlananMiktar).NotEmpty().WithMessage("PlannedQuantity bos gecilemez").NotNull().WithMessage("PlannedQuantity zorunlu alan");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId bos gecilemez").NotNull().WithMessage("ItemId zorunlu alan");
+            RuleFor(x => x.DepoId).NotEmpty().WithMessage("LocationId bos gecilemez").NotNull().WithMessage("LocationId zorunlu alan");
         }
     }
     public class ManufacturingOrderUpdateValidations : AbstractValidator<UretimUpdate>
@@ -29,8 +29,8 @@ namespace Validation.ManufacturingOrder
         {
 
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilemez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId bos gecilemez").NotNull().WithMessage("ItemId zorunlu alan");
-            RuleFor(x => x.LocationId).NotEmpty().WithMessage("LocationId bos gecilemez").NotNull().WithMessage("LocationId zorunlu alan");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId bos gecilemez").NotNull().WithMessage("ItemId zorunlu alan");
+            RuleFor(x => x.DepoId).NotEmpty().WithMessage("LocationId bos gecilemez").NotNull().WithMessage("LocationId zorunlu alan");
      
         }
     }
@@ -48,9 +48,9 @@ namespace Validation.ManufacturingOrder
         public ManufacturingOrderTaskDoneValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilemez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.OrderId).NotEmpty().WithMessage("OrdersId bos gecilemez").NotNull().WithMessage("OrdersId zorunlu alan");
+            RuleFor(x => x.UretimId).NotEmpty().WithMessage("OrdersId bos gecilemez").NotNull().WithMessage("OrdersId zorunlu alan");
 
-            RuleFor(x => x.Status).NotEmpty().WithMessage("Status bos gecilemez").NotNull().WithMessage("OrdersId zorunlu alan");
+            RuleFor(x => x.Durum).NotEmpty().WithMessage("Status bos gecilemez").NotNull().WithMessage("Status zorunlu alan");
         }
     }
     public class ManufacturingOrderDeleteItemsValidations : AbstractValidator<UretimDeleteItems>
@@ -58,8 +58,8 @@ namespace Validation.ManufacturingOrder
         public ManufacturingOrderDeleteItemsValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilemez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.ManufacturingOrderId).NotEmpty().WithMessage("OrdersId bos gecilemez").NotNull().WithMessage("OrdersId zorunlu alan");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId bos gecilemez").NotNull().WithMessage("ItemId zorunlu alan");
+            RuleFor(x => x.UretimId).NotEmpty().WithMessage("OrdersId bos gecilemez").NotNull().WithMessage("OrdersId zorunlu alan");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId bos gecilemez").NotNull().WithMessage("ItemId zorunlu alan");
         }
     }
 }

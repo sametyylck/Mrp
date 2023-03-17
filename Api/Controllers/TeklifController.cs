@@ -39,7 +39,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.TeklifEkleyebilirVeDuzenleyebilir, Permison.TeklifHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.TeklifEkleyebilirVeDuzenleyebilir, Permison.TeklifHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -47,7 +47,7 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
             int id = await _teklif.Insert(T, CompanyId);
-            await _salescontrol.Adress(id, T.ContactId, CompanyId);
+            await _salescontrol.Adress(id, T.ContactId);
             var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from SalesOrder where Tip = 'Quotes' and id={id}");
             return Ok(list);
         }
@@ -59,7 +59,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.TeklifEkleyebilirVeDuzenleyebilir, Permison.TeklifHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.TeklifEkleyebilirVeDuzenleyebilir, Permison.TeklifHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -79,7 +79,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.TeklifEkleyebilirVeDuzenleyebilir, Permison.TeklifHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.TeklifEkleyebilirVeDuzenleyebilir, Permison.TeklifHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -99,7 +99,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.TeklifEkleyebilirVeDuzenleyebilir, Permison.TeklifHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.TeklifEkleyebilirVeDuzenleyebilir, Permison.TeklifHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -119,7 +119,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.TeklifGoruntule, Permison.TeklifHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.TeklifGoruntule, Permison.TeklifHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -137,7 +137,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.TeklifGoruntule, Permison.TeklifHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.TeklifGoruntule, Permison.TeklifHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -155,7 +155,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.TeklifSilebilir, Permison.TeklifHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.TeklifSilebilir, Permison.TeklifHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -173,7 +173,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.TeklifSilebilir, Permison.TeklifHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.TeklifSilebilir, Permison.TeklifHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -193,7 +193,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.TeklifOnaylama, Permison.TeklifHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.TeklifOnaylama, Permison.TeklifHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();

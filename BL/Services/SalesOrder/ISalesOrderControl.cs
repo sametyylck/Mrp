@@ -12,14 +12,14 @@ namespace BL.Services.SalesOrder
 {
     public interface ISalesOrderControl
     {
-        Task<List<string>> Insert(SatısDTO T, int CompanyId);
-        Task<List<string>> Adress(int id, int? ContactId, int CompanyId);
-        Task<List<string>> InsertItem(SatısInsertItem T, int CompanyId);
-        Task<List<string>> Update(SalesOrderUpdate T, int CompanyId);
-        Task<List<string>> DeleteItems(SatısDeleteItems T, int CompanyId);
-        Task<List<string>> QuotesDone(QuotesDone T, int CompanyId);
-        Task<List<string>> Make(SalesOrderMake T, int CompanyId);
-        Task<List<string>> UpdateItem(SatısUpdateItems T, int CompanyId);
+        Task<List<string>> Insert(SatısDTO T);
+        Task<List<string>> Adress(int id, int? ContactId);
+        Task<List<string>> InsertItem(SatısInsertItem T);
+        Task<List<string>> Update(SalesOrderUpdate T);
+        Task<List<string>> DeleteItems(SatısDeleteItems T);
+        Task<List<string>> QuotesDone(QuotesDone T);
+        Task<List<string>> Make(SalesOrderMake T);
+        Task<List<string>> UpdateItem(SatısUpdateItems T);
 
     }
 }

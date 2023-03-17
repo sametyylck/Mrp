@@ -24,7 +24,7 @@ namespace Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class StockAdjusmentControllers : ControllerBase
+    public class StockAdjusmentController : ControllerBase
     {
         private readonly IUserService _user;
         private readonly IDbConnection _db;
@@ -39,7 +39,7 @@ namespace Api.Controllers
         private readonly IIDControl _control;
         private readonly IPermissionControl _izinkontrol;
 
-        public StockAdjusmentControllers(IUserService user, IDbConnection db, IStockAdjusmentRepository adjusment, IValidator<StockAdjusmentItemDelete> stockAdjusmentItemDelete, IValidator<StockAdjusmentInsertItem> stockAdjusmentInsertItem, IValidator<StockAdjusmentInsert> stockAdjusmentInsert, IValidator<StockAdjusmentUpdate> stockAdjusmentUpdate, IValidator<StockAdjusmentUpdateItems> stockAdjusmentUpdateItem, IValidator<IdControl> delete, IStockAdjusmentControl stockadjusmentcontrol, IIDControl control, IPermissionControl izinkontrol)
+        public StockAdjusmentController(IUserService user, IDbConnection db, IStockAdjusmentRepository adjusment, IValidator<StockAdjusmentItemDelete> stockAdjusmentItemDelete, IValidator<StockAdjusmentInsertItem> stockAdjusmentInsertItem, IValidator<StockAdjusmentInsert> stockAdjusmentInsert, IValidator<StockAdjusmentUpdate> stockAdjusmentUpdate, IValidator<StockAdjusmentUpdateItems> stockAdjusmentUpdateItem, IValidator<IdControl> delete, IStockAdjusmentControl stockadjusmentcontrol, IIDControl control, IPermissionControl izinkontrol)
         {
             _user = user;
             _db = db;
@@ -62,7 +62,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -72,7 +72,7 @@ namespace Api.Controllers
             ValidationResult result = await _StockAdjusmentInsert.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _stockadjusmentcontrol.Insert(T, CompanyId);
+                var hata = await _stockadjusmentcontrol.Insert(T);
                 if (hata.Count()==0)
                 {
                     int id = await _adjusment.Insert(T, CompanyId);
@@ -106,7 +106,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -118,7 +118,7 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-                var hata = await _stockadjusmentcontrol.InsertItem(T, CompanyId);
+                var hata = await _stockadjusmentcontrol.InsertItem(T);
                 if (hata.Count() == 0)
                 {
                     int id = await _adjusment.InsertItem(T, T.StockAdjusmentId, CompanyId, UserId);
@@ -152,7 +152,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -163,7 +163,7 @@ namespace Api.Controllers
             if (result.IsValid)
             {
 
-                var hata = await _stockadjusmentcontrol.Update(T, CompanyId);
+                var hata = await _stockadjusmentcontrol.Update(T);
                 if (hata.Count() == 0)
                 {
                     DynamicParameters param1 = new DynamicParameters();
@@ -198,7 +198,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -209,7 +209,7 @@ namespace Api.Controllers
             if (result.IsValid)
             {
            
-                var hata = await _stockadjusmentcontrol.UpdateStockAdjusment(T, CompanyId);
+                var hata = await _stockadjusmentcontrol.UpdateStockAdjusment(T);
                 if (hata.Count() == 0)
                 {
                     DynamicParameters param2 = new DynamicParameters();
@@ -242,7 +242,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeSilme, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeSilme, Permison.StokDuzenlemeHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -252,7 +252,7 @@ namespace Api.Controllers
             ValidationResult result = await _StockAdjusmentItemDelete.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _stockadjusmentcontrol.DeleteItems(T, CompanyId);
+                var hata = await _stockadjusmentcontrol.DeleteItems(T);
                 if (hata.Count() == 0)
                 {
                     await _adjusment.DeleteItems(T, CompanyId, UserId);
@@ -281,7 +281,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeSilme, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeSilme, Permison.StokDuzenlemeHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -292,7 +292,7 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                
-                var hata = await _control.GetControl("StockAdjusment", T.id, CompanyId);
+                var hata = await _control.GetControl("StockAdjusment", T.id);
                 if (hata.Count() == 0)
                 {
                     await _adjusment.Delete(T, CompanyId, UserId);
@@ -321,7 +321,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeGoruntule, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeGoruntule, Permison.StokDuzenlemeHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -341,7 +341,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeGoruntule, Permison.StokDuzenlemeHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeGoruntule, Permison.StokDuzenlemeHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();

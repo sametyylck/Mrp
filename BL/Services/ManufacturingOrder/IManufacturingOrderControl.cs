@@ -11,16 +11,16 @@ namespace BL.Services.ManufacturingOrder
 {
     public interface IManufacturingOrderControl
     {
-        Task<List<string>> Insert(UretimDTO T, int CompanyId);
-        Task<List<string>> Update(UretimUpdate T, int CompanyId);
-        Task<List<string>> DoneStock(UretimTamamlama T,int CompanyId);
-        Task<List<string>> DeleteItems(UretimDeleteItems T, int CompanyId);
-        Task<List<string>> IngredientsUpdate(UretimIngredientsUpdate T, int CompanyId);
-        Task<List<string>> OperationUpdate(UretimOperationsUpdate T, int CompanyId);
-        Task<List<string>> IngredientInsert(UretimIngredientsInsert T, int CompanyId);
-        Task<List<string>> OperationsInsert(UretimOperationsInsert T, int CompanyId);
-        Task<List<string>> PurchaseOrder(PurchaseBuy T, int CompanyId);
-        Task<List<string>> DeleteKontrol(List<UretimDeleteKontrol> T, int CompanyId);
+        Task<List<string>> Insert(UretimDTO T);
+        Task<List<string>> Update(UretimUpdate T);
+        Task<List<string>> DoneStock(UretimTamamlama T);
+        Task<List<string>> DeleteItems(UretimDeleteItems T);
+        Task<List<string>> IngredientsUpdate(UretimIngredientsUpdate T);
+        Task<List<string>> OperationUpdate(UretimOperationsUpdate T);
+        Task<List<string>> IngredientInsert(UretimIngredientsInsert T);
+        Task<List<string>> OperationsInsert(UretimOperationsInsert T);
+        Task<List<string>> PurchaseOrder(PurchaseBuy T);
+        Task<List<string>> DeleteKontrol(List<UretimDeleteKontrol> T);
 
 
 

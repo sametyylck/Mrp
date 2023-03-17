@@ -20,8 +20,8 @@ namespace Validation.Company
     {
         public CompanyUpdateCompanyValidations()
         {
-            RuleFor(x => x.LegalName).NotEmpty().WithMessage("Yasal isim bos gecilemez").NotNull();
-            RuleFor(x => x.DisplayName).NotEmpty().WithMessage("Gorünen isim bos gecilemez").NotNull();
+            RuleFor(x => x.GercekIsim).NotEmpty().WithMessage("Yasal isim bos gecilemez").NotNull();
+            RuleFor(x => x.GorunenIsim).NotEmpty().WithMessage("Gorünen isim bos gecilemez").NotNull();
 
 
         }
@@ -31,11 +31,11 @@ namespace Validation.Company
         public CompanyInsertValidations()
         {
 
-            RuleFor(x => x.Country).NotEmpty().WithMessage("Ulke bos gecilemez").NotNull();
+            RuleFor(x => x.Ulke).NotEmpty().WithMessage("Ulke bos gecilemez").NotNull();
 
-            RuleFor(x => x.AddressLine1).NotEmpty().WithMessage("Adress satırı bos gecilemez").NotNull();
+            RuleFor(x => x.Adres1).NotEmpty().WithMessage("Adress satırı bos gecilemez").NotNull();
 
-                RuleFor(x => x.CityTown).NotEmpty().WithMessage("Sehir bos gecilemez").NotNull();
+                RuleFor(x => x.Sehir).NotEmpty().WithMessage("Sehir bos gecilemez").NotNull();
         }
     }
     public class CompanyUpdateValidations : AbstractValidator<CompanyUpdate>
@@ -44,11 +44,11 @@ namespace Validation.Company
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilmez").NotNull();
 
-            RuleFor(x => x.Country).NotEmpty().WithMessage("Ulke bos gecilemez").NotNull();
+            RuleFor(x => x.Ulke).NotEmpty().WithMessage("Ulke bos gecilemez").NotNull();
 
-            RuleFor(x => x.AddressLine1).NotEmpty().WithMessage("Adress satırı bos gecilemez").NotNull();
+            RuleFor(x => x.Adres1).NotEmpty().WithMessage("Adress satırı bos gecilemez").NotNull();
 
-            RuleFor(x => x.CityTown).NotEmpty().WithMessage("Sehir bos gecilemez").NotNull();
+            RuleFor(x => x.Sehir).NotEmpty().WithMessage("Sehir bos gecilemez").NotNull();
         }
 
     }

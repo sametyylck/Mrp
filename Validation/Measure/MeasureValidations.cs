@@ -12,7 +12,7 @@ namespace Validation.Measure
     {
         public MeasureInsertValidations()
         {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Name boş geçilemez").NotNull().WithMessage("Name zorunlu alan");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("Name boş geçilemez").NotNull().WithMessage("Name zorunlu alan");
         }
     }
 
@@ -21,7 +21,7 @@ namespace Validation.Measure
         public MeasureUpdateValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id boş geçilemez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Name boş geçilemez").NotNull().WithMessage("Name zorunlu alan");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("Name boş geçilemez").NotNull().WithMessage("Name zorunlu alan");
         }
     }
 

@@ -13,20 +13,20 @@ namespace DAL.DTO
         {
             public int id { get; set; }
 
-            public string Name { get; set; } = string.Empty;
+            public string Isim { get; set; } = string.Empty;
 
         }
 
         public class CategoryInsert
         {  
-            public string Name { get; set; } = string.Empty;
+            public string Isim { get; set; } = string.Empty;
 
         }
         public class CategoryUpdate
         {
             public int id { get; set; }
 
-            public string Name { get; set; } = string.Empty;
+            public string Isim { get; set; } = string.Empty;
 
 
         }
@@ -41,7 +41,7 @@ namespace DAL.DTO
 
         public class CategoryItemFilter
         {
-            public string? Name { get; set; }
+            public string? Isim { get; set; }
         }
     }
 }

@@ -67,7 +67,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokTransferGoruntule, Permison.StokTransferHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokTransferGoruntule, Permison.StokTransferHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -87,7 +87,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokTransferEkle, Permison.StokTransferHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokTransferEkle, Permison.StokTransferHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -97,15 +97,15 @@ namespace Api.Controllers
             ValidationResult result = await _StockTransferInsert.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _control.Insert(T, CompanyId);
+                var hata = await _control.Insert(T);
                 if (hata.Count()==0)
                 {
-                    string sql1 = $"Select Tip From Items where CompanyId = {CompanyId} and id = {T.ItemId}";
+                    string sql1 = $"Select Tip From Items where id = {T.ItemId}";
                     var Tip = await _db.QueryFirstAsync<string>(sql1);
-                    await _locstokkontrol.Kontrol(T.ItemId, T.OriginId, Tip, CompanyId);
-                    await _locstokkontrol.Kontrol(T.ItemId, T.DestinationId, Tip, CompanyId);
+                    await _locstokkontrol.Kontrol(T.ItemId, T.OriginId, Tip);
+                    await _locstokkontrol.Kontrol(T.ItemId, T.DestinationId, Tip);
 
-                    var kontrol = await _locstokkontrol.AdresStokKontrol(T.ItemId, T.OriginId, T.DestinationId,T.Quantity, CompanyId);
+                    var kontrol = await _locstokkontrol.AdresStokKontrol(T.ItemId, T.OriginId, T.DestinationId,T.Quantity);
 
                     if (kontrol.Count()!=0)
                     {
@@ -150,7 +150,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokTransferEkle, Permison.StokTransferHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokTransferEkle, Permison.StokTransferHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -161,7 +161,7 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                 
-                var hata = await _control.InsertItem(T, CompanyId);
+                var hata = await _control.InsertItem(T);
                 if (hata.Count()==0)
                 {
                     int id = await _transfer.InsertStockTransferItem(T, T.StockTransferId, CompanyId, UserId);
@@ -212,7 +212,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokTransferEkle, Permison.StokTransferHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokTransferEkle, Permison.StokTransferHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -222,7 +222,7 @@ namespace Api.Controllers
             ValidationResult result = await _StockTransferUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _idcontrol.GetControl("StockTransfer", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("StockTransfer", T.id);
                 if (hata.Count() == 0)
                 {
 
@@ -258,7 +258,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokTransferEkle, Permison.StokTransferHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokTransferEkle, Permison.StokTransferHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -266,13 +266,13 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
             ValidationResult result = await _StockTransferUpdateItems.ValidateAsync(T);
-            if (result.IsValid)
+            if (result.IsValid)     
             {
               
-                var hata = await _control.UpdateItems(T.ItemId,T.StockTransferId,T.id, CompanyId);
+                var hata = await _control.UpdateItems(T.ItemId,T.StockTransferId,T.id);
                 if (hata.Count() == 0)
                 {
-                    var kontrol = await _control.AdresStokKontrol(T.id,T.ItemId, T.StockTransferId, T.Quantity, CompanyId);
+                    var kontrol = await _control.AdresStokKontrol(T.id,T.ItemId, T.StockTransferId, T.Quantity);
                     if (kontrol.Count()!=0)
                     {
                         return BadRequest(kontrol);
@@ -307,7 +307,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokTransferSilebilir, Permison.StokTransferHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokTransferSilebilir, Permison.StokTransferHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -318,7 +318,7 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                
-                var hata = await _control.UpdateItems(T.ItemId,T.StockTransferId,T.id, CompanyId);
+                var hata = await _control.UpdateItems(T.ItemId,T.StockTransferId,T.id);
                 if (hata.Count() == 0)
                 {
                     await _transfer.DeleteItems(T, CompanyId, UserId);
@@ -349,7 +349,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokTransferSilebilir, Permison.StokTransferHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokTransferSilebilir, Permison.StokTransferHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -359,7 +359,7 @@ namespace Api.Controllers
             ValidationResult result = await _StockTransferDelete.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _idcontrol.GetControl("StockTransfer", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("StockTransfer", T.id);
                 if (hata.Count() == 0)
                 {
                     await _transfer.Delete(T, CompanyId, UserId);
@@ -388,7 +388,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.StokTransferGoruntule, Permison.StokTransferHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.StokTransferGoruntule, Permison.StokTransferHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();

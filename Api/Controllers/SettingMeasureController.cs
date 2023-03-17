@@ -52,14 +52,14 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOlcü, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOlcü, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
-            var list = await _measureRepository.List(CompanyId); 
+            var list = await _measureRepository.List(); 
 
             return Ok( list);
         }
@@ -68,9 +68,8 @@ namespace Api.Controllers
         public async Task<ActionResult<MeasureDTO>> Insert(MeasureInsert T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOlcü, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOlcü, Permison.AyarlarHepsi,UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -80,14 +79,10 @@ namespace Api.Controllers
             ValidationResult result = await _MeasureInsert.ValidateAsync(T);
             if (result.IsValid)
             {
-                int id = await _measureRepository.Insert(T, CompanyId);
+                int id = await _measureRepository.Insert(T, UserId);
 
-                string sql = $"Select * From Measure where CompanyId = {CompanyId} and id = {id}";
-                var eklenen = await _db.QueryAsync<MeasureClas>(sql);
-                if (eklenen.Count() == 0)
-                {
-                    return BadRequest("Measure Eklenirken Bir Hata Oluştu");
-                }
+                string sql = $"Select id,Isim From Olcu where id = {id}";
+                var eklenen = await _db.QueryAsync<OlcuDTO>(sql);
                 return Ok(eklenen.First());
             }
             else
@@ -106,7 +101,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOlcü, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOlcü, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -116,11 +111,13 @@ namespace Api.Controllers
             ValidationResult result = await _MeasureUpdate.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _idcontrol.GetControl("Measure", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("Olcu", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _measureRepository.Update(T, CompanyId);
-                    return Ok("Güncelleme İşlemi Başarıyla Gerçekleşti");
+                    await _measureRepository.Update(T);
+                    string sql = $"Select id,Isim  From Olcu where id = {T.id}";
+                    var eklenen = await _db.QueryAsync<OlcuDTO>(sql);
+                    return Ok(eklenen);
                 }
                 else
                 {
@@ -147,7 +144,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOlcü, Permison.AyarlarHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.AyarlarOlcü, Permison.AyarlarHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -157,10 +154,10 @@ namespace Api.Controllers
             ValidationResult result = await _Delete.ValidateAsync(T);
             if (result.IsValid)
             {
-                var hata = await _idcontrol.GetControl("Measure", T.id, CompanyId);
+                var hata = await _idcontrol.GetControl("Olcu", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _measureRepository.Delete(T, CompanyId);
+                    await _measureRepository.Delete(T);
                     return Ok("Silme İşlemi  Gerçekleşti");
                 }
                 else

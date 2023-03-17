@@ -41,20 +41,20 @@ namespace DAL.DTO
             public string? Tip { get; set; } = null!;
 
 
-            public string? Name { get; set; } = null!;
+            public string? Isim { get; set; } = null!;
 
-            public int? CategoryId { get; set; }
-            public int? MeasureId { get; set; }
+            public int? KategoriId { get; set; }
+            public int? OlcuId { get; set; }
 
-            public int? ContactId { get; set; }
+            public int? TedarikciId { get; set; }
 
-            public string? VariantCode { get; set; } = null!;
+            public string? StokKodu { get; set; } = null!;
 
             //[MaxLength(15)]
             //Hata Verdiriyor
-            public float? DefaultPrice { get; set; }
+            public float? VarsayilanFiyat { get; set; }
 
-            public string? Info { get; set; } = null!;
+            public string? Bilgi { get; set; } = null!;
 
         }
         public class ItemsUpdate
@@ -65,22 +65,21 @@ namespace DAL.DTO
             public string? Tip { get; set; } = null!;
 
 
-            public string? Name { get; set; } = null!;
+            public string? Isim { get; set; } = null!;
 
-            public int? CategoryId { get; set; }
-            public int? MeasureId { get; set; }
+            public int? KategoriId { get; set; }
+            public int? OlcuId { get; set; }
 
-            public int? ContactId { get; set; }
+            public int? TedarikciId { get; set; }
 
-            public string? VariantCode { get; set; } = null!;
+            public string? StokKodu { get; set; } = null!;
 
             //[MaxLength(15)]
             //Hata Verdiriyor
-            public float? DefaultPrice { get; set; }
+            public float? VarsayilanFiyat { get; set; }
 
-            public string? Info { get; set; } = null!;
+            public string? Bilgi { get; set; } = null!;
 
-            public int? CompanyId { get; set; }
         }
 
 
@@ -95,22 +94,20 @@ namespace DAL.DTO
         {
             public int id { get; set; }
             public string? Tip { get; set; }
-            public string? Name { get; set; } 
-            public int? CategoryId { get; set; }
-            public string? CategoryName { get; set; }
-            public int? MeasureId { get; set; }
-            public string? MeasureName { get; set; } 
-            public int? ContactId { get; set; }
-            public string? ContactName { get; set; } 
-            public string? VariantCode { get; set; }
-            public float? DefaultPrice { get; set; }
-            public float? IngredientsCost { get; set; }
-            public float? OperationsCost { get; set; }
-            public float? InStock { get; set; }
-            public string? Info { get; set; } 
-            public bool? IsActive { get; set; }
-
-            public int? CompanyId { get; set; }
+            public string? Isim { get; set; } 
+            public int? KategoriId { get; set; }
+            public string? KategoriIsmi { get; set; }
+            public int? OlcuId { get; set; }
+            public string? OlcuIsmi { get; set; } 
+            public int? TedarikciId { get; set; }
+            public string? TedarikciIsmi { get; set; } 
+            public string? StokKodu { get; set; }
+            public float? VarsayilanFiyat { get; set; }
+            public float? MalzemeTutarı { get; set; }
+            public float? OperasyonTutarı { get; set; }
+            public float? StokAdet { get; set; }
+            public string? Bilgi { get; set; } 
+            public bool? Aktif { get; set; }
             public virtual CategoryClass? Category { get; set; }
         }
 
@@ -118,29 +115,28 @@ namespace DAL.DTO
         {
             public int id { get; set; }
             public string? Tip { get; set; } = null!;
-            public string? Name { get; set; } = null!;
-            public string? VariantCode { get; set; } 
-            public int? CategoryId { get; set; }
-            public string? CategoryName { get; set; } 
-            public float? DefaultPrice { get; set; }
-            public float? Cost { get; set; }
-            public float? Profit { get; set; }
+            public string? Isim { get; set; } = null!;
+            public string? StokKodu { get; set; } 
+            public int? KategoriId { get; set; }
+            public string? KategoriIsmi { get; set; } 
+            public float? VarsayilanFiyat { get; set; }
+            public float? Maliyet { get; set; }
+            public float? Kar { get; set; }
             public float? Margin { get; set; }
-            public string? ProductTime { get; set; } 
-            public string? DisplayName { get; set; }
-            public bool IsActive { get; set; }
+            public float? UrunZamani { get; set; } 
+            public string? GorunenIsim { get; set; }
+            public bool Aktif { get; set; }
+            public string TedarikciIsim { get; set; }
 
-            public virtual CategoryItemFilter Category { get; set; } = null!;
-            public virtual ContactsItemFilter Contacts { get; set; } = null!;
         }
 
 
 
         public class costbul
         {
-            public int MaterialId { get; set; }
-            public float DefaultPrice { get; set; }
-            public int Quantity { get; set; }
+            public int MalzemeId { get; set; }
+            public float VarsayilanFiyat { get; set; }
+            public int Miktar { get; set; }
 
         }
     }

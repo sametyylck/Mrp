@@ -11,7 +11,7 @@ namespace DAL.Contracts
     {
         Task<IEnumerable<ResourcesDTO>> List(int CompanyId);
         Task<int> Insert(ResourcesInsert T, int CompanyId);
-        Task Update(ResourcesUpdate T, int CompanyId);
+        Task Update(ResourcesUpdate T);
         Task Delete(IdControl T, int CompanyId);
     }
 }

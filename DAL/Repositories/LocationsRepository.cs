@@ -19,47 +19,45 @@ namespace DAL.Repositories
             _dbConnection = dbConnection;
         }
 
-        public async Task Delete(IdControl T, int CompanyId)
+        public async Task Delete(IdControl T)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
             prm.Add("@Tip", "SettingsLocation");
-            prm.Add("@IsActive", false);
-            prm.Add("@CompanyId", CompanyId);
+            prm.Add("@Aktif", false);
             prm.Add("@DateTime", DateTime.Now);
-           await _dbConnection.ExecuteAsync($"Update Locations SET IsActive = @IsActive,DeleteDate=@DateTime where id = @id and CompanyId = @CompanyId and Tip=@Tip", prm);
+           await _dbConnection.ExecuteAsync($"Update DepoVeAdresler SET Aktif = @Aktif,DeleteDate=@DateTime where id = @id and Tip=@Tip", prm);
         }
 
-        public async Task<int> Insert(LocationsInsert T, int CompanyId)
+        public async Task<int> Insert(LocationsInsert T, int KullanıcıId)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@Tip", "SettingsLocation");
-            prm.Add("@LocationName", T.LocationName);
-            prm.Add("@AddressLine1", T.AddressLine1);
-            prm.Add("@AddressLine2", T.AddressLine2);
-            prm.Add("@CityTown", T.CityTown);
-            prm.Add("@StateRegion", T.StateRegion);
-            prm.Add("@ZipPostalCode", T.ZipPostalCode);
-            prm.Add("@Country", T.Country);
-            prm.Add("@LegalName", T.LegalName);
-            prm.Add("@Sell", T.Sell);
-            prm.Add("@Make", T.Make);
-            prm.Add("@IsActive", true);
-            prm.Add("@Buy", T.Buy);
-            prm.Add("@CompanyId", CompanyId);
-            return await _dbConnection.QuerySingleAsync<int>($"Insert into Locations (LocationName,LegalName,Sell,Make,Buy,AddressLine1,AddressLine2,Tip,CityTown,StateRegion,ZipPostalCode,Country,IsActive,CompanyId) OUTPUT INSERTED.[id] values (@LocationName,@LegalName,@Sell,@Make,@Buy,@AddressLine1,@AddressLine2,@Tip,@CityTown,@StateRegion,@ZipPostalCode, @Country,@IsActive,@CompanyId)", prm);
+            prm.Add("@LocationName", T.Isim);
+            prm.Add("@AddressLine1", T.Adres1);
+            prm.Add("@AddressLine2", T.Adres2);
+            prm.Add("@CityTown", T.Sehir);
+            prm.Add("@StateRegion", T.Cadde);
+            prm.Add("@ZipPostalCode", T.PostaKodu);
+            prm.Add("@Country", T.Ulke);
+            prm.Add("@LegalName", T.GercekIsim);
+            prm.Add("@Sell", T.Satis);
+            prm.Add("@Make", T.Uretim);
+            prm.Add("@Aktif", true);
+            prm.Add("@Buy", T.SatinAlma);
+            prm.Add("@KullanıcıId", KullanıcıId);
+            return await _dbConnection.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Isim,GercekIsim,Satis,Uretim,SatinAlma,Adres1,Adres2,Tip,Sehir,Cadde,PostaKodu,Ulke,Aktif,KullanıcıId) OUTPUT INSERTED.[id] values (@LocationName,@LegalName,@Sell,@Make,@Buy,@AddressLine1,@AddressLine2,@Tip,@CityTown,@StateRegion,@ZipPostalCode, @Country,@Aktif,@KullanıcıId)", prm);
         }
 
-        public async Task<IEnumerable<LocationsDTO>> List(int CompanyId)
+        public async Task<IEnumerable<LocationsDTO>> List()
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@Tip", "SettingsLocation");
-            var list = await _dbConnection.QueryAsync<LocationsDTO>($"Select id,LocationName,LegalName,Sell,Make,Buy,AddressLine1,AddressLine2,Tip,CityTown,StateRegion,ZipPostalCode,Country  from Locations where CompanyId = @CompanyId and Tip=@Tip and IsActive=1", prm);
+            var list = await _dbConnection.QueryAsync<LocationsDTO>($"Select id,Isim ,GercekIsim ,Satis a,Uretim ,SatinAlma ,Adres1 ,Adres2 ,Tip,Sehir ,Cadde a,PostaKodu ,Ulke from DepoVeAdresler where Tip=@Tip and Aktif=1", prm);
             return list.ToList();
         }
 
-        public async Task<int> Register(int id)
+        public async Task<int> Register(int KullanıcıId)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@Tip", "SettingsLocation");
@@ -68,38 +66,39 @@ namespace DAL.Repositories
             prm.Add("@Sell", 1);
             prm.Add("@Make", 1);
             prm.Add("@Buy", 1);
-            prm.Add("@IsActive", true);
-            prm.Add("@CompanyId", id);
-            return await _dbConnection.QuerySingleAsync<int>($"Insert into Locations (Tip,LocationName,LegalName,Sell,Make,Buy,IsActive,CompanyId) OUTPUT INSERTED.[id] values (@Tip,@LocationName,@LegalName,@Sell,@Make,@Buy,@IsActive,@CompanyId) ", prm);
+            prm.Add("@Aktif", true);
+            prm.Add("@KullanıcıId", KullanıcıId);
+
+
+            return await _dbConnection.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Tip,Isim,GercekIsim,Satis,Uretim,SatinAlma,Aktif,KullaniciId) OUTPUT INSERTED.[id] values (@Tip,@LocationName,@LegalName,@Sell,@Make,@Buy,@Aktif,@KullanıcıId) ", prm);
         }
 
-        public async Task<int> RegisterLegalAddress(int id)
+        public async Task<int> RegisterLegalAddress(int KullanıcıId)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@Tip", "LegalAddress");
-            param.Add("@CompanyId", id);
-            param.Add("@IsActive", true);
-            return await _dbConnection.QuerySingleAsync<int>($"Insert into Locations (Tip,IsActive,CompanyId) OUTPUT INSERTED.[id] values (@Tip,@IsActive,@CompanyId) ", param);
+            param.Add("@KullanıcıId", KullanıcıId);
+            param.Add("@Aktif", true);
+            return await _dbConnection.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Tip,Aktif,KullaniciId) OUTPUT INSERTED.[id] values (@Tip,@Aktif,@KullanıcıId) ", param);
         }
 
-        public async Task Update(LocationsDTO T, int CompanyId)
+        public async Task Update(LocationsDTO T)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@Tip", "SettingsLocation");
             prm.Add("@id", T.id);
-            prm.Add("@LocationName", T.LocationName);
-            prm.Add("@AddressLine1", T.AddressLine1);
-            prm.Add("@AddressLine2", T.AddressLine2);
-            prm.Add("@CityTown", T.CityTown);
-            prm.Add("@StateRegion", T.StateRegion);
-            prm.Add("@ZipPostalCode", T.ZipPostalCode);
-            prm.Add("@Country", T.Country);
-            prm.Add("@LegalName", T.LegalName);
-            prm.Add("@Sell", T.Sell);
-            prm.Add("@Make", T.Make);
-            prm.Add("@Buy", T.Buy);
-            prm.Add("@CompanyId", CompanyId);
-            await _dbConnection.ExecuteAsync($"Update Locations SET LocationName=@LocationName,LegalName=@LegalName,Sell=@Sell,Make=@Make,Buy=@Buy,AddressLine1=@AddressLine1,AddressLine2=@AddressLine2,CityTown=@CityTown,StateRegion=@StateRegion,ZipPostalCode=@ZipPostalCode,Country=@Country where id = @id  and CompanyId = @CompanyId and Tip=@Tip", prm);
+            prm.Add("@LocationName", T.Isim);
+            prm.Add("@AddressLine1", T.Adres1);
+            prm.Add("@AddressLine2", T.Adres2);
+            prm.Add("@CityTown", T.Sehir);
+            prm.Add("@StateRegion", T.Cadde);
+            prm.Add("@ZipPostalCode", T.PostaKodu);
+            prm.Add("@Country", T.Ulke);
+            prm.Add("@LegalName", T.GercekIsim);
+            prm.Add("@Sell", T.Satis);
+            prm.Add("@Make", T.Uretim);
+            prm.Add("@Buy", T.SatinAlma);
+            await _dbConnection.ExecuteAsync($"Update DepoVeAdresler SET Isim=@LocationName,GercekIsim=@LegalName,Satis=@Sell,Uretim=@Make,SatinAlma=@Buy,Adres1=@AddressLine1,Adres2=@AddressLine2,Sehir=@CityTown,Cadde=@StateRegion,PostaKodu=@ZipPostalCode,Ulke=@Country where id = @id and Tip=@Tip", prm);
         }
     }
 }

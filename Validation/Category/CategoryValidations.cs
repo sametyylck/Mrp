@@ -12,14 +12,14 @@ namespace Validation.Category
     {
         public CategoryInsertValidations()
         {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Isim bos gecilmez").NotNull();
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("Isim bos gecilmez").NotNull();
         }
     }
     public class CategoryUpdateValidations : AbstractValidator<CategoryDTO.CategoryUpdate>
     {
         public CategoryUpdateValidations()
         {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Isim bos gecilmez").NotNull();
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("Isim bos gecilmez").NotNull();
             RuleFor(x => x.id).NotEmpty().WithMessage("Id bos gecilmez").NotNull();
         }
     }

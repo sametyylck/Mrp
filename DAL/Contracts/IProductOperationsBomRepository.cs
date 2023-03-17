@@ -10,9 +10,9 @@ namespace DAL.Contracts
 {
     public interface IProductOperationsBomRepository
     {
-        Task<IEnumerable<ProductOperationsBOMList>> List(int CompanyId, int ItemId);
-        Task<int> Insert(ProductOperationsBOMInsert T, int CompanyId);
-        Task Update(ProductOperationsBOMUpdate T, int CompanyId);
-        Task Delete(IdControl T, int CompanyId);
+        Task<IEnumerable<ProductOperationsBOMList>> List(int ItemId);
+        Task<int> Insert(ProductOperationsBOMInsert T,int KullanıcıId);
+        Task Update(ProductOperationsBOMUpdate T);
+        Task Delete(IdControl T);
     }
 }

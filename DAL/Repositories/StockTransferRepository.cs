@@ -75,13 +75,13 @@ namespace DAL.Repositories
                 //Verilen konumlarda bu iteme ait stock değeri var mı kontrol edilir.Yoksa oluşturulur.
                 if (sorgu.First().originvarmi == 0)
                 {
-                  await  _loc.Insert(Tip, item.ItemId, CompanyId, Origin);
+                  await  _loc.Insert(Tip, item.ItemId, Origin);
                 }
                 float? OriginStockCount = sorgu.First().stockCountOrigin;
 
                 if (sorgu.First().destinationvarmı == 0)
                 {
-                   await _loc.Insert(Tip, item.ItemId, CompanyId,  Destination);
+                   await _loc.Insert(Tip, item.ItemId,  Destination);
                 }
 
                 float? DestinationStockCount = sorgu.First().DestinationStockCounts;

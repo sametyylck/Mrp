@@ -12,16 +12,16 @@ namespace DAL.Contracts
 {
     public interface IManufacturingOrderItemRepository
     {
-        Task InsertOrderItems(int id, int? SalesOrderId, int? SalesOrderItemId, int CompanyId);
-        Task UpdateOrderItems(ManufacturingOrderUpdate T, float eski, int CompanyId);
-        Task<IEnumerable<ManufacturingOrderItemsIngredientsDetail>> IngredientsDetail(int CompanyId, int id);
-        Task<IEnumerable<ManufacturingOrderItemsOperationDetail>> OperationDetail(int CompanyId, int id);
-        Task IngredientsUpdate(ManufacturingOrderItemsIngredientsUpdate T, int CompanyId);
-        Task OperationsUpdate(ManufacturingOrderItemsOperationsUpdate T, int CompanyId);
-        Task<int> IngredientsInsert(ManufacturingOrderItemsIngredientsInsert T, int CompanyId);
-        Task<int> OperationsInsert(ManufacturingOrderItemsOperationsInsert T, int CompanyId);
-        Task DeleteStockControl(IdControl T, int CompanyId,int UserId);
-        Task DeleteItems(ManufacturingDeleteItems T, int CompanyId);
-        Task BuyStockControl(ManufacturingPurchaseOrder T, int? missing, int CompanyId);
+        Task InsertOrderItems(int id, int? SalesOrderId, int? SalesOrderItemId);
+        Task UpdateOrderItems(ManufacturingOrderUpdate T, float eski);
+        Task<IEnumerable<ManufacturingOrderItemsIngredientsDetail>> IngredientsDetail(int id);
+        Task<IEnumerable<ManufacturingOrderItemsOperationDetail>> OperationDetail( int id);
+        Task IngredientsUpdate(ManufacturingOrderItemsIngredientsUpdate T);
+        Task OperationsUpdate(ManufacturingOrderItemsOperationsUpdate T);
+        Task<int> IngredientsInsert(ManufacturingOrderItemsIngredientsInsert T);
+        Task<int> OperationsInsert(ManufacturingOrderItemsOperationsInsert T);
+        Task DeleteStockControl(IdControl T, int UserId);
+        Task DeleteItems(ManufacturingDeleteItems T);
+        Task BuyStockControl(ManufacturingPurchaseOrder T, int? missing);
     }
 }

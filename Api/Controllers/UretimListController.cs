@@ -33,7 +33,7 @@ namespace Api.Controllers
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimGoruntule, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimGoruntule, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -48,12 +48,12 @@ namespace Api.Controllers
         [Route("ScheludeOpenList")]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> ScheludeOpenList(ManufacturingOrderList T, int KAYITSAYISI, int SAYFA)
+        public async Task<IActionResult> ScheludeOpenList(ManufacturingOrderListArama T, int KAYITSAYISI, int SAYFA)
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimGoruntule, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimGoruntule, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -67,12 +67,12 @@ namespace Api.Controllers
         [Route("ScheludeDoneList")]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> ScheludeDoneList(ManufacturingOrderDoneList T, int KAYITSAYISI, int SAYFA,DateTime? Tarih1,DateTime? Tarih2)
+        public async Task<IActionResult> ScheludeDoneList(ManufacturingOrderDoneListArama T, int KAYITSAYISI, int SAYFA,DateTime? Tarih1,DateTime? Tarih2)
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimGoruntule, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimGoruntule, Permison.UretimHepsi,UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -87,12 +87,12 @@ namespace Api.Controllers
         [Route("TaskOpenList")]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> TaskOpenList(ManufacturingTask T, int KAYITSAYISI, int SAYFA)
+        public async Task<IActionResult> TaskOpenList(ManufacturingTaskArama T, int KAYITSAYISI, int SAYFA)
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimGoruntule, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimGoruntule, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();
@@ -107,12 +107,12 @@ namespace Api.Controllers
         [Route("TaskDoneList")]
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> TaskDoneList(ManufacturingTask T, int KAYITSAYISI, int SAYFA)
+        public async Task<IActionResult> TaskDoneList(ManufacturingTaskArama T, int KAYITSAYISI, int SAYFA)
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
             int UserId = user[1];
-            var izin = await _izinkontrol.Kontrol(Permison.UretimGoruntule, Permison.UretimHepsi, CompanyId, UserId);
+            var izin = await _izinkontrol.Kontrol(Permison.UretimGoruntule, Permison.UretimHepsi, UserId);
             if (izin == false)
             {
                 List<string> izinhatasi = new();

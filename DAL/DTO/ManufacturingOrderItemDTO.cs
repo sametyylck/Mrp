@@ -24,7 +24,6 @@ namespace DAL.DTO
             [RegularExpression(RegularExpression, ErrorMessage = "Özel karekter giremezsiniz")]
             [StringLength(50)]
             public string Note { get; set; } = string.Empty;
-            public int? CompanyId { get; set; }
             public string Tip { get; set; } = string.Empty;
             public int RezerveId { get; set; }
             public int Status { get; set; }
@@ -53,7 +52,6 @@ namespace DAL.DTO
             // (0 = Not Started) (1 = In Progress) (2 = Paused) (3 = Completed) (4 = Blocked)
             public int? Status { get; set; }
             public int? PurchaseOrderId { get; set; }
-            public int? CompanyId { get; set; }
         }
         public class BuyKontrol
         {
@@ -78,106 +76,105 @@ namespace DAL.DTO
         public class ManufacturingOrderItemsIngredientsUpdate
         {
             public int? id { get; set; }
-            public int? SalesOrderId { get; set; }
-            public int? SalesOrderItemId { get; set; }
-            public int? OrderId { get; set; }
-            public int? ItemId { get; set; }
-            public string Note { get; set; } = string.Empty;
-            public float? Quantity { get; set; }
-            public int? LocationId { get; set; }
-            public float? Cost { get; set; }
-            public int Availability { get; set; }
+            public int? SatisId { get; set; }
+            public int? SatisDetayId { get; set; }
+            public int? UretimId { get; set; }
+            public int? StokId { get; set; }
+            public float? Miktar { get; set; }
+            public int? DepoId { get; set; }
+            public float? Tutar { get; set; }
+            public int MalzemeDurumu { get; set; }
+            public string Bilgi { get; set; }
         }
         public class ManufacturingOrderItemsIngredientsInsert
         {
-            public int? SalesOrderId { get; set; }
-            public int? SalesOrderItemId { get; set; }
-            public int? OrderId { get; set; }
-            public int? ItemId { get; set; }
-            public string Note { get; set; } = string.Empty;
-            public float? Quantity { get; set; }
-            public int? LocationId { get; set; }
-            public float? Cost { get; set; }
-            public int Availability { get; set; }
+            public int? SatisId { get; set; }
+            public int? SatisDetayId { get; set; }
+            public int? UretimId { get; set; }
+            public int? StokId { get; set; }
+            public float? Miktar { get; set; }
+            public int? DepoId { get; set; }
+            public float? Tutar { get; set; }
+            public int MalzemeDurumu { get; set; }
+            public string Bilgi { get; set; }
         }
 
         public class ManufacturingOrderItemsOperationsUpdate
         {
             public int? id { get; set; }
-            public int? OrderId { get; set; }
-            public int? OperationId { get; set; }
-            public int? ResourceId { get; set; }
-            public int? PlannedTime { get; set; }
-            public int? Status { get; set; }
-            public float? CostPerHour { get; set; }
+            public int? UretimId { get; set; }
+            public int? OperasyonId { get; set; }
+            public int? KaynakId { get; set; }
+            public int? PlanlananZaman { get; set; }
+            public int? Durum { get; set; }
+            public float? SaatlikUcret { get; set; }
         }
         public class ManufacturingOrderItemsOperationsInsert
         {
-            public int OrderId { get; set; }
-            public int OperationId { get; set; }
-            public int? ResourceId { get; set; }
-            public int? PlannedTime { get; set; }
-            public int? Status { get; set; }
-            public float? Cost { get; set; }
-            public float? CostPerHour { get; set; }
+            public int UretimId { get; set; }
+            public int OperasyonId { get; set; }
+            public int? KaynakId { get; set; }
+            public int? PlanlananZaman { get; set; }
+            public int? Durum { get; set; }
+            public float? Tutar { get; set; }
+            public float? SaatlikUcret { get; set; }
         }
 
 
         public class ManufacturingOrderItemsOperationDetail
         {
             public int id { get; set; }
-            public int? OperationId { get; set; }
-            public string OperationName { get; set; } = string.Empty;
-            public int? ResourceId { get; set; }
-            public string ResourceName { get; set; } = string.Empty;
-            public int? PlannedTime { get; set; }
-            public float CostPerHour { get; set; }
+            public int? OperasyonId { get; set; }
+            public string OperasyonIsmi { get; set; } = string.Empty;
+            public int? KaynakId { get; set; }
+            public string KaynakIsmi { get; set; } = string.Empty;
+            public int? PlanlananZaman { get; set; }
+            public float SaatlikUcret { get; set; }
 
-            public float Cost { get; set; }
-            public int? Status { get; set; }
+            public float Tutar { get; set; }
+            public int? Durum { get; set; }
         }
         public class Quantitys
         {
-            public float Quantity { get; set; }
-            public float PlannedQuantity { get; set; }
+            public float Miktar { get; set; }
+            public float PlanlananMiktar { get; set; }
 
         }
         public class Manufacturing
         {
             public float ToplamCount { get; set; }
-            public int LocationStockId { get; set; }
+            public int DepoStokOd { get; set; }
             public float ToplamRezerveCount { get; set; }
-            public float AllStockQuantity { get; set; }
-            public float RezerveCount { get; set; }
-            public int ItemId { get; set; }
+            public float RezerveAdet { get; set; }
+            public int StokId { get; set; }
 
 
 
         }
         public class ManufacturingPurchaseOrder
         {
-            public int? SalesOrderId { get; set; }
-            public int? SalesOrderItemId { get; set; }
-            public int? ManufacturingOrderId { get; set; }
-            public int? ManufacturingOrderItemId { get; set; }
+            public int? SatisId { get; set; }
+            public int? SatisDetayId { get; set; }
+            public int? UretimId { get; set; }
+            public int? UretimDetayId { get; set; }
 
             public string Tip { get; set; } = null!;
-            public int? ContactId { get; set; }
-            public string? OrderName { get; set; }
+            public int? CariKod { get; set; }
+            public string? SatinAlimIsmi { get; set; }
 
-            public DateTime? ExpectedDate { get; set; }
-            public DateTime? CreateDate { get; set; }
-            public int? LocationId { get; set; }
-            public int? ItemId { get; set; }
-            public float Quantity { get; set; }
+            public DateTime? BeklenenTarih { get; set; }
+            public DateTime? OlusturmaTarihi { get; set; }
+            public int? DepoId { get; set; }
+            public int? StokId { get; set; }
+            public float Miktar { get; set; }
 
         }
         public class UretimDeleteKontrolClas
         {
-            public int? SalesOrderId { get; set; }
-            public int? SalesOrderItemId { get; set; }
+            public int? SatisId { get; set; }
+            public int? SatisDetayId { get; set; }
 
-            public string? Name { get; set; }
+            public string? Isim { get; set; }
 
         }
 

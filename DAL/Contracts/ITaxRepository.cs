@@ -12,8 +12,8 @@ namespace DAL.Contracts
     {
         Task<int> Insert(TaxInsert T, int CompanyId);
         Task<int> Register(int id);
-        Task<IEnumerable<TaxClas>> List(int CompanyId);
-        Task Update(TaxUpdate tax,int CompanyId);
-        Task Delete(IdControl tax,int CompanyId);
+        Task<IEnumerable<TaxClas>> List();
+        Task Update(TaxUpdate tax);
+        Task Delete(IdControl tax);
     }
 }

@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BL.Services.IdControl
+namespace DAL.DTO
 {
-    public interface IIDControl
+    public class OlcuDTO
     {
-        Task<List<string>> GetControl(string tabloadi,int id);
+        public int id { get; set; }
+        public string Name { get; set; }
     }
 }

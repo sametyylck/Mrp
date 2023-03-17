@@ -55,24 +55,24 @@ namespace DAL.DTO
         public class ManufacturingOrderUpdate
         {
             public int id { get; set; }
-            public int SalesOrderId { get; set; }
-            public int SalesOrderItemId { get; set; }
-            public float? PlannedQuantity { get; set; }
-            public int? ItemId { get; set; }
-            public string Name { get; set; } = string.Empty;
+            public int SatisId { get; set; }
+            public int SatisDetayId { get; set; }
+            public float? PlanlananMiktar { get; set; }
+            public int? StokId { get; set; }
+            public string Isim { get; set; } = string.Empty;
             [Column(TypeName = "datetime2")]
-            public DateTime? ProductionDeadline { get; set; }
+            public DateTime? UretimTarihi { get; set; }
 
             [Column(TypeName = "datetime2")]
-            public DateTime? CreatedDate { get; set; }
-            public DateTime? ExpectedDate { get; set; }
-            public int LocationId { get; set; }
-            public string Info { get; set; } = string.Empty;
+            public DateTime? OlusturmaTarihi { get; set; }
+            public DateTime? BeklenenTarih { get; set; }
+            public int DepoId { get; set; }
+            public string Bilgi { get; set; } = string.Empty;
             // (0 = Not Started) (1 = Blocked) (2 = Work In Progress) (3 = Done) 
-            public float MaterialCost { get; set; }
-            public float OperationCost { get; set; }
-            public float TotalCost { get; set; }
-            public int? Status { get; set; }
+            public float MalzemeTutarı { get; set; }
+            public float OperasyonTutarı { get; set; }
+            public float ToplamTutar { get; set; }
+            public int? Durum { get; set; }
             public float eskiPlanned { get; set; }
             public float eskiLocation { get; set; }
         }
@@ -86,8 +86,8 @@ namespace DAL.DTO
         public class ManufacturingTaskDone
         {
             public int id { get; set; }
-            public int OrderId { get; set; }
-            public int Status { get; set; }
+            public int UretimId { get; set; }
+            public int Durum { get; set; }
         }
 
         public class ManufacturingDeleteItems
@@ -160,6 +160,23 @@ namespace DAL.DTO
             public DateTime? BaslangıcTarih { get; set; }
             public DateTime? SonTarih { get; set; }
         }
+        public class ManufacturingOrderListArama
+        {
+            public string Name { get; set; } = string.Empty;
+            public string Customer { get; set; } = string.Empty;
+            public string ItemName { get; set; } = string.Empty;
+            public string CategoryName { get; set; } = string.Empty;
+            public float? PlannedQuantity { get; set; }
+            public int? PlannedTime { get; set; }
+            public int? Status { get; set; }
+
+            // (0 = Not Started) (1 = Blocked) (2 = Work In Progress) (3 = Done) 
+            public string Availability { get; set; } = string.Empty;
+            public int? LocationId { get; set; }
+            public DateTime? BaslangıcTarih { get; set; }
+            public DateTime? SonTarih { get; set; }
+        }
+
         public class ManufacturingOrderDoneList
         {
             public int id { get; set; }
@@ -181,6 +198,24 @@ namespace DAL.DTO
             public DateTime? BaslangıcTarih { get; set; }
             public DateTime? SonTarih { get; set; }
         
+        }
+        public class ManufacturingOrderDoneListArama
+        {
+
+            public string Name { get; set; } = string.Empty;
+            public string Customer { get; set; } = string.Empty;
+            public string ItemName { get; set; } = string.Empty;
+            public string CategoryName { get; set; } = string.Empty;
+            public float? PlannedQuantity { get; set; }
+            public int? PlannedTime { get; set; }
+
+            public int? LocationId { get; set; }
+            public float? MaterialCost { get; set; }
+            public float? OperationCost { get; set; }
+            public float? TotalCost { get; set; }
+            public DateTime? BaslangıcTarih { get; set; }
+            public DateTime? SonTarih { get; set; }
+
         }
 
         public class ManufacturingOrderResponse
@@ -228,5 +263,19 @@ namespace DAL.DTO
             public DateTime CompletedDate { get; set; }
             public int? Status { get; set; }
         }
+        public class ManufacturingTaskArama
+        {
+            public string OrderName { get; set; } = string.Empty;
+            public string ResourcesName { get; set; } = string.Empty;
+            public string OperationName { get; set; } = string.Empty;
+            public string ItemName { get; set; } = string.Empty;
+            public DateTime ProductionDeadline { get; set; }
+            public float? PlannedQuantity { get; set; }
+            public float? PlannedTime { get; set; }
+            public int? LocationId { get; set; }
+            public DateTime CompletedDate { get; set; }
+            public int? Status { get; set; }
+        }
+
     }
 }

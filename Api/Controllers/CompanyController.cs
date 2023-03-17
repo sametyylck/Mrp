@@ -39,15 +39,6 @@ namespace Api.Controllers
             _IDCONTROL = ıDCONTROL;
         }
 
-        [Route("List")]
-        [HttpGet, Authorize]
-        public async Task<ActionResult<CompanyClas>> List(int id)
-        {
-            List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
-            var list = await _company.List(CompanyId);
-            return (list.First());
-        }
 
         [Route("Update")]
         [HttpPut, Authorize]
@@ -57,19 +48,19 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                 List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                var hata =await _IDCONTROL.GetControl("Locations", T.id,CompanyId);
+                int UserId = user[1];
+                var hata =await _IDCONTROL.GetControl("Locations", T.id);
                 if (hata.Count()==0)
                 {
-                    await _company.Update(T, CompanyId);
+                    await _company.Update(T, UserId);
                     var list = new CompanyUpdate
                     {
-                        AddressLine1 = T.AddressLine1,
-                        AddressLine2 = T.AddressLine2,
-                        CityTown = T.CityTown,
-                        Country = T.Country,
-                        StateRegion = T.StateRegion,
-                        ZipPostalCode = T.ZipPostalCode
+                        Adres1 = T.Adres1,
+                        Adres2 = T.Adres2,
+                        Sehir = T.Sehir,
+                        Ulke = T.Ulke,
+                        Cadde = T.Cadde,
+                        PostaKodu = T.PostaKodu
                     };
                     return (list);
                 }
@@ -86,75 +77,5 @@ namespace Api.Controllers
             }
         }
 
-        [HttpPut, Authorize]
-        [Route("UpdateCompany")]
-        public async Task<ActionResult<CompanyClas>> UpdateCompany(CompanyUpdateCompany T)
-        {
-            ValidationResult result = await _CompanyUpdateCompany.ValidateAsync(T);
-            if (result.IsValid)
-            {
-              
-
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                var hata = await _IDCONTROL.GetControl("Company", CompanyId, CompanyId);
-                if (hata.Count() == 0)
-                {
-                    DynamicParameters prm = new DynamicParameters();
-                    prm.Add("@id", CompanyId);
-                    List<CompanyClas> list = (await _db.QueryAsync<CompanyClas>($"Select LocationId from Company where id = @id", prm)).ToList();
-                    int locationId = list.First().LocationId;
-                    await _company.UpdateCompany(T,CompanyId);
-                    var company = new CompanyClas
-                    {
-
-                        DisplayName = T.DisplayName,
-                        LegalName = T.LegalName
-                    };
-                    return (company);
-                }
-                else
-                {
-                    return BadRequest(hata);
-                }
-   
-            }
-            else
-            {
-                result.AddToModelState(this.ModelState);
-                return BadRequest(result.ToString());
-            }
-        }
-        [Route("Delete")]
-        [HttpDelete, Authorize]
-        public async Task<ActionResult<CompanyClas>> Delete(IdControl T)
-        {
-            ValidationResult result = await _IdControl.ValidateAsync(T);
-            if (result.IsValid)
-            {
-
-                List<int> user = _user.CompanyId();
-                int CompanyId = user[0];
-                int User = user[1];
-
-                var hata = await _IDCONTROL.GetControl("Locations", T.id, CompanyId);
-                if (hata.Count() == 0)
-                {
-                await _company.Delete(T, CompanyId,User);
-
-                }
-                else
-                {
-                    return BadRequest(hata);
-                }
-                return Ok("başarılı");
-            }
-            else
-            {
-                result.AddToModelState(this.ModelState);
-                return BadRequest(result.ToString());
-            }
-
-        }
     }
 }

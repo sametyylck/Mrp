@@ -19,15 +19,14 @@ namespace BL.Services.StockTakes
         {
             _db = db;
         }
-        public async Task<List<string>> StockTakesDone(StockTakesDone T, int CompanyId)
+        public async Task<List<string>> StockTakesDone(StockTakesDone T)
         {
             List<string> hatalar = new();
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@Status", T.Status);
 
-            string sqlquery = $@"select Count(id) from StockTakes where CompanyId={CompanyId} and id={T.id}";
+            string sqlquery = $@"select Count(id) from StokSayim where id={T.id}";
             var id = await _db.QueryFirstAsync<int>(sqlquery);
             if (id==0)
             {
@@ -36,14 +35,14 @@ namespace BL.Services.StockTakes
 
             }
 
-            string sql = $@"select Status from StockTakes where CompanyId={CompanyId} and id={T.id}";
+            string sql = $@"select Durum from StokSayim where id={T.id}";
             var Status = await _db.QueryFirstAsync<int>(sql);
 
             if (Status==1)
             {
                 if (T.Status==2 || T.Status==3)
                 {
-                    var degerler = await _db.QueryAsync<StockTakeItems>($@"select * from StockTakesItem where CompanyId={CompanyId} and StockTakesId={T.id}");
+                    var degerler = await _db.QueryAsync<StockTakeItems>($@"select * from StokSayimDetay where  StokSayimId={T.id}");
                     foreach (var item in degerler)
                     {
                         if (item.CountedQuantity==null)
@@ -56,12 +55,12 @@ namespace BL.Services.StockTakes
             return hatalar;
         }
 
-        public async Task<List<string>> DeleteItem(StockTakeDelete T, int CompanyId)
+        public async Task<List<string>> DeleteItem(StockTakeDelete T)
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<StockTakeDelete>($@"select
-             (Select id  From StockTakesItem where CompanyId = {CompanyId} and ItemId={T.ItemId} and id={T.id} )as ItemId,
-            (Select Count(*) as varmi From StockTakes where CompanyId = {CompanyId} and id = {T.id} and IsActive=1)as id
+             (Select id  From StokSayimDetay where  StokId={T.ItemId} and id={T.id} )as ItemId,
+            (Select Count(*) as varmi From StokSayim where  and id = {T.id} and IsActive=1)as id
             "); 
             if (list.First().id == null)
             {
@@ -79,13 +78,13 @@ namespace BL.Services.StockTakes
             }
         }
 
-        public async Task<List<string>> Insert(StockTakesInsert T, int CompanyId)
+        public async Task<List<string>> Insert(StockTakesInsert T)
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select id as varmi From Locations where CompanyId = {CompanyId} and id = {T.LocationId})as LocationId
+            (Select id as varmi From DepoVeAdresler where  id = {T.LocationId})as LocationId
             ");
-            if (list.First().LocationId==null)
+            if (list.First().DepoId ==null)
             {
                 hatalar.Add("Boyle bir location yok");
                 return hatalar;
@@ -98,14 +97,14 @@ namespace BL.Services.StockTakes
             }
         }
 
-        public async Task<List<string>> InsertItem(List<StockTakeInsertItems> T , int CompanyId)
+        public async Task<List<string>> InsertItem(List<StockTakeInsertItems> T)
         {
             List<string> hatalar = new();
             foreach (var item in T)
             {
                 var list = await _db.QueryAsync<StockTakeInsertItems>($@"select
-             (Select id  From Items where CompanyId = {CompanyId} and id={item.ItemId})as ItemId,
-            (Select id as varmi From StockTakes where CompanyId = {CompanyId} and id = {item.StockTakesId} and IsActive=1)as StockTakesId
+             (Select id  From Urunler where  id={item.ItemId})as ItemId,
+            (Select id as varmi From StokSayim where id = {item.StockTakesId} and Aktif=1)as StockTakesId
             ");
                 if (list.First().ItemId == null)
                 {
@@ -120,13 +119,13 @@ namespace BL.Services.StockTakes
      
         }
 
-        public async Task<List<string>> UpdateItem(StockTakesUpdateItems T, int CompanyId)
+        public async Task<List<string>> UpdateItem(StockTakesUpdateItems T)
         {
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<StockTakesUpdateItems>($@"select
-             (Select id  From StockTakesItem where CompanyId = {CompanyId} and id={T.StockTakesItemId} and StockTakesId={T.StockTakesId})as StockTakesItemId,
-            (Select id as varmi From StockTakes where CompanyId = {CompanyId} and id = {T.StockTakesId} and IsActive=1)as StockTakesId");
+             (Select id  From StokSayimDetay where  id={T.StockTakesItemId} and StokSayimId={T.StockTakesId})as StockTakesItemId,
+            (Select id as varmi From StokSayim where id = {T.StockTakesId} and Aktif=1)as StockTakesId");
             if (list.First().StockTakesId == null)
             {
                 hatalar.Add("StockTakesId,Boyle bir id yok");
