@@ -40,7 +40,7 @@ namespace Validation.ManufacturingOrder
         {
 
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilemez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.Status).NotEmpty().WithMessage("Status bos gecilemez").NotNull().WithMessage("OrdersId zorunlu alan");
+            RuleFor(x => x.Durum).NotEmpty().WithMessage("Status bos gecilemez").NotNull().WithMessage("OrdersId zorunlu alan");
         }
     }
     public class ManufacturingOrderTaskDoneValidations : AbstractValidator<ManufacturingTaskDone>
@@ -59,7 +59,6 @@ namespace Validation.ManufacturingOrder
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilemez").NotNull().WithMessage("id zorunlu alan");
             RuleFor(x => x.UretimId).NotEmpty().WithMessage("OrdersId bos gecilemez").NotNull().WithMessage("OrdersId zorunlu alan");
-            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId bos gecilemez").NotNull().WithMessage("ItemId zorunlu alan");
         }
     }
 }

@@ -47,7 +47,7 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
             int id = await _teklif.Insert(T, CompanyId);
-            await _salescontrol.Adress(id, T.ContactId);
+            await _salescontrol.Adress(id, T.CariId);
             var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from SalesOrder where Tip = 'Quotes' and id={id}");
             return Ok(list);
         }

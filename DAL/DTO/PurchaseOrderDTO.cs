@@ -36,14 +36,14 @@ namespace DAL.DTO
             public int? SatisDetayId { get; set; }
             public int? UretimId { get; set; }
             public int? UretimDetayId { get; set; }
-
+            public int SubeId { get; set; }
             public string Tip { get; set; } = null!;
             public int? TedarikciId { get; set; }
             public string? SatinAlmaIsmi { get; set; } 
 
             public DateTime? BeklenenTarih { get; set; }
             public DateTime? OlusturmaTarihi { get; set; }
-            public int? DepoId { get; set; }
+            public int DepoId { get; set; }
             public int? StokId { get; set; }
             public float Miktar { get; set; }
             public float? BirimFiyat { get; set; }
@@ -56,6 +56,7 @@ namespace DAL.DTO
             public string Bilgi { get; set; } = string.Empty;
             public int DurumBelirteci { get; set; }
             public float Kayip { get; set; }
+
         }
         public class PurchaseOrderInsertItem
         {
@@ -81,6 +82,7 @@ namespace DAL.DTO
             public string? SatinAlmaIsmi { get; set; }
             public DateTime? BeklenenTarih { get; set; }
             public DateTime? OlusturmaTarihi { get; set; }
+            public int SubeId { get; set; }
             public int? DepoId { get; set; }
             public string Bilgi { get; set; } = string.Empty;
         }
@@ -108,6 +110,7 @@ namespace DAL.DTO
         public class PurchaseOrderUpdate
         {
             public int id { get; set; }
+            public int SubeId { get; set; }
             public int? TedarikciId { get; set; }
             public string SatinAlmaIsmi { get; set; } = string.Empty;
             public DateTime? BeklenenTarih { get; set; }
@@ -129,8 +132,7 @@ namespace DAL.DTO
             public int? SatinAlmaId { get; set; }
             public string? Tip { get; set; }
             public int? DepoId { get; set; }
-            public int? ContactId { get; set; }
-            public string? ContactTip { get; set; }
+            public int? CariId { get; set; }
             public int? SatisId { get; set; }
             public int? SatisDetayId { get; set; }
             public int? IdControl { get; set; }
@@ -150,7 +152,7 @@ namespace DAL.DTO
             public string? Tip { get; set; }
             public int? DepoId { get; set; }
             public int? ContactId { get; set; }
-            public string? ContactTip { get; set; }
+            public string? CariTip { get; set; }
             public int? SatisId { get; set; }
             public int? SatisDetayId { get; set; }
             public int? IdControl { get; set; }
@@ -165,25 +167,42 @@ namespace DAL.DTO
             public int id { get; set; }
             public int? StokId { get; set; }
             public int? VergiId { get; set; }
-            public float? Miktar { get; set; }
+            public float Miktar { get; set; }
             public int OlcuId { get; set; }
             public float? BirimFiyat { get; set; }
             public int SatinAlmaId { get; set; }
         }
+        public class SatinAlmaDetays
+        {
+            public int id { get; set; }
+            public int? StokId { get; set; }
+            public int? VergiId { get; set; }
+            public float VergiDegeri { get; set; }
+            public float VergiMiktari { get; set; }
+            public string StokKodu { get; set; }
+            public string StokAd { get; set; }
+            public float Miktar { get; set; }
+            public int OlcuId { get; set; }
+            public float BirimFiyat { get; set; }
+            public int SatinAlmaId { get; set; }
+            public float TumToplam { get; set; }
+            public float AraToplam { get; set; }
+        }
+
         public class PurchaseOrderUpdateItemResponse
         {
             public int id { get; set; }
-            public int? ItemId { get; set; }
-            public string? ItemName { get; set; }
-            public int? TaxId { get; set; }
-            public string? TaxName { get; set; }
-            public float? TaxValue { get; set; }
-            public float? Quantity { get; set; }
-            public float? TotalAll { get; set; }
-            public int MeasureId { get; set; }
-            public string? MeasureName { get; set; }
-            public float? PricePerUnit { get; set; }
-            public int OrdersId { get; set; }
+            public int? StokId { get; set; }
+            public string? UrunIsmi { get; set; }
+            public int? VergiId { get; set; }
+            public string? VergiIsim { get; set; }
+            public float? VergiDegeri { get; set; }
+            public float? Miktar { get; set; }
+            public float? TumToplam { get; set; }
+            public int OlcuId { get; set; }
+            public string? OlcuIsmi { get; set; }
+            public float? BirimFiyat { get; set; }
+            public int SatinAlmaId { get; set; }
         }
         public class PurchaseDetails
         {
@@ -197,6 +216,7 @@ namespace DAL.DTO
             public int DurumBelirteci { get; set; }
             public DateTime? OlusturmaTarihi { get; set; }
             public int? DepoId { get; set; }
+            public int SubeId { get; set; }
             public string DepoIsmi { get; set; } = string.Empty;
             public IEnumerable<PurchaseOrdersItemDetails> detay { get; set; }
 
@@ -205,19 +225,19 @@ namespace DAL.DTO
         public class PurchaseOrdersItemDetails
         {
             public int id { get; set; }
-            public int ItemId { get; set; }
-            public string ItemName { get; set; } = string.Empty;
-            public float Quantity { get; set; }
-            public float PricePerUnit { get; set; }
-            public int TaxId { get; set; }
-            public float TaxValue { get; set; }
-            public string TaxName { get; set; } = string.Empty;
-            public float ItemTotalAll { get; set; }
-            public int MeasureId { get; set; }
-            public string MeasureName { get; set; } = string.Empty;
-            public float ItemTotalPrice { get; set; }
-            public float ItemPlusTax { get; set; }
-            public int OrdersId { get; set; }
+            public int StokId { get; set; }
+            public string UrunIsmi { get; set; } = string.Empty;
+            public float Miktar { get; set; }
+            public float BirimFiyat { get; set; }
+            public int VergiId { get; set; }
+            public float VergiDegeri { get; set; }
+            public string VergiIsim { get; set; } = string.Empty;
+            public float TumToplam { get; set; }
+            public int OlcuId { get; set; }
+            public string OlcuIsmi { get; set; } = string.Empty;
+            public float ToplamTutar { get; set; }
+            public float VergiMiktari { get; set; }
+            public int SatinAlmaId { get; set; }
 
         }
 
@@ -234,7 +254,7 @@ namespace DAL.DTO
             public string? Tip { get; set; }
 
             public string TedarikciIsmi { get; set; } = string.Empty;
-            public float? TumTutar { get; set; }
+            public float? TumToplam { get; set; }
             public int? DepoId { get; set; }
             public DateTime? BeklenenTarih { get; set; }
 

@@ -19,22 +19,21 @@ namespace DAL.DTO
             public string? Tip { get; set; } = null!;
 
 
-            public string? Name { get; set; } = null!;
+            public string? Isim { get; set; } = null!;
 
-            public int? CategoryId { get; set; }
-            public int? MeasureId { get; set; }
+            public int? KategoriId { get; set; }
+            public int? OlcuId { get; set; }
 
-            public int? ContactId { get; set; }
+            public int? TedarikciId { get; set; }
 
-            public string? VariantCode { get; set; } = null!;
+            public string? StokKodu { get; set; } = null!;
 
             //[MaxLength(15)]
             //Hata Verdiriyor
-            public float? DefaultPrice { get; set; }
+            public float? VarsayilanFiyat { get; set; }
 
-            public string? Info { get; set; } = null!;
+            public string? Bilgi { get; set; } = null!;
 
-            public int? CompanyId { get; set; }
         }
         public class ItemsInsert
         {

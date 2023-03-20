@@ -73,8 +73,6 @@ namespace BL.Services.Orders
             }
             else
             {
-                hatalar.Add("Make tip hatası");
-
                 return hatalar;
             }
            
@@ -84,15 +82,14 @@ namespace BL.Services.Orders
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<PurchaseItemControl2>($@"select
-            (Select id  From Olcu where  id = {T.OlcuId})as MeasureId,
+            (Select id  From Olcu where  id = {T.OlcuId})as OlcuId,
             (Select Tip  From Urunler where  id={T.StokId})as Tip,
-            (Select id  From Vergi where  id = {T.VergiId})as TaxId,
-            (Select  id as OrdersId From Uretim where id = {T.UretimId} and Aktif=1 and Status!=3)as UretimId,
-            (Select id From UretimDetay where  id = {T.UretimDetayId} and OrderId={T.UretimId})as id,
-             (select id From Satis where  id = {T.SatisId} and DeliveryId!=2 and  DeliveryId!=4)as SalesOrderId, 
-            (Select id From SatisDetay where  id = {T.SatisDetayId} and SalesOrderId={T.SatisId})as SalesOrderItemId,
-            (Select id as LocationId From DepoVeAdresler where  id = {T.DepoId})as LocationId,
-            (Select Tip  From Cari where  id = {T.TedarikciId})as ContactTip
+            (Select id  From Vergi where  id = {T.VergiId})as VergiId,
+            (Select  id as UretimId From Uretim where id = {T.UretimId} and Aktif=1 and Durum!=3)as UretimId,
+            (Select id From UretimDetay where  id = {T.UretimDetayId} and UretimId={T.UretimId})as id,
+             (select id From Satis where  id = {T.SatisId} and DurumBelirteci!=2 and  DurumBelirteci!=4)as SatisId, 
+            (Select id From SatisDetay where  id = {T.SatisDetayId} and SatisId={T.SatisId})as SatisDetayId,
+            (Select id as DepoId From DepoVeAdresler where  id = {T.DepoId})as DepoId
             ");
 
             if (T.UretimId!=0 && T.UretimDetayId !=0)
@@ -162,7 +159,7 @@ namespace BL.Services.Orders
             (Select id  From Olcu where  id = {T.OlcuId})as OlcuId,
             (Select Tip  From Urunler where id={T.StokId})as Tip,
             (Select id  From Vergi where  id = {T.VergiId})as VergiId,
-            (Select id as varmi From SatinAlma where  id = {T.SatinAlmaId} and IsActive=1 and DeliveryId=1)as OrdersId");
+            (Select id as varmi From SatinAlma where  id = {T.SatinAlmaId} and Aktif=1 and DurumBelirteci=1)as id");
 
 
 
@@ -173,10 +170,14 @@ namespace BL.Services.Orders
             }
             if (list.First().Tip != "Material")
             {
-                hatalar.Add("ItemId tip hatası");
+                if (list.First().Tip != "SemiProduct")
+                {
+                    hatalar.Add("ItemId tip hatası");
+
+                }
 
             }
-            if (list.First().SatinAlmaId == null)
+            if (list.First().id == null)
             {
                 hatalar.Add("Böyle Bir OrdersId Yok");
             }
@@ -196,8 +197,7 @@ namespace BL.Services.Orders
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select id as varmi From Locations where  id = {T.DepoId})as LocationId,
-            (Select Tip  From Cari where  CariKod= {T.TedarikciId})as Tip
+            (Select id as varmi From DepoVeAdresler where  id = {T.DepoId})as DepoId
         ");
             if (list.First().DepoId==null)
             {
@@ -208,10 +208,6 @@ namespace BL.Services.Orders
             if (make != true)
             {
                 hatalar.Add("Uretim kismina yetkiniz yok");
-            }
-            if (list.First().Tip != "Supplier")
-            {
-                hatalar.Add("ContactId,Böyle Bir Tedarikci Yok");
                 return hatalar;
 
             }
@@ -225,10 +221,10 @@ namespace BL.Services.Orders
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select id  From Olcu where  id = {T.OlcuId})as MeasureId,
+            (Select id  From Olcu where  id = {T.OlcuId})as OlcuId,
             (Select Tip  From Urunler where  id={T.StokId})as Tip,
-            (Select id  From Vergi where  id = {T.VergiId})as TaxId,
-            (Select id as varmi From SatinAlma where  id = {T.SatinAlmaId} and Aktif=1 and DurumBelirteci=1)as OrdersId,
+            (Select id  From Vergi where  id = {T.VergiId})as VergiId,
+            (Select id as varmi From SatinAlma where  id = {T.SatinAlmaId} and Aktif=1 and DurumBelirteci=1)as SatinAlmaId,
             (Select id as varmi From SatinAlmaDetay where  id ={T.id} and SatinAlmaId={T.SatinAlmaId})as id");
             if (list.First().OlcuId ==null)
             {
@@ -236,7 +232,11 @@ namespace BL.Services.Orders
             }
             if (list.First().Tip != "Material")
             {
-                hatalar.Add("ItemId tip hatası");
+                if (list.First().Tip != "SemiProduct")
+                {
+                    hatalar.Add("ItemId tip hatası");
+                }
+         
             }
             if (list.First().VergiId == null)
             {

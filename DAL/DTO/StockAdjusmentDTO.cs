@@ -115,27 +115,26 @@ namespace DAL.DTO
         public class StockAdjusmentStockUpdate
         {
             public int id { get; set; }
-            public float? Quantity { get; set; }
-            public float ManufacturingQuantity { get; set; }
-            public int LocationStockId { get; set; }
+            public float? Miktar { get; set; }
+            public float UretimMiktari { get; set; }
+            public int DepoStokId { get; set; }
             public float? Adjusment { get; set; }
-            public int LocationsStockCount { get; set; }
-            public int StockId { get; set; }
+            public int StokAdeti { get; set; }
+            public int StokId { get; set; }
             public string Tip { get; set; } = string.Empty;
-            public float? RezerveCount { get; set; }
+            public float? RezerveDeger { get; set; }
         }
         public class StockAdjusmentSql
         {
             public int id { get; set; }
-            public float? Quantity { get; set; }
-            public float ManufacturingQuantity { get; set; }
-            public int LocationStockId { get; set; }
+            public float? Miktar { get; set; }
+            public float PlanlananMiktar { get; set; }
+            public int DepoStokId { get; set; }
             public float? Adjusment { get; set; }
-            public int LocationsStockCount { get; set; }
-            public int StockId { get; set; }
+            public int StokAdeti { get; set; }
+            public int StokId { get; set; }
             public string Tip { get; set; } = string.Empty;
-            public float? RezerveCount { get; set; }
-            public int ItemId { get; set; }
+            public float? RezerveDeger { get; set; }
         }
         public class LocaVarmı
         {

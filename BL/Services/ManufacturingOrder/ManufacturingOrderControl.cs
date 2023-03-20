@@ -74,8 +74,8 @@ namespace BL.Services.ManufacturingOrder
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<ManufacturingOrderItemsIngredientsInsert>($@"select
-            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as OrderId,
-            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as LocationId 
+            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as UretimId,
+            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as DepoId 
 ");
 
 
@@ -91,7 +91,7 @@ namespace BL.Services.ManufacturingOrder
                 hatalar.Add(hata);
                 
             }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from DepoVeAdresler where id={T.DepoId} ")).ToList();
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from DepoVeAdresler where id={T.DepoId} ")).ToList();
             bool? make = Locaiton.First().Uretim;
             if (make != true)
             {
@@ -117,9 +117,9 @@ namespace BL.Services.ManufacturingOrder
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<ManufacturingOrderItemsIngredientsUpdate>($@"select
-            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as OrderId,
-            (Select id From UretimDetay where id = {T.id} and OrderId={T.UretimId})    as  id,
-            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as LocationId
+            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as UretimId,
+            (Select id From UretimDetay where id = {T.id} and UretimId={T.UretimId})    as  id,
+            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as DepoId
                       
 ");
 
@@ -142,7 +142,7 @@ namespace BL.Services.ManufacturingOrder
                 hatalar.Add(hata);
             }
 
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from DepoVeAdresler where  id={T.DepoId} ")).ToList();
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from DepoVeAdresler where  id={T.DepoId} ")).ToList();
             bool? make = Locaiton.First().Uretim;
             if (make != true)
             {
@@ -170,7 +170,7 @@ namespace BL.Services.ManufacturingOrder
 
             //eklenen locationStock Varmi Kontrol Ediyoruz
             var list = await _db.QueryAsync<ManufacturingPurchaseOrder>($@"select
-            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as LocationId,
+            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as DepoId,
             (Select Tip  From Urunler where id={T.StokId})as Tip    
             ");
 
@@ -179,7 +179,7 @@ namespace BL.Services.ManufacturingOrder
             {
                 hatalar.Add("Böyle Bir Lokasyon Yok");
             }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Sell,Make,Buy from DepoVeAdresler where  id={T.DepoId} ")).ToList();
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from DepoVeAdresler where  id={T.DepoId} ")).ToList();
             bool? make = Locaiton.First().Uretim;
             if (make != true)
             {
@@ -210,9 +210,9 @@ namespace BL.Services.ManufacturingOrder
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<ManufacturingOrderItemsOperationsUpdate>($@"select
-            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as OrderId,
-            (Select id From Kaynaklar where  id = {T.KaynakId} and Aktif=1)    as  ResourceId,
-            (Select id From Operasyonlar where id = {T.OperasyonId} and Aktif=1) as OperationId");
+            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as UretimId,
+            (Select id From Kaynaklar where  id = {T.KaynakId} and Aktif=1)    as  KaynakId,
+            (Select id From Operasyonlar where id = {T.OperasyonId} and Aktif=1) as OperasyonId");
 
             if (list.First().UretimId==null)
             {
@@ -246,10 +246,10 @@ namespace BL.Services.ManufacturingOrder
 
 
             var list = await _db.QueryAsync<ManufacturingOrderItemsOperationsUpdate>($@"select
-            (Select id From UretimDetay where id = {T.id} and OrderId={T.UretimId})as id,
-            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Status!=3)as OrderId,
-            (Select id From Kaynaklar where  id = {T.KaynakId} and Aktif=1)    as  ResourceId,
-            (Select id From Operasyonlar where  id = {T.OperasyonId} and Aktif=1) as OperationId");
+            (Select id From UretimDetay where id = {T.id} and UretimId={T.UretimId})as id,
+            (Select id as varmi From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as UretimId,
+            (Select id From Kaynaklar where  id = {T.KaynakId} and Aktif=1)    as  KaynakId,
+            (Select id From Operasyonlar where  id = {T.OperasyonId} and Aktif=1) as OperasyonId");
 
             if (list.First().UretimId == null)
             {
@@ -285,9 +285,9 @@ namespace BL.Services.ManufacturingOrder
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<ManufacturingPurchaseOrder>($@"select
-            (Select id From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as ManufacturingOrderId,
-            (Select id From UretimDetay where id = {T.UretimDetayId} and OrderId={T.UretimId})    as  ManufacturingOrderItemId,
-            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as LocationId,
+            (Select id From Uretim where  id = {T.UretimId} and Aktif=1 and Durum!=3)as UretimId,
+            (Select id From UretimDetay where id = {T.UretimDetayId} and UretimId={T.UretimId})    as  UretimDetayId,
+            (Select id as varmi From DepoVeAdresler where id = {T.DepoId}) as DepoId,
             (Select Tip  From Urunler where  id={T.StokId})as Tip
             ");
 
@@ -334,8 +334,8 @@ namespace BL.Services.ManufacturingOrder
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<ManufacturingPurchaseOrder>($@"select
-            (Select id From Uretim where - id = {T.id} and Aktif=1 and Durum!=3)as ManufacturingOrderId,
-            (Select id as varmi From DepoVeAdresler where  id = {T.DepoId}) as LocationId,
+            (Select id From Uretim where id = {T.id} and Aktif=1 and Durum!=3)as UretimId,
+            (Select id as varmi From DepoVeAdresler where  id = {T.DepoId}) as DepoId,
             (Select Tip  From Urunler where  id={T.StokId})as Tip
 
             ");

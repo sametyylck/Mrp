@@ -85,9 +85,10 @@ namespace DAL.Repositories
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", id);
 
-            var list = await _db.QueryAsync<PurchaseDetails>($@"Select SatinAlma.id,SatinAlma.Tip,SatinAlma.TedarikciId,Cari.AdSoyad as SupplierName,SatinAlma.BeklenenTarih,SatinAlma.OlusturmaTarihi,
+            var list = await _db.QueryAsync<PurchaseDetails>($@"Select SatinAlma.id,SatinAlma.Tip,SatinAlma.SubeId,Subeler.SubeIsmi,SatinAlma.TedarikciId,Cari.AdSoyad as SupplierName,SatinAlma.BeklenenTarih,SatinAlma.OlusturmaTarihi,
             SatinAlma.SatinAlmaIsmi, SatinAlma.DepoId,DepoVeAdresler.Isim, SatinAlma.Bilgi,SatinAlma.DurumBelirteci 
             From SatinAlma 
+            left join Subeler on Subeler.id=SatinAlma.SubeId
             left join Cari on Cari.CariKod = SatinAlma.TedarikciId 
             left join DepoVeAdresler on DepoVeAdresler.id=SatinAlma.DepoId 
             left join SatinAlmaDetay on SatinAlmaDetay.SatinAlmaId = SatinAlma.id 
@@ -96,9 +97,9 @@ namespace DAL.Repositories
             SatinAlma.SatinAlmaIsmi, SatinAlma.DepoId, SatinAlma.Bilgi,DepoVeAdresler.Isim,SatinAlma.DurumBelirteci", prm);
             foreach (var item in list)
             {
-                var list2 = await _db.QueryAsync<PurchaseOrdersItemDetails>(@$"  Select SatinAlmaDetay.id as id,SatinAlmaDetay.StokId ,Urunler.Isim as ItemName, SatinAlmaDetay.Miktar, SatinAlmaDetay.BirimFiyat,
+                var list2 = await _db.QueryAsync<PurchaseOrdersItemDetails>(@$"  Select SatinAlmaDetay.id as id,SatinAlmaDetay.StokId ,Urunler.Isim as UrunIsmi, SatinAlmaDetay.Miktar, SatinAlmaDetay.BirimFiyat,
                 SatinAlmaDetay.VergiId, Vergi.VergiIsim, SatinAlmaDetay.VergiDegeri, SatinAlmaDetay.TumToplam, SatinAlmaDetay.ToplamTutar, SatinAlmaDetay.VergiMiktari ,
-                SatinAlmaDetay.SatinAlmaId, SatinAlmaDetay.OlcuId, Olcu.Isim as MeasureName from SatinAlmaDetay
+                SatinAlmaDetay.SatinAlmaId, SatinAlmaDetay.OlcuId, Olcu.Isim as OlcuIsmi from SatinAlmaDetay
                 left join Urunler on Urunler.id = SatinAlmaDetay.StokId  
                 left    join Vergi on Vergi.id = SatinAlmaDetay.VergiId
                 left  join Olcu on Olcu.id = SatinAlmaDetay.OlcuId 
@@ -136,24 +137,24 @@ namespace DAL.Repositories
 
             prm.Add("StokId", T.StokId);
 
-            var Rate = await _db.QueryFirstAsync<TaxClas>($"select Rate from Tax where id =@id and CompanyId=@CompanyId", new { id = T.VergiId });
+            var Rate = await _db.QueryFirstAsync<TaxClas>($"select VergiDegeri from Vergi where id =@id", new { id = T.VergiId });
             float TaxRate = Rate.VergiDegeri;
 
-            var DefaultPricee = await _db.QueryFirstAsync<Items>($"select DefaultPrice from Items where id =@StokId and CompanyId=@CompanyId", new { StokId = T.StokId });
-            var PriceUnit = DefaultPricee.DefaultPrice;
+            var DefaultPricee = await _db.QueryFirstAsync<Items>($"select VarsayilanFiyat from Urunler where id =@StokId", new { StokId = T.StokId });
+            var PriceUnit = DefaultPricee.VarsayilanFiyat;
             var TotalPrice = (T.Miktar * PriceUnit); //adet*fiyat
             float? PlusTax = (TotalPrice * TaxRate) / 100; //tax fiyatı hesaplama
             var TotalAll = TotalPrice + PlusTax; //toplam fiyat hesaplama  
             prm.Add("@Miktar", T.Miktar);
-            prm.Add("@PricePerUnit", PriceUnit);
+            prm.Add("@BirimFiyat", PriceUnit);
             prm.Add("@VergiId", T.VergiId);
-            prm.Add("@TaxValue", TaxRate);
-            prm.Add("@OrdersId", OrdersId);
-            prm.Add("@PlusTax", PlusTax);
-            prm.Add("@TotalPrice", TotalPrice);
-            prm.Add("@TotalAll", TotalAll);
+            prm.Add("@VergiDegeri", TaxRate);
+            prm.Add("@SatinAlmaId", OrdersId);
+            prm.Add("@VergiMiktari", PlusTax);
+            prm.Add("@ToplamTutar", TotalPrice);
+            prm.Add("@TumToplam", TotalAll);
 
-            return await _db.QuerySingleAsync<int>($"Insert into SatinAlmaDetay (StokId,Miktar,BirimFiyat,VergiId,VergiDegeri,SatinAlmaId,ToplamTutar,VergiMiktari,TumToplam,OlcuId) OUTPUT INSERTED.[id] values (@StokId,@Miktar,@PricePerUnit,@VergiId,@TaxValue,@OrdersId,@TotalPrice,@PlusTax,@TotalAll,@MeasureId)", new { StokId = T.StokId, Miktar = T.Miktar, BirimFiyat = PriceUnit, VergiId = T.VergiId, VergiDegeri = TaxRate, SatinAlmaId = OrdersId, ToplamTutar = TotalPrice, VergiMiktari = PlusTax, TumToplam = TotalAll, OlcuId = T.OlcuId });
+            return await _db.QuerySingleAsync<int>($"Insert into SatinAlmaDetay (StokId,Miktar,BirimFiyat,VergiId,VergiDegeri,SatinAlmaId,ToplamTutar,VergiMiktari,TumToplam) OUTPUT INSERTED.[id] values (@StokId,@Miktar,@BirimFiyat,@VergiId,@VergiDegeri,@SatinAlmaId,@ToplamTutar,@VergiMiktari,@TumToplam)", prm);
 
         }
 
@@ -179,7 +180,7 @@ namespace DAL.Repositories
             prm.Add("@VergiId", T.VergiId);
             prm.Add("@StokId", T.StokId);
 
-            var Rate = _db.Query<TaxClas>($"(select Rate from Tax where id =@VergiId and CompanyId=@CompanyId)", prm);
+            var Rate = _db.Query<TaxClas>($"(select VergiDegeri from Vergi where id =@VergiId)", prm);
             float TaxRate = Rate.First().VergiDegeri;
 
             prm.Add("@PricePerUnit", T.BirimFiyat);

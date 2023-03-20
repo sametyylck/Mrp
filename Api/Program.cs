@@ -66,6 +66,9 @@ using BL.Services.LocationStock;
 using PurchaseBuy = DAL.DTO.PurchaseBuy;
 using BL.Extensions;
 using BL.Services.Kullanýcý;
+using DAL.StokHareket;
+using DAL.Hareket;
+using DAL.Hareket.Fatura;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -213,7 +216,10 @@ builder.Services.AddScoped<ITeklifRepository, TeklifRepository>();
 builder.Services.AddScoped<IPermissionControl, PermissionControl>();
 builder.Services.AddScoped<IKullanýcýRepository, KullanýcýRepository>();
 builder.Services.AddScoped<IKullanýcýKontrol, KullanýcýKontrol>();
-
+builder.Services.AddScoped<IStokHareket, StokHareket>();
+builder.Services.AddScoped<ICariHareket, CariHareket>();
+builder.Services.AddScoped<IEvrakNumarasýOLusturucu, EvrakNumarasýOlusturucu>();
+builder.Services.AddScoped<IFatura, Fatura>();
 
 
 

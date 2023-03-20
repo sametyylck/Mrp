@@ -51,7 +51,7 @@ namespace DAL.DTO
             public string? ItemName { get; set; }
             public int BillingLocationId { get; set; }
             public int? ShippingLocationId { get; set; }
-            public float? Quantity { get; set; }
+            public float? Miktar { get; set; }
             public float? PricePerUnit { get; set; }
             public float? TotalPrice { get; set; }
             public int TaxId { get; set; }
@@ -67,7 +67,7 @@ namespace DAL.DTO
             public int? LocationId { get; set; }
             public int? ContactId { get; set; }
             public int? TaxId { get; set; }
-            public float? Quantity { get; set; }
+            public float? Miktar { get; set; }
             public int Status { get; set; }
             public int Conditions { get; set; }
 
@@ -92,28 +92,28 @@ namespace DAL.DTO
         public class SalesOrderRezerve
         {
             public int id { get; set; }
-            public int SalesOrderId { get; set; }
+            public int SatisId { get; set; }
             public string? Tip { get; set; }
-            public int ItemId { get; set; }
-            public float RezerveCount { get; set; }
-            public int CustomerId { get; set; }
-            public int LocationId { get; set; }
-            public int Status { get; set; }
+            public int StokId { get; set; }
+            public float RezerveDeger { get; set; }
+            public int CariId { get; set; }
+            public int DepoId { get; set; }
+            public int Durum { get; set; }
 
-            public float LocationStockCount { get; set; }
+            public float StokAdeti { get; set; }
 
         }
         public class SalesOrderUpdate
         {
             public int id { get; set; }
-            public int ContactId { get; set; }
-            public string? DisplayName { get; set; }
-            public string? OrderName { get; set; }
-            public DateTime DeliveryDeadline { get; set; }
-            public DateTime CreateDate { get; set; }
-            public int LocationId { get; set; }
-            public string? Info { get; set; }
-            public float Total { get; set; }
+            public int CariId { get; set; }
+            public string? GorunenIsim { get; set; }
+            public string? SatisIsmi { get; set; }
+            public DateTime TeslimSuresi { get; set; }
+            public DateTime OlusturmaTarihi { get; set; }
+            public int DepoId { get; set; }
+            public string? Bilgi { get; set; }
+            public float Toplam { get; set; }
 
         }
         public class SalesOrderDetail
@@ -140,7 +140,7 @@ namespace DAL.DTO
         public class SalesDone
         {
             public int id { get; set; }
-            public int DeliveryId { get; set; }
+            public int DurumBelirteci { get; set; }
         }
         public class SalesOrderUpdateItems
         {
@@ -152,7 +152,7 @@ namespace DAL.DTO
             public int ContactId { get; set; }
             public int LocationId { get; set; }
             public int ItemId { get; set; }
-            public float Quantity { get; set; }
+            public float Miktar { get; set; }
             public float PricePerUnit { get; set; }
             public int TaxId { get; set; }
             public int Conditions { get; set; }
@@ -163,9 +163,9 @@ namespace DAL.DTO
         {
             public int id { get; set; }
             public int OrderItemId { get; set; }
-            public int ItemId { get; set; }
-            public float Quantity { get; set; }
-            public float PlannedQuantity { get; set; }
+            public int StokId { get; set; }
+            public float Miktar { get; set; }
+            public float PlanlananMiktar { get; set; }
             public string? Note { get; set; }
 
         }
@@ -197,7 +197,7 @@ namespace DAL.DTO
 
             public int ItemId { get; set; }
             public string? ItemName { get; set; }
-            public float Quantity { get; set; }
+            public float Miktar { get; set; }
             public float PricePerUnit { get; set; }
             public int TaxId { get; set; }
             public string? TaxName { get; set; }
@@ -229,7 +229,7 @@ namespace DAL.DTO
             public int? ContactId { get; set; }
             public string? Customer { get; set; }
             public string? OrderName { get; set; }
-            public int? Quantity { get; set; }
+            public int? Miktar { get; set; }
             public int? Rezerve { get; set; }
             public int? Missing { get; set; }
 
@@ -265,7 +265,7 @@ namespace DAL.DTO
             public int ItemId { get; set; }
             public int LocationId { get; set; }
             public int ContactId { get; set; }
-            public int Quantity { get; set; }
+            public int Miktar { get; set; }
             public int? Status { get; set; }
             public int? Conditions { get; set; }
         }

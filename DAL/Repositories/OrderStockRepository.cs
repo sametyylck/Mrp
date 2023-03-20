@@ -1,7 +1,9 @@
 ﻿using DAL.Contracts;
 using DAL.DTO;
+using DAL.Hareket;
 using DAL.Models;
 using DAL.StockControl;
+using DAL.StokHareket;
 using Dapper;
 using System;
 using System.Collections.Generic;
@@ -22,11 +24,17 @@ namespace DAL.Repositories
         private readonly IDbConnection _db;
         private readonly ILocationStockRepository _locationStockRepository;
         private readonly IStockControl _stockcontrol;
-        public OrderStockRepository(IDbConnection db, ILocationStockRepository locationStockRepository, IStockControl stockcontrol)
+        private readonly IStokHareket _stokhareket;
+        private readonly ICariHareket _carihareket;
+        private readonly IEvrakNumarasıOLusturucu _evrakno;
+        public OrderStockRepository(IDbConnection db, ILocationStockRepository locationStockRepository, IStockControl stockcontrol, IStokHareket stokhareket, ICariHareket carihareket, IEvrakNumarasıOLusturucu evrakno)
         {
             _db = db;
             _locationStockRepository = locationStockRepository;
             _stockcontrol = stockcontrol;
+            _stokhareket = stokhareket;
+            _carihareket = carihareket;
+            _evrakno = evrakno;
         }
 
         public async Task<IEnumerable<PurchaseOrderLogsList>> DoneList(PurchaseOrderLogsList T, int KAYITSAYISI, int SAYFA)
@@ -36,13 +44,13 @@ namespace DAL.Repositories
             string sql;
             if (T.DepoId == null)
             {
-                sql = $"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}Select sa.id,sa.Tip,sa.SatinAlmaIsmi,Cari.AdSoyad as TedarikciIsmi,sa.BeklenenTarih, sa.TumTutar,Orders.Aktif from SatinAlma sa inner join Cari on Cari.CariKod = sa.TedarikciId and sa.DurumBelirteci=1 where  sa.Aktif = 1 and  sa.Tip = '{T.Tip}' and ISNULL(Cari.AdSoyad,0) LIKE '%{T.TedarikciIsmi}%' and ISNULL(sa.SatinAlmaIsmi,0) LIKE '%{T.SatinAlmaIsmi}%' and ISNULL(sa.TumTutar,0) LIKE '%{T.TumTutar}%' ORDER BY sa.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY; ";
+                sql = $"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}Select sa.id,sa.Tip,sa.SatinAlmaIsmi,Cari.AdSoyad as TedarikciIsmi,sa.BeklenenTarih, sa.TumTutar from SatinAlma sa inner join Cari on Cari.CariKod = sa.TedarikciId and sa.DurumBelirteci=1 where  sa.Aktif = 1 and  sa.Tip = '{T.Tip}' and ISNULL(Cari.AdSoyad,0) LIKE '%{T.TedarikciIsmi}%' and ISNULL(sa.SatinAlmaIsmi,0) LIKE '%{T.SatinAlmaIsmi}%' and ISNULL(sa.TumTutar,0) LIKE '%{T.TumToplam}%' ORDER BY sa.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY; ";
             }
             else
             {
 
 
-                sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}Select sa.id,sa.Tip,sa.SatinAlmaIsmi,Cari.AdSoyad as TedarikciIsmi,sa.BeklenenTarih, sa.TumTutar,Orders.Aktif from SatinAlma sa inner join Cari on Cari.CariKod = sa.TedarikciId and sa.DurumBelirteci=1 where  sa.DepoId={T.DepoId} and  sa.Aktif = 1 and  sa.Tip = '{T.Tip}' and ISNULL(Cari.AdSoyad,0) LIKE '%{T.TedarikciIsmi}%' and ISNULL(sa.SatinAlmaIsmi,0) LIKE '%{T.SatinAlmaIsmi}%' and ISNULL(sa.TumTutar,0) LIKE '%{T.TumTutar}%' ORDER BY sa.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY; ";
+                sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}Select sa.id,sa.Tip,sa.SatinAlmaIsmi,Cari.AdSoyad as TedarikciIsmi,sa.BeklenenTarih, sa.TumTutar from SatinAlma sa inner join Cari on Cari.CariKod = sa.TedarikciId and sa.DurumBelirteci=1 where  sa.DepoId={T.DepoId} and  sa.Aktif = 1 and  sa.Tip = '{T.Tip}' and ISNULL(Cari.AdSoyad,0) LIKE '%{T.TedarikciIsmi}%' and ISNULL(sa.SatinAlmaIsmi,0) LIKE '%{T.SatinAlmaIsmi}%' and ISNULL(sa.TumTutar,0) LIKE '%{T.TumToplam}%' ORDER BY sa.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY; ";
             }
 
             var list = await _db.QueryAsync<PurchaseOrderLogsList>(sql);
@@ -56,13 +64,13 @@ namespace DAL.Repositories
             string sql;
             if (T.DepoId == null)
             {
-                sql = $"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}Select sa.id,sa.Tip,sa.SatinAlmaIsmi,Cari.AdSoyad as TedarikciIsmi,sa.BeklenenTarih, sa.TumTutar,Orders.Aktif from SatinAlma sa inner join Cari on Cari.CariKod = sa.TedarikciId and sa.DurumBelirteci=1 where  sa.Aktif = 1 and  sa.Tip = '{T.Tip}' and ISNULL(Cari.AdSoyad,0) LIKE '%{T.TedarikciIsmi}%' and ISNULL(sa.SatinAlmaIsmi,0) LIKE '%{T.SatinAlmaIsmi}%' and ISNULL(sa.TumTutar,0) LIKE '%{T.TumTutar}%' ORDER BY sa.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY; ";
+                sql = $"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}Select sa.id,sa.Tip,sa.SatinAlmaIsmi,Cari.AdSoyad as TedarikciIsmi,sa.BeklenenTarih, sa.TumTutar from SatinAlma sa inner join Cari on Cari.CariKod = sa.TedarikciId and sa.DurumBelirteci=1 where  sa.Aktif = 1 and  sa.Tip = '{T.Tip}' and ISNULL(Cari.AdSoyad,0) LIKE '%{T.TedarikciIsmi}%' and ISNULL(sa.SatinAlmaIsmi,0) LIKE '%{T.SatinAlmaIsmi}%' and ISNULL(sa.TumTutar,0) LIKE '%{T.TumToplam}%' ORDER BY sa.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY; ";
             }
             else
             {
      
 
-                sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}Select sa.id,sa.Tip,sa.SatinAlmaIsmi,Cari.AdSoyad as TedarikciIsmi,sa.BeklenenTarih, sa.TumTutar,Orders.Aktif from SatinAlma sa inner join Cari on Cari.CariKod = sa.TedarikciId and sa.DurumBelirteci=1 where  sa.DepoId={T.DepoId} and  sa.Aktif = 1 and  sa.Tip = '{T.Tip}' and ISNULL(Cari.AdSoyad,0) LIKE '%{T.TedarikciIsmi}%' and ISNULL(sa.SatinAlmaIsmi,0) LIKE '%{T.SatinAlmaIsmi}%' and ISNULL(sa.TumTutar,0) LIKE '%{T.TumTutar}%' ORDER BY sa.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY; ";
+                sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}Select sa.id,sa.Tip,sa.SatinAlmaIsmi,Cari.AdSoyad as TedarikciIsmi,sa.BeklenenTarih, sa.TumTutar from SatinAlma sa inner join Cari on Cari.CariKod = sa.TedarikciId and sa.DurumBelirteci=1 where  sa.DepoId={T.DepoId} and  sa.Aktif = 1 and  sa.Tip = '{T.Tip}' and ISNULL(Cari.AdSoyad,0) LIKE '%{T.TedarikciIsmi}%' and ISNULL(sa.SatinAlmaIsmi,0) LIKE '%{T.SatinAlmaIsmi}%' and ISNULL(sa.TumTutar,0) LIKE '%{T.TumToplam}%' ORDER BY sa.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY; ";
             }
 
 
@@ -77,25 +85,27 @@ namespace DAL.Repositories
         public async Task StockUpdate(PurchaseOrderId T, int user)
         {
             DynamicParameters prm = new DynamicParameters();
-            
+            var evrakno = await _evrakno.Olustur(T.id);
+       
             prm.Add("@id", T.id);
-            string sqla = $"Select DepoId From SatinAlma where id  = @id";
+            string sqla = $"Select DepoId,SubeId,DurumBelirteci From SatinAlma where id  = @id";
             var locationIdDeger = await _db.QueryAsync<PurchaseOrder>(sqla, prm); //gelen ordersId'nin locationId alıyoruz
-            int? locaitonId = locationIdDeger.First().DepoId;
+            int locaitonId = locationIdDeger.First().DepoId;
+            int SubeId = locationIdDeger.First().SubeId;
+            int olddeliveryId = locationIdDeger.First().DurumBelirteci;
             prm.Add("@locationId", locaitonId);
 
             prm.Add("@DeliveryId", T.DurumBelirteci);
-            string sqls = $"Select DurumBelirteci From SatinAlma where  id= @id";
-            var delivery = await _db.QueryFirstAsync<PurchaseOrderId>(sqls, prm);
-            int olddeliveryId = delivery.DurumBelirteci; ;
+
             if (T.DurumBelirteci == 1 || T.DurumBelirteci == 2)
             {
                 await _db.ExecuteAsync($"Update SatinAlma SET DurumBelirteci = @DeliveryId where id = @id ", prm);
             }
 
 
-            string sql = $"Select id,StokId,Miktar From SatinAlmaDetay where SatinAlmaId  = @id";
-            var stokdegerler = await _db.QueryAsync<PurchaseItem>(sql, prm); //gelen ordersId'nin OrdersItem tablosundaki itemId ve Quantity e erişerek hangi itemin kaç tane artacağına bakılacak.
+            string sql = @$"select SatinAlmaDetay.id,StokId,Miktar,BirimFiyat,VergiId,VergiDegeri,ToplamTutar as AraToplam,VergiMiktari,TumToplam,Urunler.StokKodu,Urunler.Isim as StokAd from SatinAlmaDetay
+               left join Urunler on Urunler.id=SatinAlmaDetay.StokId where SatinAlmaId=@id";
+            var stokdegerler = await _db.QueryAsync<SatinAlmaDetays>(sql, prm); //gelen ordersId'nin OrdersItem tablosundaki itemId ve Quantity e erişerek hangi itemin kaç tane artacağına bakılacak.
 
             if (olddeliveryId < T.DurumBelirteci && T.DurumBelirteci == 2)
             {
@@ -124,7 +134,7 @@ namespace DAL.Repositories
                     }
 
 
-                    float? adet = item.Miktar;
+                    float adet = item.Miktar;
 
                     if (salesorderId!=0)
                     {
@@ -202,7 +212,7 @@ namespace DAL.Repositories
 
                             float? kalan = item.Miktar;
 
-                            string sqlquery = $@"select ma.id,me.id as ManufacturingOrderItemId,me.PlannedQuantity  from Uretim ma
+                            string sqlquery = $@"select ma.id,me.id as UretimDetayId,me.PlanlananMiktar  from Uretim ma
                             left join UretimDetay me on me.UretimId=ma.id
                             where  SatisId=@SalesOrderId and SatisDetayId=@SalesOrderItemId and me.StokId=@ItemId and me.MalzemeDurum=0";
                             var sorgu6 = await _db.QueryAsync<UretimOzelClass>(sqlquery, prm);//
@@ -369,10 +379,49 @@ namespace DAL.Repositories
                     }
                     float? NewStockCount = stockCount + adet;
                     prm.Add("@NewStockCount", NewStockCount); //Yeni count değerini tabloya güncelleştiriyoruz.
-                    await _db.ExecuteAsync($"Update LocationStock SET StockCount =@NewStockCount where id = @stocklocationId  and CompanyId = @CompanyId", prm);
+                    await _db.ExecuteAsync($"Update DepoStoklar SET StokAdeti =@NewStockCount where id = @stocklocationId", prm);
+                    StokHareketDTO harekettablo = new();
+                    harekettablo.Miktar = adet;
+                    harekettablo.EvrakNo = evrakno;
+                    harekettablo.DepoId = locaitonId;
+                    harekettablo.SubeId = SubeId;
+                    harekettablo.StokAd = item.StokAd;
+                    harekettablo.StokKodu = item.StokKodu;
+                    harekettablo.OlcuId = item.OlcuId;
+                    harekettablo.BirimFiyat = item.BirimFiyat;
+                    harekettablo.Tutar = item.TumToplam;
+                    harekettablo.AraToplam = item.AraToplam;
+                    harekettablo.Giris = true;
+                    harekettablo.EvrakTipi = 1;
+                    harekettablo.KDVOrani = item.VergiDegeri;
+                    await _stokhareket.StokHareketInsert(harekettablo,user);
+   
 
 
                 }
+                string sqlsorgu4 = @$"select 
+                sa.DepoId,sa.SubeId,Sum(sad.TumToplam) as Tutar,Sum(sad.ToplamTutar)as AraToplam,Sum(sad.VergiMiktari)as KDVTutari,
+				sa.TedarikciId as CariKod,Cari.AdSoyad,Cari.VergiDairesi,Cari.VergiNumarası,Cari.FaturaAdresId
+                from SatinAlmaDetay sad
+                left join SatinAlma sa  on sa.id=sad.SatinAlmaId
+                left join Cari on Cari.CariKod=sa.TedarikciId where sa.id=@id
+                Group By sa.DepoId,sa.SubeId,sa.TedarikciId,Cari.AdSoyad,Cari.VergiDairesi,Cari.VergiNumarası,Cari.FaturaAdresId";
+                var caridetay = await _db.QueryAsync<CariHareketDTO>(sqlsorgu4, prm);//
+                CariHareketDTO cari = new();
+                foreach (var carihareket in caridetay)
+                {
+                    cari.AraToplam = carihareket.AraToplam;
+                    cari.CariAd = carihareket.CariAd;
+                    cari.CariKod = carihareket.CariKod;
+                    cari.EvrakNo = evrakno;
+                    cari.EvrakTipi = 1;
+                    cari.KDVTutari = carihareket.KDVTutari;
+                    cari.SubeId = carihareket.SubeId;
+                    cari.DepoId = carihareket.DepoId;
+                    cari.Tarih = DateTime.Now;
+                   
+                }
+                await _carihareket.CariHareketInsert(cari, user);
             }
         }
 

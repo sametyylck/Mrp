@@ -77,7 +77,7 @@ namespace Api.Controllers
                     return BadRequest(hata);
                 }
                 int id = await _satıs.Insert(T, CompanyId);
-                await _salescontrol.Adress(id, T.ContactId);
+                await _salescontrol.Adress(id, T.CariId);
                 var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from SalesOrder where id={id} ");
                 return Ok(list);
             }

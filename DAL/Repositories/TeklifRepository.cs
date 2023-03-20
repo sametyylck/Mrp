@@ -33,14 +33,14 @@ namespace DAL.Repositories
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@Tip", T.Tip);
-            prm.Add("@ContactId", T.ContactId);
-            prm.Add("@DeliveryDeadLine", T.DeliveryDeadline);
-            prm.Add("@CreateDate", T.CreateDate);
+            prm.Add("@ContactId", T.CariId);
+            prm.Add("@DeliveryDeadLine", T.TeslimSuresi);
+            prm.Add("@CreateDate", T.OlusturmaTarihi);
             prm.Add("@DeliveryId", 0);
-            prm.Add("@OrderName", T.OrderName);
-            prm.Add("@Info", T.Info);
+            prm.Add("@OrderName", T.SatisIsmi);
+            prm.Add("@Info", T.Bilgi);
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@LocationId", T.LocationId);
+            prm.Add("@LocationId", T.DepoId);
             prm.Add("@IsActive", true);
 
             return await _db.QuerySingleAsync<int>($"Insert into SalesOrder (Tip,ContactId,DeliveryDeadline,CreateDate,OrderName,LocationId,Info,CompanyId,IsActive,DeliveryId) OUTPUT INSERTED.[id] values (@Tip,@ContactId,@DeliveryDeadline,@CreateDate,@OrderName,@LocationId,@Info,@CompanyId,@IsActive,@DeliveryId)", prm);
@@ -49,28 +49,28 @@ namespace DAL.Repositories
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@ItemId", T.ItemId);
+            prm.Add("@ItemId", T.StokId);
             var liste = await _db.QueryAsync<LocaVarmı>($@"select 
             (select Rate from Tax where id=(select DefaultTaxPurchaseOrderId from GeneralDefaultSettings where CompanyId=@CompanyId))as Rate,
             (select DefaultPrice from Items where id =@ItemId and CompanyId=@CompanyId)as DefaultPrice", prm);
-            prm.Add("@TaxId", T.TaxId);
+            prm.Add("@TaxId", T.VergiId);
             float rate = await _db.QueryFirstAsync<int>($"select  Rate from Tax where id =@TaxId and CompanyId=@CompanyId", prm);
 
 
             var PriceUnit = liste.First().VarsayilanFiyat;
 
-            var TotalPrice = (T.Quantity * PriceUnit); //adet*fiyat
+            var TotalPrice = (T.Miktar * PriceUnit); //adet*fiyat
             float? PlusTax = (TotalPrice * rate) / 100; //tax fiyatı hesaplama
             var TotalAll = TotalPrice + PlusTax; //toplam fiyat hesaplama  
-            prm.Add("@Quantity", T.Quantity);
+            prm.Add("@Quantity", T.Miktar);
             prm.Add("@PricePerUnit", PriceUnit);
             prm.Add("@TaxValue", rate);
-            prm.Add("@OrdersId", T.SalesOrderId);
+            prm.Add("@OrdersId", T.SatisId);
             prm.Add("@PlusTax", PlusTax);
             prm.Add("@TotalPrice", TotalPrice);
             prm.Add("@TotalAll", TotalAll);
-            prm.Add("@location", T.LocationId);
-            prm.Add("@ContactId", T.ContactId);
+            prm.Add("@location", T.DepoId);
+            prm.Add("@ContactId", T.CariId);
             prm.Add("@Stance", 0);
             prm.Add("@SalesItem", 0);
             prm.Add("@Ingredients", 0);
@@ -79,7 +79,7 @@ namespace DAL.Repositories
             int id = await _db.QuerySingleAsync<int>($"Insert into SalesOrderItem(ItemId,Quantity,PricePerUnit,TaxId,TaxValue,SalesOrderId,TotalPrice,PlusTax,TotalAll,Stance,SalesItem,Ingredients,CompanyId,Production) OUTPUT INSERTED.[id] values (@ItemId,@Quantity,@PricePerUnit,@TaxId,@TaxValue,@OrdersId,@TotalPrice,@PlusTax,@TotalAll,@Stance,@SalesItem,@Ingredients,@CompanyId,@Production)", prm);
 
             prm.Add("@SalesOrderItemId", id);
-            prm.Add("@id", T.SalesOrderId);
+            prm.Add("@id", T.SatisId);
 
             return id;
 
@@ -89,63 +89,63 @@ namespace DAL.Repositories
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@ContactId", T.ContactId);
-            prm.Add("@DeliveryDeadLine", T.DeliveryDeadline);
-            prm.Add("@CreateDate", T.CreateDate);
-            prm.Add("@OrderName", T.OrderName);
+            prm.Add("@ContactId", T.CariId);
+            prm.Add("@DeliveryDeadLine", T.TeslimSuresi);
+            prm.Add("@CreateDate", T.OlusturmaTarihi);
+            prm.Add("@OrderName", T.SatisIsmi);
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@LocationId", T.LocationId);
-            prm.Add("@Total", T.Total);
-            prm.Add("@Info", T.Info);
-            var location = await _db.QueryAsync<int>($"Select LocationId from SalesOrder where id=@id and CompanyId=@CompanyId ", prm);
+            prm.Add("@LocationId", T.DepoId);
+            prm.Add("@Total", T.Toplam);
+            prm.Add("@Info", T.Bilgi);
+            var location = await _db.QueryAsync<int>($"Select DepoId from SalesOrder where id=@id ", prm);
             prm.Add("@eskilocationId", location.First());
 
-            await _db.ExecuteAsync($"Update SalesOrder set ContactId=@ContactId,DeliveryDeadLine=@DeliveryDeadLine,CreateDate=@CreateDate,OrderName=@OrderName,Info=@Info,LocationId=@LocationId,TotalAll=@Total where CompanyId=@CompanyId and id=@id", prm);
+            await _db.ExecuteAsync($"Update Satis set CariId=@ContactId,DeliveryDeadLine=@DeliveryDeadLine,CreateDate=@CreateDate,OrderName=@OrderName,Info=@Info,LocationId=@LocationId,TotalAll=@Total where CompanyId=@CompanyId and id=@id", prm);
 
         }
         public async Task UpdateItems(TeklifUpdateItems T, int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@id", T.SalesOrderId);
+            prm.Add("@id", T.SatisId);
             prm.Add("@OrderItemId", T.id);
-            prm.Add("@ItemId", T.ItemId);
-            prm.Add("@Quantity", T.Quantity);
-            prm.Add("@PricePerUnit", T.PricePerUnit);
+            prm.Add("@ItemId", T.StokId);
+            prm.Add("@Quantity", T.Miktar);
+            prm.Add("@PricePerUnit", T.BirimFiyat);
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@TaxId", T.TaxId);
-            prm.Add("@CustomerId", T.ContactId);
-            prm.Add("@location", T.LocationId);
+            prm.Add("@TaxId", T.VergiId);
+            prm.Add("@CustomerId", T.CariId);
+            prm.Add("@location", T.DepoId);
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@ItemId", T.ItemId);
+            prm.Add("@ItemId", T.StokId);
 
             string sqlv = $@"Select ItemId  from  SalesOrderItem where CompanyId=@CompanyId and id=@OrderItemId";
             var Item = await _db.QuerySingleAsync<int>(sqlv, prm);
-            if (T.ItemId != Item)
+            if (T.StokId != Item)
             {
                 var liste = await _db.QueryAsync<LocaVarmı>($@"select 
             (select Rate from Tax where id=(select DefaultTaxPurchaseOrderId from GeneralDefaultSettings where CompanyId=@CompanyId))as Rate,
             (select DefaultPrice from Items where id =@ItemId and CompanyId=@CompanyId)as DefaultPrice", prm);
-                prm.Add("@TaxId", T.TaxId);
+                prm.Add("@TaxId", T.VergiId);
                 var Birimfiyat = liste.First().VarsayilanFiyat;
-                T.PricePerUnit = Birimfiyat;
+                T.BirimFiyat = Birimfiyat;
 
             }
 
             var Rate = await _db.QueryFirstAsync<float>($"(select Rate from Tax where id =@TaxId and CompanyId=@CompanyId)", prm);
             float TaxRate = Rate;
-            var PriceUnit = T.PricePerUnit;
-            float totalprice = (T.Quantity * PriceUnit); //adet*fiyat
+            var PriceUnit = T.BirimFiyat;
+            float totalprice = (T.Miktar * PriceUnit); //adet*fiyat
             float? PlusTax = (totalprice * TaxRate) / 100; //tax fiyatı hesaplama
             float? total = totalprice + PlusTax; //toplam fiyat hesaplama  
-            prm.Add("@Quantity", T.Quantity);
+            prm.Add("@Quantity", T.Miktar);
             prm.Add("@PricePerUnit", PriceUnit);
-            prm.Add("@TaxId", T.TaxId);
+            prm.Add("@TaxId", T.VergiId);
             prm.Add("@TaxValue", TaxRate);
-            prm.Add("@OrdersId", T.SalesOrderId);
+            prm.Add("@OrdersId", T.SatisId);
             prm.Add("@PlusTax", PlusTax);
             prm.Add("@TotalPrice", totalprice);
             prm.Add("@TotalAll", total);
-            prm.Add("@ContactsId", T.ContactId);
+            prm.Add("@ContactsId", T.CariId);
 
             await _db.ExecuteAsync($@"Update SalesOrderItem set ItemId=@ItemId,Quantity=@Quantity,TotalAll=@TotalAll,PricePerUnit=@PricePerUnit,TaxId=@TaxId,TaxValue=@TaxValue where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
 
@@ -276,9 +276,9 @@ namespace DAL.Repositories
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
             prm.Add("@OrdersId", T.OrdersId);
-            prm.Add("@ItemId", T.ItemId);
+            prm.Add("@ItemId", T.StokId);
             prm.Add("@CompanyId", CompanyId);
-            if (T.ItemId != 0)
+            if (T.StokId != 0)
             {
                 await _db.ExecuteAsync($"Delete from SalesOrderItem where id=@id and SalesOrderId=@OrdersId and CompanyId=@CompanyId", prm);
             }
@@ -346,15 +346,15 @@ namespace DAL.Repositories
                     var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, param);
                     var Tip = sorgu.First().Tip;
                     SatısInsertItem A = new SatısInsertItem();
-                    A.ItemId = item.StokId;
-                    A.LocationId = T.LocationId;
-                    A.ContactId = T.ContactId;
-                    A.Quantity = item.Miktar;
+                    A.StokId = item.StokId;
+                    A.DepoId = T.LocationId;
+                    A.CariId = T.ContactId;
+                    A.Miktar = item.Miktar;
 
 
 
                     await _satis.Control(A, T.id, Tip, CompanyId);
-                    if (A.Status == 3)
+                    if (A.Durum == 3)
                     {
                         param.Add("@SalesItem", 3);
                     }
@@ -363,7 +363,7 @@ namespace DAL.Repositories
                         param.Add("@SalesItem", 1);
                     }
 
-                    if (A.Status == 3)
+                    if (A.Durum == 3)
                     {
                         param.Add("@SalesItem", 3);
                         param.Add("@Production", 4);

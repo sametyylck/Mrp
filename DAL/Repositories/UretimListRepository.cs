@@ -26,42 +26,42 @@ namespace DAL.Repositories
             prm.Add("@CompanyId", CompanyId);
 
             string sql = $@"
-                                Select ManufacturingOrder.id , ManufacturingOrder.[Name],ManufacturingOrder.ItemId,Items.[Name] as ItemName,ManufacturingOrder.ExpectedDate,ManufacturingOrder.SalesOrderId,ManufacturingOrder.SalesOrderItemId,                                 ManufacturingOrder.ProductionDeadline,ManufacturingOrder.CreatedDate,ManufacturingOrder.PlannedQuantity,
-                                ManufacturingOrder.LocationId,Locations.LocationName,ManufacturingOrder.[Status],ManufacturingOrder.Info
-                                From ManufacturingOrder
-                                inner join Items on Items.id = ManufacturingOrder.ItemId
-                                inner join Locations on Locations.id = ManufacturingOrder.LocationId
-                                where ManufacturingOrder.CompanyId = {CompanyId} and ManufacturingOrder.id = {id}";
+                                Select Uretim.id , Uretim.[Isim],Uretim.StokId,Urunler.[Isim] as UrunIsmi,Uretim.BeklenenTarih,Uretim.SatisId,Uretim.SatisDetayId,                                 Uretim.UretimTarihi,Uretim.OlusturmaTarihi,Uretim.PlanlananMiktar,
+                                Uretim.DepoId,DepoVeAdresler.Isim,Uretim.[Durum],Uretim.Bilgi
+                                From Uretim
+                                inner join Urunler on Urunler.id = Uretim.StokId
+                                inner join DepoVeAdresler on DepoVeAdresler.id = Uretim.DepoId
+                                where Uretim.id = {id}";
             var Detail = await _db.QueryAsync<ManufacturingOrderDetail>(sql);
             foreach (var item in Detail)
             {
-                prm.Add("@LocationId", item.LocationId);
+                prm.Add("@DepoId", item.DepoId);
                 prm.Add("@id", id);
 
-                string sql1 = $@"  select moi.id,moi.Tip,moi.ItemId,Items.Name,ISNULL(Notes,'')AS Note,moi.PlannedQuantity as Quantity,moi.Cost,moi.Availability,
-ISNULL(SUM(DISTINCT(case when Orders.DeliveryId=1 then OrdersItem.Quantity else 0 end)),0)-ISNULL(moi.PlannedQuantity,0)+ISNULL(rez.RezerveCount,0) as Missing
-from ManufacturingOrderItems moi
-left join ManufacturingOrder mao on mao.id=moi.OrderId
-left join Items on Items.id=moi.ItemId
-left join LocationStock on LocationStock.ItemId=moi.ItemId and LocationStock.LocationId=@LocationId
-left join Rezerve rez on rez.ManufacturingOrderId=mao.id and rez.ManufacturingOrderItemId=moi.id  and rez.Status=1  and rez.LocationId=@LocationId
-left join Orders on Orders.ManufacturingOrderId=mao.id and Orders.ManufacturingOrderItemId=moi.id 
-left join OrdersItem on OrdersItem.OrdersId=Orders.id
-where mao.id=@id and moi.Tip='Ingredients' and mao.CompanyId=@CompanyId and mao.LocationId=@LocationId
-Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi.Cost,moi.Availability,
- moi.PlannedQuantity,rez.RezerveCount,orders.DeliveryId,OrdersItem.Quantity   
+                string sql1 = $@"  select moi.id,moi.Tip,moi.StokId,Urunler.Isim,ISNULL(moi.Bilgi,'')AS Bilgi,moi.PlanlananMiktar,moi.Tutar,moi.MalzemeDurum,
+ISNULL(SUM(DISTINCT(case when SatinAlma.DurumBelirteci=1 then SatinAlmaDetay.Miktar else 0 end)),0)-ISNULL(moi.PlanlananMiktar,0)+ISNULL(rez.RezerveDeger,0) as Kayip
+from UretimDetay moi
+left join Uretim mao on mao.id=moi.UretimId
+left join Urunler on Urunler.id=moi.StokId
+left join DepoStoklar on DepoStoklar.StokId=moi.StokId and DepoStoklar.DepoId=@DepoId
+left join Rezerve rez on rez.UretimId=mao.id and rez.UretimDetayId=moi.id  and rez.Durum=1  and rez.DepoId=@DepoId
+left join SatinAlma on SatinAlma.UretimId=mao.id and SatinAlma.UretimDetayId=moi.id 
+left join SatinAlmaDetay on SatinAlmaDetay.SatinAlmaId=SatinAlma.id
+where mao.id=@id and moi.Tip='Ingredients' and mao.DepoId=@DepoId
+Group by moi.id,moi.Tip,moi.StokId,Urunler.Isim,moi.Bilgi,moi.PlanlananMiktar ,moi.Tutar,moi.MalzemeDurum,
+ moi.PlanlananMiktar,rez.RezerveDeger,SatinAlma.DurumBelirteci,SatinAlmaDetay.Miktar   
             ";
                 var IngredientsDetail = await _db.QueryAsync<ManufacturingOrderItemsIngredientsDetail>(sql1, prm);
                 string sql2 = $@"Select moi.id,
-                            moi.OperationId,Operations.[Name] as OperationName,
-                            moi.ResourceId ,Resources.[Name] as ResourceName,
-                            moi.PlannedTime,moi.CostPerHour,
-                            Cast(ISNULL(moi.Cost,0)as decimal(15,2)) as Cost,
-                            moi.[Status]
-                            From ManufacturingOrderItems moi
-                            left join Operations on Operations.id = moi.OperationId
-                            left join Resources on moi.ResourceId = Resources.id
-                            where Tip='Operations' and moi.OrderId={id} and moi.CompanyId={CompanyId}";
+                            moi.OperasyonId,Operasyonlar.[Isim] as OperasyonIsmi,
+                            moi.KaynakId ,Kaynaklar.[Isim] as KaynakIsmi,
+                            moi.PlanlananZaman,moi.SaatlikUcret,
+                            Cast(ISNULL(moi.Tutar,0)as decimal(15,2)) as Tutar,
+                            moi.[Durum]
+                            From UretimDetay moi
+                            left join Operasyonlar on Operasyonlar.id = moi.OperasyonId
+                            left join Kaynaklar on moi.KaynakId = Kaynaklar.id
+                            where Tip='Operasyonlar' and moi.UretimId={id}";
                 var OperationDetail = await _db.QueryAsync<ManufacturingOrderItemsOperationDetail>(sql2);
                 item.IngredientDetail = IngredientsDetail;
                 item.OperationDetail = OperationDetail;
@@ -76,21 +76,21 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@CompanyId", CompanyId);
             prm.Add("@id", id);
-            var Location = await _db.QueryAsync<int>($"Select LocationId From ManufacturingOrder where CompanyId = {CompanyId} and id = {id}");
-            prm.Add("@LocationId", Location.First());
-            string sql = $@"  select moi.id,moi.Tip,moi.ItemId,Items.Name,ISNULL(Notes,'')AS Note,moi.PlannedQuantity as Quantity,moi.Cost,moi.Availability,
-            (ISNULL(LocationStock.StockCount,0)-ISNULL(SUM(DISTINCT(Rezerve.RezerveCount)),0))+(ISNULL(rez.RezerveCount,0))-(ISNULL(moi.PlannedQuantity,0))+ISNULL(SUM(DISTINCT(case when Orders.DeliveryId=1 then OrdersItem.Quantity else 0 end)),0)AS missing
-            from ManufacturingOrderItems moi
-            left join ManufacturingOrder mao on mao.id=moi.OrderId
-            left join Items on Items.id=moi.ItemId
-            left join LocationStock on LocationStock.ItemId=moi.ItemId and LocationStock.LocationId=@LocationId
-            left join OrdersItem on OrdersItem.ItemId=moi.ItemId 
-            right join Orders on Orders.id=OrdersItem.OrdersId and Orders.ManufacturingOrderId=mao.id 
-            left join Rezerve on Rezerve.ItemId=Items.id  and Rezerve.Status=1  and Rezerve.LocationId=@LocationId
-			 left join Rezerve rez on rez.ManufacturingOrderId=mao.id and rez.ManufacturingOrderItemId=moi.id  and rez.Status=1  and rez.LocationId=@LocationId
-            where mao.id=@id and moi.Tip='Ingredients' and mao.LocationId=@LocationId  and mao.Status!=3 and mao.CompanyId=@CompanyId
-            Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi.Cost,moi.Availability,
-            moi.PlannedQuantity,LocationStock.StockCount,rez.RezerveCount,orders.DeliveryId,OrdersItem.Quantity   
+            var Location = await _db.QueryAsync<int>($"Select DepoId From Uretim where CompanyId = {CompanyId} and id = {id}");
+            prm.Add("@DepoId", Location.First());
+            string sql = $@"  select moi.id,moi.Tip,moi.StokId,Urunler.Isim,ISNULL(Bilgi,'')AS Bilgi,moi.PlanlananMiktar,moi.Tutar,moi.MalzemeDurum,
+            (ISNULL(DepoStoklar.StokAdeti,0)-ISNULL(SUM(DISTINCT(Rezerve.RezerveDeger)),0))+(ISNULL(rez.RezerveDeger,0))-(ISNULL(moi.PlanlananMiktar,0))+ISNULL(SUM(DISTINCT(case when SatinAlma.DurumBelirteci=1 then SatinAlmaDetay.Miktar else 0 end)),0)AS missing
+            from UretimDetay moi
+            left join Uretim mao on mao.id=moi.UretimId
+            left join Urunler on Urunler.id=moi.StokId
+            left join DepoStoklar on DepoStoklar.StokId=moi.StokId and DepoStoklar.DepoId=@DepoId
+            left join SatinAlmaDetay on SatinAlmaDetay.StokId=moi.StokId 
+            right join SatinAlma on SatinAlma.id=SatinAlmaDetay.SatinAlmaId and SatinAlma.UretimId=mao.id 
+            left join Rezerve on Rezerve.StokId=Urunler.id  and Rezerve.Durum=1  and Rezerve.DepoId=@DepoId
+			 left join Rezerve rez on rez.UretimId=mao.id and rez.UretimDetayId=moi.id  and rez.Durum=1  and rez.DepoId=@DepoId
+            where mao.id=@id and moi.Tip='Ingredients' and mao.DepoId=@DepoId  and mao.Durum!=3
+            Group by moi.id,moi.Tip,moi.StokId,Urunler.Isim,moi.Notes,moi.PlanlananMiktar ,moi.Tutar,moi.MalzemeDurum,
+            moi.PlanlananMiktar,DepoStoklar.StokAdeti,rez.RezerveDeger,SatinAlma.DurumBelirteci,SatinAlmaDetay.Miktar   
             ";
             var IngredientsDetail = await _db.QueryAsync<ManufacturingOrderItemsIngredientsDetail>(sql, prm);
 
@@ -100,15 +100,15 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
         public async Task<IEnumerable<ManufacturingOrderItemsOperationDetail>> OperationDetail(int CompanyId, int id)
         {
             string sql = $@"Select moi.id,
-                            moi.OperationId,Operations.[Name] as OperationName,
-                            moi.ResourceId ,Resources.[Name] as ResourceName,
-                            moi.PlannedTime,moi.CostPerHour,
-                            Cast(ISNULL(moi.Cost,0)as decimal(15,2)) as Cost,
-                            moi.[Status]
-                            From ManufacturingOrderItems moi
-                            left join Operations on Operations.id = moi.OperationId
-                            left join Resources on moi.ResourceId = Resources.id
-                            where Tip='Operations' and moi.OrderId={id} and moi.CompanyId={CompanyId}";
+                            moi.OperasyonId,Operasyonlar.[Isim] as OperasyonIsmi,
+                            moi.KaynakId ,Kaynaklar.[Isim] as KaynakIsmi,
+                            moi.PlanlananZaman,moi.SaatlikUcret,
+                            Cast(ISNULL(moi.Tutar,0)as decimal(15,2)) as Tutar,
+                            moi.[Durum]
+                            From UretimDetay moi
+                            left join Operasyonlar on Operasyonlar.id = moi.OperasyonId
+                            left join Kaynaklar on moi.KaynakId = Kaynaklar.id
+                            where Tip='Operasyonlar' and moi.UretimId={id} ";
             var OperationDetail = await _db.QueryAsync<ManufacturingOrderItemsOperationDetail>(sql);
             return OperationDetail.ToList();
         }
@@ -117,7 +117,7 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@CompanyId", CompanyId);
-            param.Add("location", T.LocationId);
+            param.Add("location", T.DepoId);
             string sql = string.Empty;
             if (KAYITSAYISI == null)
             {
@@ -131,65 +131,65 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
             if (T.BaslangıcTarih == null || T.SonTarih == null)
             {
 
-                if (T.LocationId == null || T.LocationId == 0)
+                if (T.DepoId == null || T.DepoId == 0)
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (Select
-            ManufacturingOrder.id
-            , ManufacturingOrder.[Name], ManufacturingOrder.ItemId,
-			Items.[Name] AS ItemName,ManufacturingOrder.LocationId,Locations.LocationName ,ManufacturingOrder.ExpectedDate,
-            Categories.[Name] as  CategoryName,ISNULL(ManufacturingOrder.CustomerId,0) as CustomerId,
-			ISNULL(Contacts.DisplayName,'') AS Customer,ManufacturingOrder.[Status],
-            ISNULL(ManufacturingOrder.PlannedQuantity,0)as PlannedQuantity,
-            SUM(ISNULL(ManufacturingOrderItems.PlannedTime,0))as PlannedTime,
-			ISNULL(ManufacturingOrder.MaterialCost,0)as MaterialCost,ISNULL(ManufacturingOrder.OperationCost,0) as OperationCost
-			,ISNULL(ManufacturingOrder.TotalCost,0)as TotalCost,ManufacturingOrder.DoneDate
-            from ManufacturingOrder
-            left join ManufacturingOrderItems on ManufacturingOrder.id= ManufacturingOrderItems.OrderId 
-            left join Locations on Locations.id=ManufacturingOrder.LocationId
-            left join Contacts on Contacts.id=ManufacturingOrder.CustomerId
-            inner join Items on Items.id=ManufacturingOrder.ItemId
-            inner join Categories on Categories.id=Items.CategoryId 
-            where ManufacturingOrder.CompanyId=@CompanyId and  ManufacturingOrder.Status=3 and  ManufacturingOrder.IsActive=1 and 
-			(ManufacturingOrderItems.Tip = 'Operations' or  ManufacturingOrderItems.Tip is null or   ManufacturingOrderItems.Tip='Ingredients')
-            Group By ManufacturingOrder.id, ManufacturingOrder.[Name],  ManufacturingOrder.ItemId,
-			ManufacturingOrder.CustomerId,Contacts.DisplayName,ManufacturingOrder.LocationId,ManufacturingOrder.DoneDate,
-			ManufacturingOrder.MaterialCost,ManufacturingOrder.OperationCost,ManufacturingOrder.TotalCost,
-            Locations.LocationName , Items.[Name],Categories.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.[Status],ManufacturingOrder.ExpectedDate) x
-            where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND  ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
-            ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-             ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
-			 and    ISNULL(TotalCost,'') like '%{T.TotalCost}%'
+            Uretim.id
+            , Uretim.[Isim], Uretim.StokId,
+			Urunler.[Isim] AS UrunIsmi,Uretim.DepoId,DepoVeAdresler.Isim ,Uretim.BeklenenTarih,
+            Kategoriler.[Isim] as  KategoriIsmi,ISNULL(Uretim.CariId,0) as CariId,
+			Uretim.[Durum],
+            ISNULL(Uretim.PlanlananMiktar,0)as PlanlananMiktar,
+            SUM(ISNULL(UretimDetay.PlanlananZaman,0))as PlanlananZaman,
+			ISNULL(Uretim.MalzemeFiyati,0)as MalzemeFiyati,ISNULL(Uretim.OperasyonFiyati,0) as OperasyonFiyati
+			,ISNULL(Uretim.ToplamMaliyet,0)as ToplamMaliyet,Uretim.TamamlamaTarihi
+            from Uretim
+            left join UretimDetay on Uretim.id= UretimDetay.UretimId 
+            left join DepoVeAdresler on DepoVeAdresler.id=Uretim.DepoId
+            left join Cari on Cari.CariKod=Uretim.CariId
+            inner join Urunler on Urunler.id=Uretim.StokId
+            inner join Kategoriler on Kategoriler.id=Urunler.KategoriId 
+            where  Uretim.Durum=3 and  Uretim.Aktif=1 and 
+			(UretimDetay.Tip = 'Operasyonlar' or  UretimDetay.Tip is null or   UretimDetay.Tip='Ingredients')
+            Group By Uretim.id, Uretim.[Isim],  Uretim.StokId,
+			Uretim.CariId,Uretim.DepoId,Uretim.TamamlamaTarihi,
+			Uretim.MalzemeFiyati,Uretim.OperasyonFiyati,Uretim.ToplamMaliyet,
+            DepoVeAdresler.Isim , Urunler.[Isim],Kategoriler.[Isim],Uretim.PlanlananMiktar,Uretim.[Durum],Uretim.BeklenenTarih) x
+            where ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%' AND  ISNULL(Isim,'') Like '%{T.Isim}%' AND    ISNULL     (Customer,'') like '%{T.CariAdSoyad}%' and
+            ISNULL(ItemName,'') like '%{T.UrunIsmi}%' and ISNULL(KategoriIsmi,'') like '%{T.KategoriIsmi}%' and ISNULL(PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' and
+             ISNULL(MalzemeFiyati,'') like '%{T.MalzemeFiyati}%' and    ISNULL(OperasyonFiyati,'') like '%{T.OperasyonFiyati}%'
+			 and    ISNULL(ToplamMaliyet,'') like '%{T.ToplamTutar}%'
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
                 }
                 else
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (Select
-            ManufacturingOrder.id, ManufacturingOrder.[Name], ManufacturingOrder.ItemId,
-			Items.[Name] AS ItemName,ManufacturingOrder.LocationId,Locations.LocationName ,ManufacturingOrder.ExpectedDate,
-            Categories.[Name] as  CategoryName,ISNULL(ManufacturingOrder.CustomerId,0) as CustomerId,
-			ISNULL(Contacts.DisplayName,'') AS Customer,ManufacturingOrder.[Status],
-            ISNULL(ManufacturingOrder.PlannedQuantity,0)as PlannedQuantity,
-            SUM(ISNULL(ManufacturingOrderItems.PlannedTime,0))as PlannedTime,
-			ISNULL(ManufacturingOrder.MaterialCost,0)as MaterialCost,ISNULL(ManufacturingOrder.OperationCost,0) as OperationCost
-			,ISNULL(ManufacturingOrder.TotalCost,0)as TotalCost,ManufacturingOrder.DoneDate
-            from ManufacturingOrder
-            left join ManufacturingOrderItems on ManufacturingOrder.id= ManufacturingOrderItems.OrderId 
-            left join Locations on Locations.id=ManufacturingOrder.LocationId
-            left join Contacts on Contacts.id=ManufacturingOrder.CustomerId
-            inner join Items on Items.id=ManufacturingOrder.ItemId
-            inner join Categories on Categories.id=Items.CategoryId 
-            where ManufacturingOrder.CompanyId=@CompanyId and ManufacturingOrder.LocationId=@location and  ManufacturingOrder.Status=3 and  ManufacturingOrder.IsActive=1 and 
-			(ManufacturingOrderItems.Tip = 'Operations' or    ManufacturingOrderItems.Tip is null or   ManufacturingOrderItems.Tip='Ingredients')
-            Group By ManufacturingOrder.id, ManufacturingOrder.[Name],  ManufacturingOrder.ItemId,
-			ManufacturingOrder.CustomerId,Contacts.DisplayName,ManufacturingOrder.LocationId,ManufacturingOrder.DoneDate,
-			ManufacturingOrder.MaterialCost,ManufacturingOrder.OperationCost,ManufacturingOrder.TotalCost,
-            Locations.LocationName , Items.[Name],Categories.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.[Status],ManufacturingOrder.ExpectedDate) x
-			 where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND  ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
-            ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-             ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
-			 and    ISNULL(TotalCost,'') like '%{T.TotalCost}%'
+            Uretim.id, Uretim.[Isim], Uretim.StokId,
+			Urunler.[Isim] AS ItemName,Uretim.DepoId,DepoVeAdresler.Isim ,Uretim.BeklenenTarih,
+            Kategoriler.[Isim] as  KategoriIsmi,ISNULL(Uretim.CariId,0) as CariId,
+			ISNULL(Cari.DisplayName,'') AS Customer,Uretim.[Durum],
+            ISNULL(Uretim.PlanlananMiktar,0)as PlanlananMiktar,
+            SUM(ISNULL(UretimDetay.PlanlananZaman,0))as PlanlananZaman,
+			ISNULL(Uretim.MalzemeFiyati,0)as MalzemeFiyati,ISNULL(Uretim.OperasyonFiyati,0) as OperasyonFiyati
+			,ISNULL(Uretim.ToplamMaliyet,0)as ToplamMaliyet,Uretim.TamamlamaTarihi
+            from Uretim
+            left join UretimDetay on Uretim.id= UretimDetay.OrderId 
+            left join DepoVeAdresler on DepoVeAdresler.id=Uretim.DepoId
+            left join Cari on Cari.CariKod=Uretim.CariId
+            inner join Urunler on Urunler.id=Uretim.StokId
+            inner join Kategoriler on Kategoriler.id=Urunler.KategoriId 
+            whereUretim.DepoId=@location and  Uretim.Durum=3 and  Uretim.Aktif=1 and 
+			(UretimDetay.Tip = 'Operasyonlar' or    UretimDetay.Tip is null or   UretimDetay.Tip='Ingredients')
+            Group By Uretim.id, Uretim.[Isim],  Uretim.StokId,
+			Uretim.CariId,Cari.DisplayName,Uretim.DepoId,Uretim.TamamlamaTarihi,
+			Uretim.MalzemeFiyati,Uretim.OperasyonFiyati,Uretim.ToplamMaliyet,
+            DepoVeAdresler.Isim , Urunler.[Isim],Kategoriler.[Isim],Uretim.PlanlananMiktar,Uretim.[Durum],Uretim.BeklenenTarih) x
+			 where ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%' AND  ISNULL(Isim,'') Like '%{T.Isim}%' AND    ISNULL     (Customer,'') like '%{T.CariAdSoyad}%' and
+            ISNULL(ItemName,'') like '%{T.UrunIsmi}%' and ISNULL(KategoriIsmi,'') like '%{T.KategoriIsmi}%' and ISNULL(PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' and
+             ISNULL(MalzemeFiyati,'') like '%{T.MalzemeFiyati}%' and    ISNULL(OperasyonFiyati,'') like '%{T.OperasyonFiyati}%'
+			 and    ISNULL(ToplamMaliyet,'') like '%{T.ToplamTutar}%'
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
                 }
                 var ScheludeOpenDoneList = await _db.QueryAsync<ManufacturingOrderDoneList>(sql, param);
@@ -200,65 +200,65 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
             {
                 var ilkgun = T.BaslangıcTarih.ToString();
                 var songun = T.SonTarih.ToString();
-                if (T.LocationId == null || T.LocationId == 0)
+                if (T.DepoId == null || T.DepoId == 0)
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (Select
-            ManufacturingOrder.id
-            , ManufacturingOrder.[Name], ManufacturingOrder.ItemId,
-			Items.[Name] AS ItemName,ManufacturingOrder.LocationId,Locations.LocationName ,ManufacturingOrder.ExpectedDate,
-            Categories.[Name] as  CategoryName,ISNULL(ManufacturingOrder.CustomerId,0) as CustomerId,
-			ISNULL(Contacts.DisplayName,'') AS Customer,ManufacturingOrder.[Status],
-            ISNULL(ManufacturingOrder.PlannedQuantity,0)as PlannedQuantity,
-            SUM(ISNULL(ManufacturingOrderItems.PlannedTime,0))as PlannedTime,
-			ISNULL(ManufacturingOrder.MaterialCost,0)as MaterialCost,ISNULL(ManufacturingOrder.OperationCost,0) as OperationCost
-			,ISNULL(ManufacturingOrder.TotalCost,0)as TotalCost,ManufacturingOrder.DoneDate
-            from ManufacturingOrder
-            left join ManufacturingOrderItems on ManufacturingOrder.id= ManufacturingOrderItems.OrderId 
-            left join Locations on Locations.id=ManufacturingOrder.LocationId
-            left join Contacts on Contacts.id=ManufacturingOrder.CustomerId
-            inner join Items on Items.id=ManufacturingOrder.ItemId
-            inner join Categories on Categories.id=Items.CategoryId 
-            where ManufacturingOrder.CompanyId=@CompanyId and  ManufacturingOrder.Status=3 and  ManufacturingOrder.IsActive=1 and 
-			(ManufacturingOrderItems.Tip = 'Operations' or  ManufacturingOrderItems.Tip is null or   ManufacturingOrderItems.Tip='Ingredients')
-            Group By ManufacturingOrder.id, ManufacturingOrder.[Name],  ManufacturingOrder.ItemId,
-			ManufacturingOrder.CustomerId,Contacts.DisplayName,ManufacturingOrder.LocationId,ManufacturingOrder.DoneDate,
-			ManufacturingOrder.MaterialCost,ManufacturingOrder.OperationCost,ManufacturingOrder.TotalCost,
-            Locations.LocationName , Items.[Name],Categories.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.[Status],ManufacturingOrder.ExpectedDate) x
-            where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND  ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
-            ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-             ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
-			 and    ISNULL(TotalCost,'') like '%{T.TotalCost}%' and x.DoneDate BETWEEN '{ilkgun}' and '{songun}'
+            Uretim.id
+            , Uretim.[Isim], Uretim.StokId,
+			Urunler.[Isim] AS ItemName,Uretim.DepoId,DepoVeAdresler.Isim ,Uretim.BeklenenTarih,
+            Kategoriler.[Isim] as  KategoriIsmi,ISNULL(Uretim.CariId,0) as CariId,
+			ISNULL(Cari.DisplayName,'') AS Customer,Uretim.[Durum],
+            ISNULL(Uretim.PlanlananMiktar,0)as PlanlananMiktar,
+            SUM(ISNULL(UretimDetay.PlanlananZaman,0))as PlanlananZaman,
+			ISNULL(Uretim.MalzemeFiyati,0)as MalzemeFiyati,ISNULL(Uretim.OperasyonFiyati,0) as OperasyonFiyati
+			,ISNULL(Uretim.ToplamMaliyet,0)as ToplamMaliyet,Uretim.TamamlamaTarihi
+            from Uretim
+            left join UretimDetay on Uretim.id= UretimDetay.OrderId 
+            left join DepoVeAdresler on DepoVeAdresler.id=Uretim.DepoId
+            left join Cari on Cari.CariKod=Uretim.CariId
+            inner join Urunler on Urunler.id=Uretim.StokId
+            inner join Kategoriler on Kategoriler.id=Urunler.KategoriId 
+            where  Uretim.Durum=3 and  Uretim.Aktif=1 and 
+			(UretimDetay.Tip = 'Operasyonlar' or  UretimDetay.Tip is null or   UretimDetay.Tip='Ingredients')
+            Group By Uretim.id, Uretim.[Isim],  Uretim.StokId,
+			Uretim.CariId,Cari.DisplayName,Uretim.DepoId,Uretim.TamamlamaTarihi,
+			Uretim.MalzemeFiyati,Uretim.OperasyonFiyati,Uretim.ToplamMaliyet,
+            DepoVeAdresler.Isim , Urunler.[Isim],Kategoriler.[Isim],Uretim.PlanlananMiktar,Uretim.[Durum],Uretim.BeklenenTarih) x
+            where ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%' AND  ISNULL(Isim,'') Like '%{T.Isim}%' AND    ISNULL     (Customer,'') like '%{T.CariAdSoyad}%' and
+            ISNULL(ItemName,'') like '%{T.UrunIsmi}%' and ISNULL(KategoriIsmi,'') like '%{T.KategoriIsmi}%' and ISNULL(PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' and
+             ISNULL(MalzemeFiyati,'') like '%{T.MalzemeFiyati}%' and    ISNULL(OperasyonFiyati,'') like '%{T.OperasyonFiyati}%'
+			 and    ISNULL(ToplamMaliyet,'') like '%{T.ToplamTutar}%' and x.TamamlamaTarihi BETWEEN '{ilkgun}' and '{songun}'
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
                 }
                 else
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (Select
-            ManufacturingOrder.id, ManufacturingOrder.[Name], ManufacturingOrder.ItemId,
-			Items.[Name] AS ItemName,ManufacturingOrder.LocationId,Locations.LocationName ,ManufacturingOrder.ExpectedDate,
-            Categories.[Name] as  CategoryName,ISNULL(ManufacturingOrder.CustomerId,0) as CustomerId,
-			ISNULL(Contacts.DisplayName,'') AS Customer,ManufacturingOrder.[Status],
-            ISNULL(ManufacturingOrder.PlannedQuantity,0)as PlannedQuantity,
-            SUM(ISNULL(ManufacturingOrderItems.PlannedTime,0))as PlannedTime,
-			ISNULL(ManufacturingOrder.MaterialCost,0)as MaterialCost,ISNULL(ManufacturingOrder.OperationCost,0) as OperationCost
-			,ISNULL(ManufacturingOrder.TotalCost,0)as TotalCost,ManufacturingOrder.DoneDate
-            from ManufacturingOrder
-            left join ManufacturingOrderItems on ManufacturingOrder.id= ManufacturingOrderItems.OrderId 
-            left join Locations on Locations.id=ManufacturingOrder.LocationId
-            left join Contacts on Contacts.id=ManufacturingOrder.CustomerId
-            inner join Items on Items.id=ManufacturingOrder.ItemId
-            inner join Categories on Categories.id=Items.CategoryId 
-            where ManufacturingOrder.CompanyId=@CompanyId and ManufacturingOrder.LocationId=@location and  ManufacturingOrder.Status=3 and  ManufacturingOrder.IsActive=1 and 
-			(ManufacturingOrderItems.Tip = 'Operations' or    ManufacturingOrderItems.Tip is null or   ManufacturingOrderItems.Tip='Ingredients')
-            Group By ManufacturingOrder.id, ManufacturingOrder.[Name],  ManufacturingOrder.ItemId,
-			ManufacturingOrder.CustomerId,Contacts.DisplayName,ManufacturingOrder.LocationId,ManufacturingOrder.DoneDate,
-			ManufacturingOrder.MaterialCost,ManufacturingOrder.OperationCost,ManufacturingOrder.TotalCost,
-            Locations.LocationName , Items.[Name],Categories.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.[Status],ManufacturingOrder.ExpectedDate) x
-			 where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND  ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
-            ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-             ISNULL(MaterialCost,'') like '%{T.MaterialCost}%' and    ISNULL(OperationCost,'') like '%{T.OperationCost}%'
-			 and    ISNULL(TotalCost,'') like '%{T.TotalCost}%' and x.DoneDate BETWEEN '{ilkgun}' and '{songun}'
+            Uretim.id, Uretim.[Isim], Uretim.StokId,
+			Urunler.[Isim] AS ItemName,Uretim.DepoId,DepoVeAdresler.Isim ,Uretim.BeklenenTarih,
+            Kategoriler.[Isim] as  KategoriIsmi,ISNULL(Uretim.CariId,0) as CariId,
+			ISNULL(Cari.DisplayName,'') AS Customer,Uretim.[Durum],
+            ISNULL(Uretim.PlanlananMiktar,0)as PlanlananMiktar,
+            SUM(ISNULL(UretimDetay.PlanlananZaman,0))as PlanlananZaman,
+			ISNULL(Uretim.MalzemeFiyati,0)as MalzemeFiyati,ISNULL(Uretim.OperasyonFiyati,0) as OperasyonFiyati
+			,ISNULL(Uretim.ToplamMaliyet,0)as ToplamMaliyet,Uretim.TamamlamaTarihi
+            from Uretim
+            left join UretimDetay on Uretim.id= UretimDetay.OrderId 
+            left join DepoVeAdresler on DepoVeAdresler.id=Uretim.DepoId
+            left join Cari on Cari.CariKod=Uretim.CariId
+            inner join Urunler on Urunler.id=Uretim.StokId
+            inner join Kategoriler on Kategoriler.id=Urunler.KategoriId 
+            where Uretim.DepoId=@location and  Uretim.Durum=3 and  Uretim.Aktif=1 and 
+			(UretimDetay.Tip = 'Operasyonlar' or    UretimDetay.Tip is null or   UretimDetay.Tip='Ingredients')
+            Group By Uretim.id, Uretim.[Isim],  Uretim.StokId,
+			Uretim.CariId,Cari.DisplayName,Uretim.DepoId,Uretim.TamamlamaTarihi,
+			Uretim.MalzemeFiyati,Uretim.OperasyonFiyati,Uretim.ToplamMaliyet,
+            DepoVeAdresler.Isim , Urunler.[Isim],Kategoriler.[Isim],Uretim.PlanlananMiktar,Uretim.[Durum],Uretim.BeklenenTarih) x
+			 where ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%' AND  ISNULL(Isim,'') Like '%{T.Isim}%' AND    ISNULL     (Customer,'') like '%{T.CariAdSoyad}%' and
+            ISNULL(ItemName,'') like '%{T.UrunIsmi}%' and ISNULL(KategoriIsmi,'') like '%{T.KategoriIsmi}%' and ISNULL(PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' and
+             ISNULL(MalzemeFiyati,'') like '%{T.MalzemeFiyati}%' and    ISNULL(OperasyonFiyati,'') like '%{T.OperasyonFiyati}%'
+			 and    ISNULL(ToplamMaliyet,'') like '%{T.ToplamTutar}%' and x.TamamlamaTarihi BETWEEN '{ilkgun}' and '{songun}'
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
                 }
                 var ScheludeOpenDoneList = await _db.QueryAsync<ManufacturingOrderDoneList>(sql, param);
@@ -275,7 +275,7 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@CompanyId", CompanyId);
-            param.Add("location", T.LocationId);
+            param.Add("location", T.DepoId);
             string sql = string.Empty;
 
             if (KAYITSAYISI == null)
@@ -289,29 +289,29 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
 
             if (T.BaslangıcTarih == null || T.SonTarih == null)
             {
-                if (T.LocationId == null || T.LocationId == 0)
+                if (T.DepoId == null || T.DepoId == 0)
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (Select
-            ManufacturingOrder.id,ManufacturingOrder.ExpectedDate, ManufacturingOrder.[Name], ManufacturingOrder.ItemId, Items.[Name] AS            ItemName,ManufacturingOrder.LocationId,Locations.LocationName ,
-            ISNULL(Categories.[Name],'') as  CategoryName,ISNULL(ManufacturingOrder.CustomerId,0) as CustomerId,ISNULL     (Contacts.DisplayName,'')    AS Customer,ManufacturingOrder.[Status],
-            ISNULL(ManufacturingOrder.PlannedQuantity,0)as PlannedQuantity,
-            SUM(ISNULL(ManufacturingOrderItems.PlannedTime,0))as PlannedTime,
-            ISNULL(ManufacturingOrder.ProductionDeadline,'') as ProductDeadline,
-            ISNULL(min(ManufacturingOrderItems.Availability),0) as Availability
-            from ManufacturingOrder
-            left join ManufacturingOrderItems on ManufacturingOrder.id= ManufacturingOrderItems.OrderId 
-            left join Locations on Locations.id=ManufacturingOrder.LocationId
-            left join Contacts on Contacts.id=ManufacturingOrder.CustomerId
-            left join Items on Items.id=ManufacturingOrder.ItemId
-            left join Categories on Categories.id=Items.CategoryId 
-            where ManufacturingOrder.CompanyId=@CompanyId and ManufacturingOrder.IsActive=1 and   ManufacturingOrder.Status!=3 and (ManufacturingOrderItems.Tip = 'Operations' or    ManufacturingOrderItems.Tip is null or   ManufacturingOrderItems.Tip='Ingredients')
-            Group By ManufacturingOrder.id, ManufacturingOrder.[Name], ManufacturingOrder.ItemId,ManufacturingOrder.CustomerId,Contacts.DisplayName,ManufacturingOrder.LocationId,
-            Locations.LocationName ,ManufacturingOrder.ExpectedDate,
-            Items.[Name],Categories.            [Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.ProductionDeadline,ManufacturingOrder.[Status]) x
-            where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND ISNULL(Availability,0) like '%{T.Availability}%' and ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
-            ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' 
-            and ISNULL(Status,'') like '%{T.Status}%' 
+            Uretim.id,Uretim.BeklenenTarih, Uretim.[Isim], Uretim.StokId, Urunler.[Isim] AS            ItemName,Uretim.DepoId,DepoVeAdresler.Isim ,
+            ISNULL(Kategoriler.[Isim],'') as  KategoriIsmi,ISNULL(Uretim.CariId,0) as CariId,ISNULL     (Cari.DisplayName,'')    AS Customer,Uretim.[Durum],
+            ISNULL(Uretim.PlanlananMiktar,0)as PlanlananMiktar,
+            SUM(ISNULL(UretimDetay.PlanlananZaman,0))as PlanlananZaman,
+            ISNULL(Uretim.ProductionDeadline,'') as ProductDeadline,
+            ISNULL(min(UretimDetay.MalzemeDurum),0) as MalzemeDurum
+            from Uretim
+            left join UretimDetay on Uretim.id= UretimDetay.OrderId 
+            left join DepoVeAdresler on DepoVeAdresler.id=Uretim.DepoId
+            left join Cari on Cari.CariKod=Uretim.CariId
+            left join Urunler on Urunler.id=Uretim.StokId
+            left join Kategoriler on Kategoriler.id=Urunler.KategoriId 
+            where  Uretim.Aktif=1 and   Uretim.Durum!=3 and (UretimDetay.Tip = 'Operasyonlar' or    UretimDetay.Tip is null or   UretimDetay.Tip='Ingredients')
+            Group By Uretim.id, Uretim.[Isim], Uretim.StokId,Uretim.CariId,Cari.DisplayName,Uretim.DepoId,
+            DepoVeAdresler.Isim ,Uretim.BeklenenTarih,
+            Urunler.[Isim],Kategoriler.            [Isim],Uretim.PlanlananMiktar,Uretim.ProductionDeadline,Uretim.[Durum]) x
+            where ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%' AND ISNULL(MalzemeDurum,0) like '%{T.MalzemeDurumu}%' and ISNULL(Isim,'') Like '%{T.Isim}%' AND    ISNULL     (Customer,'') like '%{T.CariAdSoyAd}%' and
+            ISNULL(ItemName,'') like '%{T.UrunIsmi}%' and ISNULL(KategoriIsmi,'') like '%{T.KategoriIsmi}%' and ISNULL(PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' 
+            and ISNULL(Durum,'') like '%{T.Durum}%' 
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;
                         ";
                 }
@@ -319,25 +319,25 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (Select
-            ManufacturingOrder.id,ManufacturingOrder.ExpectedDate, ManufacturingOrder.[Name], ManufacturingOrder.ItemId, Items.[Name] AS            ItemName,ManufacturingOrder.LocationId,Locations.LocationName ,
-            ISNULL(Categories.[Name],'') as  CategoryName,ISNULL(ManufacturingOrder.CustomerId,0) as CustomerId,ISNULL     (Contacts.DisplayName,'')    AS Customer,ManufacturingOrder.[Status],
-            ISNULL(ManufacturingOrder.PlannedQuantity,0)as PlannedQuantity,
-            SUM(ISNULL(ManufacturingOrderItems.PlannedTime,0))as PlannedTime,
-            ISNULL(ManufacturingOrder.ProductionDeadline,'') as ProductDeadline,
-            ISNULL(min(ManufacturingOrderItems.Availability),0) as Availability
-            from ManufacturingOrder
-            left join ManufacturingOrderItems on ManufacturingOrder.id= ManufacturingOrderItems.OrderId 
-            left join Locations on Locations.id=ManufacturingOrder.LocationId
-            left join Contacts on Contacts.id=ManufacturingOrder.CustomerId
-            left join Items on Items.id=ManufacturingOrder.ItemId
-            left join Categories on Categories.id=Items.CategoryId 
-            where ManufacturingOrder.CompanyId=@CompanyId and ManufacturingOrder.IsActive=1 and ManufacturingOrder.LocationId=@location and       ManufacturingOrder.Status!=3 and (ManufacturingOrderItems.Tip = 'Operations' or    ManufacturingOrderItems.Tip is null or   ManufacturingOrderItems.Tip='Ingredients')
-            Group By ManufacturingOrder.id, ManufacturingOrder.[Name],          ManufacturingOrder.ItemId,ManufacturingOrder.CustomerId,Contacts.DisplayName,ManufacturingOrder.LocationId,
-            Locations.LocationName ,ManufacturingOrder.ExpectedDate,
-            Items.[Name],Categories.            [Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.ProductionDeadline,ManufacturingOrder.[Status]) x
-            where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND ISNULL(Availability,0) like '%{T.Availability}%' and ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
-            ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-            ISNULL(Status,'') like '%{T.Status}%' 
+            Uretim.id,Uretim.BeklenenTarih, Uretim.[Isim], Uretim.StokId, Urunler.[Isim] AS            ItemName,Uretim.DepoId,DepoVeAdresler.Isim ,
+            ISNULL(Kategoriler.[Isim],'') as  KategoriIsmi,ISNULL(Uretim.CariId,0) as CariId,ISNULL     (Cari.DisplayName,'')    AS Customer,Uretim.[Durum],
+            ISNULL(Uretim.PlanlananMiktar,0)as PlanlananMiktar,
+            SUM(ISNULL(UretimDetay.PlanlananZaman,0))as PlanlananZaman,
+            ISNULL(Uretim.ProductionDeadline,'') as ProductDeadline,
+            ISNULL(min(UretimDetay.MalzemeDurum),0) as MalzemeDurum
+            from Uretim
+            left join UretimDetay on Uretim.id= UretimDetay.OrderId 
+            left join DepoVeAdresler on DepoVeAdresler.id=Uretim.DepoId
+            left join Cari on Cari.CariKod=Uretim.CariId
+            left join Urunler on Urunler.id=Uretim.StokId
+            left join Kategoriler on Kategoriler.id=Urunler.KategoriId 
+            where  Uretim.Aktif=1 and Uretim.DepoId=@location and       Uretim.Durum!=3 and (UretimDetay.Tip = 'Operasyonlar' or    UretimDetay.Tip is null or   UretimDetay.Tip='Ingredients')
+            Group By Uretim.id, Uretim.[Isim],          Uretim.StokId,Uretim.CariId,Cari.DisplayName,Uretim.DepoId,
+            DepoVeAdresler.Isim ,Uretim.BeklenenTarih,
+            Urunler.[Isim],Kategoriler.            [Isim],Uretim.PlanlananMiktar,Uretim.ProductionDeadline,Uretim.[Durum]) x
+            where ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%' AND ISNULL(MalzemeDurum,0) like '%{T.MalzemeDurumu}%' and ISNULL(Isim,'') Like '%{T.Isim}%' AND    ISNULL     (Customer,'') like '%{T.CariAdSoyAd}%' and
+            ISNULL(ItemName,'') like '%{T.UrunIsmi}%' and ISNULL(KategoriIsmi,'') like '%{T.KategoriIsmi}%' and ISNULL(PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' and
+            ISNULL(Durum,'') like '%{T.Durum}%' 
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;
                         ";
                 }
@@ -346,29 +346,29 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
             {
                 var ilkgun = T.BaslangıcTarih.ToString();
                 var songun = T.SonTarih.ToString();
-                if (T.LocationId == null || T.LocationId == 0)
+                if (T.DepoId == null || T.DepoId == 0)
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (Select
-            ManufacturingOrder.id,ManufacturingOrder.ExpectedDate, ManufacturingOrder.[Name], ManufacturingOrder.ItemId, Items.[Name] AS            ItemName,ManufacturingOrder.LocationId,Locations.LocationName ,
-            ISNULL(Categories.[Name],'') as  CategoryName,ISNULL(ManufacturingOrder.CustomerId,0) as CustomerId,ISNULL     (Contacts.DisplayName,'')    AS Customer,ManufacturingOrder.[Status],
-            ISNULL(ManufacturingOrder.PlannedQuantity,0)as PlannedQuantity,
-            SUM(ISNULL(ManufacturingOrderItems.PlannedTime,0))as PlannedTime,
-            ISNULL(ManufacturingOrder.ProductionDeadline,'') as ProductDeadline,
-            ISNULL(min(ManufacturingOrderItems.Availability),0) as Availability
-            from ManufacturingOrder
-            left join ManufacturingOrderItems on ManufacturingOrder.id= ManufacturingOrderItems.OrderId 
-            left join Locations on Locations.id=ManufacturingOrder.LocationId
-            left join Contacts on Contacts.id=ManufacturingOrder.CustomerId
-            left join Items on Items.id=ManufacturingOrder.ItemId
-            left join Categories on Categories.id=Items.CategoryId 
-            where ManufacturingOrder.CompanyId=@CompanyId and ManufacturingOrder.IsActive=1 and   ManufacturingOrder.Status!=3 and (ManufacturingOrderItems.Tip = 'Operations' or    ManufacturingOrderItems.Tip is null or   ManufacturingOrderItems.Tip='Ingredients')
-            Group By ManufacturingOrder.id, ManufacturingOrder.[Name], ManufacturingOrder.ItemId,ManufacturingOrder.CustomerId,Contacts.DisplayName,ManufacturingOrder.LocationId,
-            Locations.LocationName ,ManufacturingOrder.ExpectedDate,
-            Items.[Name],Categories.            [Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.ProductionDeadline,ManufacturingOrder.[Status]) x
-            where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND ISNULL(Availability,0) like '%{T.Availability}%' and ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
-            ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' 
-            and ISNULL(Status,'') like '%{T.Status}%'  and x.ExpectedDate BETWEEN '{ilkgun}' and '{songun}'
+            Uretim.id,Uretim.BeklenenTarih, Uretim.[Isim], Uretim.StokId, Urunler.[Isim] AS            ItemName,Uretim.DepoId,DepoVeAdresler.Isim ,
+            ISNULL(Kategoriler.[Isim],'') as  KategoriIsmi,ISNULL(Uretim.CariId,0) as CariId,ISNULL     (Cari.DisplayName,'')    AS Customer,Uretim.[Durum],
+            ISNULL(Uretim.PlanlananMiktar,0)as PlanlananMiktar,
+            SUM(ISNULL(UretimDetay.PlanlananZaman,0))as PlanlananZaman,
+            ISNULL(Uretim.ProductionDeadline,'') as ProductDeadline,
+            ISNULL(min(UretimDetay.MalzemeDurum),0) as MalzemeDurum
+            from Uretim
+            left join UretimDetay on Uretim.id= UretimDetay.OrderId 
+            left join DepoVeAdresler on DepoVeAdresler.id=Uretim.DepoId
+            left join Cari on Cari.CariKod=Uretim.CariId
+            left join Urunler on Urunler.id=Uretim.StokId
+            left join Kategoriler on Kategoriler.id=Urunler.KategoriId 
+            where  Uretim.Aktif=1 and   Uretim.Durum!=3 and (UretimDetay.Tip = 'Operasyonlar' or    UretimDetay.Tip is null or   UretimDetay.Tip='Ingredients')
+            Group By Uretim.id, Uretim.[Isim], Uretim.StokId,Uretim.CariId,Cari.DisplayName,Uretim.DepoId,
+            DepoVeAdresler.Isim ,Uretim.BeklenenTarih,
+            Urunler.[Isim],Kategoriler.            [Isim],Uretim.PlanlananMiktar,Uretim.ProductionDeadline,Uretim.[Durum]) x
+            where ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%' AND ISNULL(MalzemeDurum,0) like '%{T.MalzemeDurumu}%' and ISNULL(Isim,'') Like '%{T.Isim}%' AND    ISNULL     (Customer,'') like '%{T.CariAdSoyAd}%' and
+            ISNULL(ItemName,'') like '%{T.UrunIsmi}%' and ISNULL(KategoriIsmi,'') like '%{T.KategoriIsmi}%' and ISNULL(PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' 
+            and ISNULL(Durum,'') like '%{T.Durum}%'  and x.BeklenenTarih BETWEEN '{ilkgun}' and '{songun}'
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;
                         ";
                 }
@@ -376,25 +376,25 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (Select
-            ManufacturingOrder.id,ManufacturingOrder.ExpectedDate, ManufacturingOrder.[Name], ManufacturingOrder.ItemId, Items.[Name] AS            ItemName,ManufacturingOrder.LocationId,Locations.LocationName ,
-            ISNULL(Categories.[Name],'') as  CategoryName,ISNULL(ManufacturingOrder.CustomerId,0) as CustomerId,ISNULL     (Contacts.DisplayName,'')    AS Customer,ManufacturingOrder.[Status],
-            ISNULL(ManufacturingOrder.PlannedQuantity,0)as PlannedQuantity,
-            SUM(ISNULL(ManufacturingOrderItems.PlannedTime,0))as PlannedTime,
-            ISNULL(ManufacturingOrder.ProductionDeadline,'') as ProductDeadline,
-            ISNULL(min(ManufacturingOrderItems.Availability),0) as Availability
-            from ManufacturingOrder
-            left join ManufacturingOrderItems on ManufacturingOrder.id= ManufacturingOrderItems.OrderId 
-            left join Locations on Locations.id=ManufacturingOrder.LocationId
-            left join Contacts on Contacts.id=ManufacturingOrder.CustomerId
-            left join Items on Items.id=ManufacturingOrder.ItemId
-            left join Categories on Categories.id=Items.CategoryId 
-            where ManufacturingOrder.CompanyId=@CompanyId and ManufacturingOrder.IsActive=1 and ManufacturingOrder.LocationId=@location and       ManufacturingOrder.Status!=3 and (ManufacturingOrderItems.Tip = 'Operations' or    ManufacturingOrderItems.Tip is null or   ManufacturingOrderItems.Tip='Ingredients')
-            Group By ManufacturingOrder.id, ManufacturingOrder.[Name],          ManufacturingOrder.ItemId,ManufacturingOrder.CustomerId,Contacts.DisplayName,ManufacturingOrder.LocationId,
-            Locations.LocationName ,ManufacturingOrder.ExpectedDate,
-            Items.[Name],Categories.            [Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrder.ProductionDeadline,ManufacturingOrder.[Status]) x
-            where ISNULL(PlannedTime,0) like '%{T.PlannedTime}%' AND ISNULL(Availability,0) like '%{T.Availability}%' and ISNULL(Name,'') Like '%{T.Name}%' AND    ISNULL     (Customer,'') like '%{T.Customer}%' and
-            ISNULL(ItemName,'') like '%{T.ItemName}%' and ISNULL(CategoryName,'') like '%{T.CategoryName}%' and ISNULL(PlannedQuantity,'') like '%{T.PlannedQuantity}%' and
-            ISNULL(Status,'') like '%{T.Status}%'   and x.ExpectedDate BETWEEN '{ilkgun}' and '{songun}'
+            Uretim.id,Uretim.BeklenenTarih, Uretim.[Isim], Uretim.StokId, Urunler.[Isim] AS            ItemName,Uretim.DepoId,DepoVeAdresler.Isim ,
+            ISNULL(Kategoriler.[Isim],'') as  KategoriIsmi,ISNULL(Uretim.CariId,0) as CariId,ISNULL     (Cari.DisplayName,'')    AS Customer,Uretim.[Durum],
+            ISNULL(Uretim.PlanlananMiktar,0)as PlanlananMiktar,
+            SUM(ISNULL(UretimDetay.PlanlananZaman,0))as PlanlananZaman,
+            ISNULL(Uretim.ProductionDeadline,'') as ProductDeadline,
+            ISNULL(min(UretimDetay.MalzemeDurum),0) as MalzemeDurum
+            from Uretim
+            left join UretimDetay on Uretim.id= UretimDetay.OrderId 
+            left join DepoVeAdresler on DepoVeAdresler.id=Uretim.DepoId
+            left join Cari on Cari.CariKod=Uretim.CariId
+            left join Urunler on Urunler.id=Uretim.StokId
+            left join Kategoriler on Kategoriler.id=Urunler.KategoriId 
+            where  Uretim.Aktif=1 and Uretim.DepoId=@location and       Uretim.Durum!=3 and (UretimDetay.Tip = 'Operasyonlar' or    UretimDetay.Tip is null or   UretimDetay.Tip='Ingredients')
+            Group By Uretim.id, Uretim.[Isim],          Uretim.StokId,Uretim.CariId,Cari.DisplayName,Uretim.DepoId,
+            DepoVeAdresler.Isim ,Uretim.BeklenenTarih,
+            Urunler.[Isim],Kategoriler.            [Isim],Uretim.PlanlananMiktar,Uretim.ProductionDeadline,Uretim.[Durum]) x
+            where ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%' AND ISNULL(MalzemeDurum,0) like '%{T.MalzemeDurumu}%' and ISNULL(Isim,'') Like '%{T.Isim}%' AND    ISNULL     (Customer,'') like '%{T.CariAdSoyAd}%' and
+            ISNULL(ItemName,'') like '%{T.UrunIsmi}%' and ISNULL(KategoriIsmi,'') like '%{T.KategoriIsmi}%' and ISNULL(PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' and
+            ISNULL(Durum,'') like '%{T.Durum}%'   and x.BeklenenTarih BETWEEN '{ilkgun}' and '{songun}'
             ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;
                         ";
                 }
@@ -413,43 +413,43 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@CompanyId", CompanyId);
-            param.Add("@LocationId", T.LocationId);
+            param.Add("@DepoId", T.DepoId);
             string sql = string.Empty;
-            if (T.LocationId == null)
+            if (T.DepoId == null)
             {
                 sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
              select x.* from(
-        select ManufacturingOrderItems.id as id,ManufacturingOrder.id as ManufacturingOrderId ,ManufacturingOrderItems.ResourceId,Resources.[Name]as ResourcesName,ManufacturingOrder.[Name]as OrderName,ManufacturingOrder.ProductionDeadline,ManufacturingOrder.ItemId,ManufacturingOrderItems.CompletedDate, 
-        Items.[Name]as ItemName,ManufacturingOrder.PlannedQuantity,ManufacturingOrderItems.OperationId,Operations.[Name]as OperationName,ManufacturingOrderItems.PlannedTime,ManufacturingOrderItems.[Status] from ManufacturingOrderItems
-        left join ManufacturingOrder on ManufacturingOrder.id=ManufacturingOrderItems.OrderId
-        left join Items on Items.id=ManufacturingOrder.ItemId
-        left join Resources on Resources.id=ManufacturingOrderItems.ResourceId
-        left join Operations on Operations.id=ManufacturingOrderItems.OperationId 
-        where ManufacturingOrderItems.CompanyId=@CompanyId and ManufacturingOrder.id=ManufacturingOrderItems.OrderId and ManufacturingOrderItems.Status=3  and 
-        ISNULL(PlannedTime,0) like '%{T.PlannedTime}%'  and ISNULL(Resources.Name,'') Like '%{T.ResourcesName}%' AND    ISNULL(ManufacturingOrder.Name,'') like '%{T.OrderName}%' and
-        ISNULL(Items.Name,'') like '%{T.ItemName}%' and ISNULL(ManufacturingOrder.PlannedQuantity,'') like '%{T.PlannedQuantity}%' and ISNULL(Operations.Name,'') like '%{T.OperationName}%' 
+        select UretimDetay.id as id,Uretim.id as UretimId ,UretimDetay.KaynakId,Kaynaklar.[Isim]as ResourcesName,Uretim.[Isim]as OrderName,Uretim.ProductionDeadline,Uretim.StokId,UretimDetay.CompletedDate, 
+        Urunler.[Isim]as ItemName,Uretim.PlanlananMiktar,UretimDetay.OperasyonId,Operasyonlar.[Isim]as OperationName,UretimDetay.PlanlananZaman,UretimDetay.[Durum] from UretimDetay
+        left join Uretim on Uretim.id=UretimDetay.OrderId
+        left join Urunler on Urunler.id=Uretim.StokId
+        left join Kaynaklar on Kaynaklar.id=UretimDetay.KaynakId
+        left join Operasyonlar on Operasyonlar.id=UretimDetay.OperasyonId 
+        where Uretim.id=UretimDetay.UretimId and UretimDetay.Durum=3  and 
+        ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%'  and ISNULL(Kaynaklar.Isim,'') Like '%{T.KaynakIsmi}%' AND    ISNULL(Uretim.Isim,'') like '%{T.UretimIsmi}%' and
+        ISNULL(Urunler.Isim,'') like '%{T.UrunIsmi}%' and ISNULL(Uretim.PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' and ISNULL(Operasyonlar.Isim,'') like '%{T.OperasyonIsmi}%' 
        
-        Group By ManufacturingOrder.id,ManufacturingOrderItems.id,ManufacturingOrderItems.ResourceId,Resources.[Name],ManufacturingOrder.[Name],ManufacturingOrder.ProductionDeadline,ManufacturingOrder.ItemId,ManufacturingOrderItems.CompletedDate,
-        Items.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrderItems.OperationId,Operations.[Name],ManufacturingOrderItems.PlannedTime,ManufacturingOrderItems.[Status])x
-        ORDER BY x.ResourceId OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
+        Group By Uretim.id,UretimDetay.id,UretimDetay.KaynakId,Kaynaklar.[Isim],Uretim.[Isim],Uretim.ProductionDeadline,Uretim.StokId,UretimDetay.CompletedDate,
+        Urunler.[Isim],Uretim.PlanlananMiktar,UretimDetay.OperasyonId,Operasyonlar.[Isim],UretimDetay.PlanlananZaman,UretimDetay.[Durum])x
+        ORDER BY x.KaynakId OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
             }
             else
             {
                 sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
              select x.* from(
-        select ManufacturingOrderItems.id as id,ManufacturingOrder.id as ManufacturingOrderId ,ManufacturingOrderItems.ResourceId,Resources.[Name]as ResourcesName,ManufacturingOrder.[Name]as OrderName,ManufacturingOrder.ProductionDeadline,ManufacturingOrder.ItemId,ManufacturingOrderItems.CompletedDate, 
-        Items.[Name]as ItemName,ManufacturingOrder.PlannedQuantity,ManufacturingOrderItems.OperationId,Operations.[Name]as OperationName,ManufacturingOrderItems.PlannedTime,ManufacturingOrderItems.[Status] from ManufacturingOrderItems
-        left join ManufacturingOrder on ManufacturingOrder.id=ManufacturingOrderItems.OrderId
-        left join Items on Items.id=ManufacturingOrder.ItemId
-        left join Resources on Resources.id=ManufacturingOrderItems.ResourceId
-        left join Operations on Operations.id=ManufacturingOrderItems.OperationId 
-        where ManufacturingOrderItems.CompanyId=@CompanyId and ManufacturingOrder.id=ManufacturingOrderItems.OrderId and ManufacturingOrderItems.Status=3  and ManufacturingOrder.LocationId=@LocationId AND
-        ISNULL(PlannedTime,0) like '%{T.PlannedTime}%'  and ISNULL(Resources.Name,'') Like '%{T.ResourcesName}%' AND    ISNULL(ManufacturingOrder.Name,'') like '%{T.OrderName}%' and
-        ISNULL(Items.Name,'') like '%{T.ItemName}%' and ISNULL(ManufacturingOrder.PlannedQuantity,'') like '%{T.PlannedQuantity}%' and ISNULL(Operations.Name,'') like '%{T.OperationName}%' 
+        select UretimDetay.id as id,Uretim.id as UretimId ,UretimDetay.KaynakId,Kaynaklar.[Isim]as ResourcesName,Uretim.[Isim]as OrderName,Uretim.ProductionDeadline,Uretim.StokId,UretimDetay.CompletedDate, 
+        Urunler.[Isim]as ItemName,Uretim.PlanlananMiktar,UretimDetay.OperasyonId,Operasyonlar.[Isim]as OperationName,UretimDetay.PlanlananZaman,UretimDetay.[Durum] from UretimDetay
+        left join Uretim on Uretim.id=UretimDetay.OrderId
+        left join Urunler on Urunler.id=Uretim.StokId
+        left join Kaynaklar on Kaynaklar.id=UretimDetay.KaynakId
+        left join Operasyonlar on Operasyonlar.id=UretimDetay.OperasyonId 
+        where UretimDetay.CompanyId=@CompanyId and Uretim.id=UretimDetay.OrderId and UretimDetay.Durum=3  and Uretim.DepoId=@DepoId AND
+        ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%'  and ISNULL(Kaynaklar.Isim,'') Like '%{T.KaynakIsmi}%' AND    ISNULL(Uretim.Isim,'') like '%{T.UretimIsmi}%' and
+        ISNULL(Urunler.Isim,'') like '%{T.UrunIsmi}%' and ISNULL(Uretim.PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' and ISNULL(Operasyonlar.Isim,'') like '%{T.OperasyonIsmi}%' 
        
-        Group By ManufacturingOrder.id,ManufacturingOrderItems.id,ManufacturingOrderItems.ResourceId,Resources.[Name],ManufacturingOrder.[Name],ManufacturingOrder.ProductionDeadline,ManufacturingOrder.ItemId,ManufacturingOrderItems.CompletedDate,
-        Items.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrderItems.OperationId,Operations.[Name],ManufacturingOrderItems.PlannedTime,ManufacturingOrderItems.[Status])x
-        ORDER BY x.ResourceId OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
+        Group By Uretim.id,UretimDetay.id,UretimDetay.KaynakId,Kaynaklar.[Isim],Uretim.[Isim],Uretim.ProductionDeadline,Uretim.StokId,UretimDetay.CompletedDate,
+        Urunler.[Isim],Uretim.PlanlananMiktar,UretimDetay.OperasyonId,Operasyonlar.[Isim],UretimDetay.PlanlananZaman,UretimDetay.[Durum])x
+        ORDER BY x.KaynakId OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
             }
 
 
@@ -465,41 +465,41 @@ Group by moi.id,moi.Tip,moi.ItemId,Items.Name,moi.Notes,moi.PlannedQuantity ,moi
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@CompanyId", CompanyId);
-            param.Add("@LocationId", T.LocationId);
+            param.Add("@DepoId", T.DepoId);
             string sql = string.Empty;
-            if (T.LocationId == null)
+            if (T.DepoId == null)
             {
                 sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
              select x.* from(
-        select ManufacturingOrderItems.id as id,ManufacturingOrder.id as ManufacturingOrderId,ManufacturingOrderItems.ResourceId,Resources.[Name]as ResourcesName,ManufacturingOrder.[Name]as OrderName,ManufacturingOrder.ProductionDeadline,ManufacturingOrder.ItemId,
-        Items.[Name]as ItemName,ManufacturingOrder.PlannedQuantity,ManufacturingOrderItems.OperationId,Operations.[Name]as OperationName,ManufacturingOrderItems.PlannedTime,ManufacturingOrderItems.[Status] from ManufacturingOrderItems
-        left join ManufacturingOrder on ManufacturingOrder.id=ManufacturingOrderItems.OrderId
-        left join Items on Items.id=ManufacturingOrder.ItemId
-        left join Resources on Resources.id=ManufacturingOrderItems.ResourceId
-        left join Operations on Operations.id=ManufacturingOrderItems.OperationId 
-        where ManufacturingOrderItems.CompanyId=@CompanyId and ManufacturingOrder.id=ManufacturingOrderItems.OrderId and ManufacturingOrderItems.Status!=3  and 
-        ISNULL(PlannedTime,0) like '%{T.PlannedTime}%'  and ISNULL(Resources.Name,'') Like '%{T.ResourcesName}%' AND    ISNULL(ManufacturingOrder.Name,'') like '%{T.OrderName}%' and
-        ISNULL(Items.Name,'') like '%{T.ItemName}%' and ISNULL(ManufacturingOrder.PlannedQuantity,'') like '%{T.PlannedQuantity}%' and ISNULL(Operations.Name,'') like '%{T.OperationName}%' 
-        Group By ManufacturingOrder.id,ManufacturingOrderItems.ResourceId,Resources.[Name],ManufacturingOrder.[Name],ManufacturingOrder.ProductionDeadline,ManufacturingOrder.ItemId,ManufacturingOrderItems.id,
-        Items.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrderItems.OperationId,Operations.[Name],ManufacturingOrderItems.PlannedTime,ManufacturingOrderItems.[Status])x
-        ORDER BY x.ResourceId OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
+        select UretimDetay.id as id,Uretim.id as UretimId,UretimDetay.KaynakId,Kaynaklar.[Isim]as ResourcesName,Uretim.[Isim]as OrderName,Uretim.ProductionDeadline,Uretim.StokId,
+        Urunler.[Isim]as ItemName,Uretim.PlanlananMiktar,UretimDetay.OperasyonId,Operasyonlar.[Isim]as OperationName,UretimDetay.PlanlananZaman,UretimDetay.[Durum] from UretimDetay
+        left join Uretim on Uretim.id=UretimDetay.OrderId
+        left join Urunler on Urunler.id=Uretim.StokId
+        left join Kaynaklar on Kaynaklar.id=UretimDetay.KaynakId
+        left join Operasyonlar on Operasyonlar.id=UretimDetay.OperasyonId 
+        where UretimDetay.CompanyId=@CompanyId and Uretim.id=UretimDetay.OrderId and UretimDetay.Durum!=3  and 
+        ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%'  and ISNULL(Kaynaklar.Isim,'') Like '%{T.KaynakIsmi}%' AND    ISNULL(Uretim.Isim,'') like '%{T.UretimIsmi}%' and
+        ISNULL(Urunler.Isim,'') like '%{T.UrunIsmi}%' and ISNULL(Uretim.PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' and ISNULL(Operasyonlar.Isim,'') like '%{T.OperasyonIsmi}%' 
+        Group By Uretim.id,UretimDetay.KaynakId,Kaynaklar.[Isim],Uretim.[Isim],Uretim.ProductionDeadline,Uretim.StokId,UretimDetay.id,
+        Urunler.[Isim],Uretim.PlanlananMiktar,UretimDetay.OperasyonId,Operasyonlar.[Isim],UretimDetay.PlanlananZaman,UretimDetay.[Durum])x
+        ORDER BY x.KaynakId OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
             }
             else
             {
                 sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
              select x.* from(
-        select ManufacturingOrderItems.id as id,ManufacturingOrder.id as ManufacturingOrderId,ManufacturingOrderItems.ResourceId,Resources.[Name]as ResourcesName,ManufacturingOrder.[Name]as OrderName,ManufacturingOrder.ProductionDeadline,ManufacturingOrder.ItemId,
-        Items.[Name]as ItemName,ManufacturingOrder.PlannedQuantity,ManufacturingOrderItems.OperationId,Operations.[Name]as OperationName,ManufacturingOrderItems.PlannedTime,ManufacturingOrderItems.[Status] from ManufacturingOrderItems
-        left join ManufacturingOrder on ManufacturingOrder.id=ManufacturingOrderItems.OrderId
-        left join Items on Items.id=ManufacturingOrder.ItemId
-        left join Resources on Resources.id=ManufacturingOrderItems.ResourceId
-        left join Operations on Operations.id=ManufacturingOrderItems.OperationId 
-        where ManufacturingOrderItems.CompanyId=@CompanyId and ManufacturingOrder.id=ManufacturingOrderItems.OrderId and ManufacturingOrderItems.Status!=3  and ManufacturingOrder.LocationId=@LocationId AND
-        ISNULL(PlannedTime,0) like '%{T.PlannedTime}%'  and ISNULL(Resources.Name,'') Like '%{T.ResourcesName}%' AND    ISNULL(ManufacturingOrder.Name,'') like '%{T.OrderName}%' and
-        ISNULL(Items.Name,'') like '%{T.ItemName}%' and ISNULL(ManufacturingOrder.PlannedQuantity,'') like '%{T.PlannedQuantity}%' and ISNULL(Operations.Name,'') like '%{T.OperationName}%' 
-        Group By ManufacturingOrder.id,ManufacturingOrderItems.ResourceId,Resources.[Name],ManufacturingOrder.[Name],ManufacturingOrder.ProductionDeadline,ManufacturingOrder.ItemId,ManufacturingOrderItems.id,
-        Items.[Name],ManufacturingOrder.PlannedQuantity,ManufacturingOrderItems.OperationId,Operations.[Name],ManufacturingOrderItems.PlannedTime,ManufacturingOrderItems.[Status])x
-        ORDER BY x.ResourceId OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
+        select UretimDetay.id as id,Uretim.id as UretimId,UretimDetay.KaynakId,Kaynaklar.[Isim]as ResourcesName,Uretim.[Isim]as OrderName,Uretim.ProductionDeadline,Uretim.StokId,
+        Urunler.[Isim]as ItemName,Uretim.PlanlananMiktar,UretimDetay.OperasyonId,Operasyonlar.[Isim]as OperationName,UretimDetay.PlanlananZaman,UretimDetay.[Durum] from UretimDetay
+        left join Uretim on Uretim.id=UretimDetay.OrderId
+        left join Urunler on Urunler.id=Uretim.StokId
+        left join Kaynaklar on Kaynaklar.id=UretimDetay.KaynakId
+        left join Operasyonlar on Operasyonlar.id=UretimDetay.OperasyonId 
+        where UretimDetay.CompanyId=@CompanyId and Uretim.id=UretimDetay.OrderId and UretimDetay.Durum!=3  and Uretim.DepoId=@DepoId AND
+        ISNULL(PlanlananZaman,0) like '%{T.PlanlananZaman}%'  and ISNULL(Kaynaklar.Isim,'') Like '%{T.KaynakIsmi}%' AND    ISNULL(Uretim.Isim,'') like '%{T.UretimIsmi}%' and
+        ISNULL(Urunler.Isim,'') like '%{T.UrunIsmi}%' and ISNULL(Uretim.PlanlananMiktar,'') like '%{T.PlanlananMiktar}%' and ISNULL(Operasyonlar.Isim,'') like '%{T.OperasyonIsmi}%' 
+        Group By Uretim.id,UretimDetay.KaynakId,Kaynaklar.[Isim],Uretim.[Isim],Uretim.ProductionDeadline,Uretim.StokId,UretimDetay.id,
+        Urunler.[Isim],Uretim.PlanlananMiktar,UretimDetay.OperasyonId,Operasyonlar.[Isim],UretimDetay.PlanlananZaman,UretimDetay.[Durum])x
+        ORDER BY x.KaynakId OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY;";
             }
 
             var ScheludeOpenList = await _db.QueryAsync<ManufacturingTask>(sql, param);

@@ -54,6 +54,7 @@ namespace Api.Controllers
             _idcontrol = idcontrol;
             _izinkontrol = izinkontrol;
         }
+
         [Route("Details/{id}")]
         [HttpGet, Authorize]
         public async Task<ActionResult<PurchaseDetails>> Details(int id)
@@ -148,7 +149,7 @@ namespace Api.Controllers
                     DynamicParameters param2 = new DynamicParameters();
                     param2.Add("@OrderId", T.SatinAlmaId);
                     param2.Add("@id", id);
-                    var list = await _db.QueryAsync<OrdersResponse>($"Select OrdersItem.id,Orders.id as OrdersId,OrdersItem.ItemId,Items.Name as ItemName, OrdersItem.Quantity, OrdersItem.MeasureId,Measure.Name as MeasureName, OrdersItem.TotalPrice, OrdersItem.PricePerUnit, OrdersItem.TotalAll, OrdersItem.TaxId, Tax.TaxName,OrdersItem.TaxValue from Orders left join OrdersItem on OrdersItem.OrdersId = Orders.id left  join Items on Items.id = OrdersItem.ItemId left join Measure on Measure.id = OrdersItem.MeasureId left    join Tax on Tax.id = OrdersItem.TaxId where Orders.CompanyId = @CompanyId and Orders.id = @OrderId and OrdersItem.id = @id ", param2);
+                    var list = await _db.QueryAsync<OrdersResponse>($"Select sad.id,SatinAlma.id as SatinAlmaId,sad.StokId,u.Isim as UrunIsmi, sad.Miktar, sad.OlcuId,Olcu.Isim as OlcuIsmi, sad.ToplmaTutar, sad.BirimFiyat, sad.TumTutar, sad.VergiId, Vergi.VergiIsmi,sad.VergiDegeri from SatinAlma left join SatinAlmaDetay sad on sad.SatinAlmaId = SatinAlma.id left  join Urunler u on u.id = sad.StokId left join Olcu on Olcu.id = sad.OlcuId left    join Vergi on Vergi.id = sad.VergiId where  SatinAlma.id = @OrderId and sad.id = @id ", param2);
 
                     return Ok(list);
                 }
@@ -237,7 +238,7 @@ namespace Api.Controllers
                     param2.Add("@CompanyId", CompanyId);
                     param2.Add("@OrderId", T.SatinAlmaId);
                     await _order.UpdatePurchaseItem(T);
-                    var list = await _db.QueryAsync<PurchaseOrderUpdateItemResponse>($"Select OrdersItem.id as OrdersItemId,Orders.id as OrdersId,OrdersItem.ItemId,Items.Name as ItemName, OrdersItem.Quantity, OrdersItem.MeasureId,Measure.Name as MeasureName,  OrdersItem.PricePerUnit, Orders.TotalAll, OrdersItem.TaxId, Tax.TaxName,OrdersItem.TaxValue from Orders left join OrdersItem on OrdersItem.OrdersId = Orders.id left  join Items on Items.id = OrdersItem.ItemId left   join Measure on Measure.id = OrdersItem.MeasureId left    join Tax on Tax.id = OrdersItem.TaxId where Orders.CompanyId = @CompanyId and Orders.id = @OrderId and OrdersItem.id = @id ", param2);
+                    var list = await _db.QueryAsync<PurchaseOrderUpdateItemResponse>($"Select sad.id,SatinALma.id as SatinAlmaId,sad.StokId,u.Isim as UrunIsmi, sad.Miktar, sad.OlcuId,Olcu.Isim as OlcuIsmi,  sad.BirimFiyat, sad.TumToplam, sad.VergiId, Vergi.VergiIsim,sad.VergiDegeri from SatinAlma left join SatinAlmaDetay sad on sad.SatinAlmaId = SatinAlma.id left  join Urunler u on u.id = sad.StokId left   join Olcu on Olcu.id = sad.OlcuId left    join Vergi on Vergi.id = sad.VergiId where  SatinAlma.id = @OrderId and sad.id = @id ", param2);
                     return Ok(list);
                 }
                 else

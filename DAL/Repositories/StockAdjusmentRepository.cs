@@ -60,8 +60,8 @@ namespace DAL.Repositories
             ";
                 var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sql, prm);//
                 float? adjusment = item.Miktari;
-                float? LocationId = sorgu.First().StockId;//locationid cekiyorz.
-                float? stockQuantity = sorgu.First().Quantity;
+                float? LocationId = sorgu.First().StokId;//locationid cekiyorz.
+                float? stockQuantity = sorgu.First().Miktar;
                 float? NewQuantity = stockQuantity - adjusment; //Tablodaki değer ile itemdeki değeri toplayarak yeni bir stok(quanitity) elde ediyoruz.
                 prm.Add("@NewQuantity", NewQuantity);
                await _db.ExecuteAsync($"Update Items SET AllStockQuantity =@NewQuantity where id = @ItemId  and CompanyId = @CompanyId", prm); //Stok tablosuna yeni değeri güncelleiyoruz.
@@ -78,9 +78,9 @@ namespace DAL.Repositories
 
 
 
-                float? stockCount = sorgu.First().LocationsStockCount;
+                float? stockCount = sorgu.First().StokAdeti;
                 float? NewStockCount = stockCount - adjusment;
-                var stocklocationId = sorgu.First().LocationStockId;
+                var stocklocationId = sorgu.First().DepoStokId;
 
 
                 prm.Add("@stocklocationId", stocklocationId);
@@ -123,8 +123,8 @@ namespace DAL.Repositories
             where s.CompanyId=@CompanyId and s.StockAdjusmentId=@StockAdjusmentId and s.id=@id)as Adjusment";
             var sorgu =await _db.QueryAsync<StockAdjusmentStockUpdate>(sql, prm);//
             float? adjusment = sorgu.First().Adjusment;
-            int LocationId = sorgu.First().StockId;
-            float? stockQuantity = sorgu.First().Quantity;
+            int LocationId = sorgu.First().StokId;
+            float? stockQuantity = sorgu.First().Miktar;
             float? NewQuantity = stockQuantity - adjusment; //Tablodaki değer ile itemdeki değeri toplayarak yeni bir stok(quanitity) elde ediyoruz.
             prm.Add("@NewQuantity", NewQuantity);
            await _db.ExecuteAsync($"Update Items SET AllStockQuantity =@NewQuantity where id = @ItemId  and CompanyId = @CompanyId", prm); //Stok tablosuna yeni değeri güncelleiyoruz.
@@ -140,9 +140,9 @@ namespace DAL.Repositories
             prm.Add("@Where", "StockAdjusmentDelete");
             await _db.ExecuteAsync($"Insert into StockMovement ([Where],Operation,Process,Quantity,PreviousValue,NextValue,Date,[User],CompanyId,LocationId,ItemId) values(@Where,@Operation,@Process,@StockMovementQuantity,@PreviousValue,@NewQuantity,@Date,@User,@CompanyId,@LocationId,@ItemId)", prm);
 
-            float? stockCount = sorgu.First().LocationsStockCount;
+            float? stockCount = sorgu.First().StokAdeti;
             float? NewStockCount = stockCount - adjusment;
-            var stocklocationId = sorgu.First().LocationStockId;
+            var stocklocationId = sorgu.First().DepoStokId;
 
 
             prm.Add("@stocklocationId", stocklocationId);
@@ -278,7 +278,7 @@ namespace DAL.Repositories
             var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sql, prm);//
             await _db.ExecuteAsync($"Update StockAdjusment set Total=@Total where id=@StockAdjusmentId and CompanyId=@CompanyId ", prm);
 
-            float? stockQuantity = sorgu.First().Quantity;
+            float? stockQuantity = sorgu.First().Miktar;
             float? NewQuantity = stockQuantity + T.Adjusment; //Tablodaki değer ile itemdeki değeri toplayarak yeni bir stok(quanitity) elde ediyoruz.
             prm.Add("@NewQuantity", NewQuantity);
            await _db.ExecuteAsync($"Update Items SET AllStockQuantity =@NewQuantity where id = @ItemId  and CompanyId = @CompanyId", prm); //Stok tablosuna yeni değeri güncelleiyoruz.
@@ -293,9 +293,9 @@ namespace DAL.Repositories
             prm.Add("@Where", "StockAdjusmentInsertItem");
             await _db.ExecuteAsync($"Insert into StockMovement ([Where],Operation,Process,Quantity,PreviousValue,NextValue,Date,[User],CompanyId,LocationId,ItemId) values(@Where,@Operation,@Process,@StockMovementQuantity,@PreviousValue,@NewQuantity,@Date,@User,@CompanyId,@LocationId,@ItemId)", prm);
 
-            float? stockCount = sorgu.First().LocationsStockCount;
+            float? stockCount = sorgu.First().StokAdeti;
             float? NewStockCount = stockCount + T.Adjusment;
-            var stocklocationId = sorgu.First().LocationStockId;
+            var stocklocationId = sorgu.First().DepoStokId;
             if (stocklocationId == 0)
             {
               await  _locationStockRepository.Insert(tip, T.ItemId,  T.LocationId);
@@ -411,9 +411,9 @@ namespace DAL.Repositories
             (Select StockCount from LocationStock where ItemId = @ItemId   and LocationId = @@locationId and CompanyId = @CompanyId)as LocationsStockCount,
             (Select id from LocationStock where ItemId = @ItemId and LocationId = @@locationId and CompanyId =   @CompanyId)   as    LocationStockId";
                 var sorgu =await _db.QueryAsync<StockAdjusmentStockUpdate>(sql, prm);//
-                int LocationId = sorgu.First().StockId;
+                int LocationId = sorgu.First().StokId;
 
-                float? stockQuantity = sorgu.First().Quantity;
+                float? stockQuantity = sorgu.First().Miktar;
                 float? NewQuantity = stockQuantity + T.Adjusment; //Tablodaki değer ile itemdeki değeri toplayarak yeni bir stok(quanitity) elde ediyoruz.
                 prm.Add("@NewQuantity", NewQuantity);
                 prm.Add("@LocationId", LocationId);
@@ -431,9 +431,9 @@ namespace DAL.Repositories
                 prm.Add("@Where", "StockAdjusmentDelete");
                 await _db.ExecuteAsync($"Insert into StockMovement ([Where],Operation,Process,Quantity,PreviousValue,NextValue,Date,[User],CompanyId,LocationId,ItemId) values(@Where,@Operation,@Process,@StockMovementQuantity,@PreviousValue,@NewQuantity,@Date,@User,@CompanyId,@LocationId,@ItemId)", prm);
 
-                float? stockCount = sorgu.First().LocationsStockCount;
+                float? stockCount = sorgu.First().StokAdeti;
                 float? NewStockCount = stockCount + T.Adjusment;
-                var stocklocationId = sorgu.First().LocationStockId;
+                var stocklocationId = sorgu.First().DepoStokId;
 
                 prm.Add("@stocklocationId", stocklocationId);
 

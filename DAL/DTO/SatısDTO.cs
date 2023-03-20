@@ -11,48 +11,48 @@ namespace DAL.DTO
 
 
         public string? Tip { get; set; }
-        public int? ContactId { get; set; }
-        public string OrderName { get; set; } = string.Empty;
-        public DateTime? DeliveryDeadline { get; set; }
-        public DateTime? CreateDate { get; set; }
-        public int? LocationId { get; set; }
-        public string Info { get; set; } = string.Empty;
+        public int? CariId { get; set; }
+        public string SatisIsmi { get; set; } = string.Empty;
+        public DateTime? TeslimSuresi { get; set; }
+        public DateTime? OlusturmaTarihi { get; set; }
+        public int? DepoId { get; set; }
+        public string Bilgi { get; set; } = string.Empty;
 
     }
     public class SatısInsertItem
     {
-        public int SalesOrderId { get; set; }
-        public int? ItemId { get; set; }
-        public int? LocationId { get; set; }
-        public int? ContactId { get; set; }
-        public int? TaxId { get; set; }
-        public float? Quantity { get; set; }
-        public int Status { get; set; }
+        public int SatisId { get; set; }
+        public int? StokId { get; set; }
+        public int? DepoId { get; set; }
+        public int? CariId { get; set; }
+        public int? VergiId { get; set; }
+        public float? Miktar { get; set; }
+        public int Durum { get; set; }
         public int Conditions { get; set; }
 
     }
     public class TeklifInsertItem
     {
-        public int SalesOrderId { get; set; }
-        public int? ItemId { get; set; }
-        public int? LocationId { get; set; }
-        public int? ContactId { get; set; }
-        public int? TaxId { get; set; }
-        public float? Quantity { get; set; }
+        public int SatisId { get; set; }
+        public int? StokId { get; set; }
+        public int? DepoId { get; set; }
+        public int? CariId { get; set; }
+        public int? VergiId { get; set; }
+        public float? Miktar { get; set; }
 
     }
     public class TeklifUpdateItems
     {
         public int id { get; set; }
-        public int SalesOrderId { get; set; }
-        public int ContactId { get; set; }
-        public int LocationId { get; set; }
-        public int ItemId { get; set; }
-        public float Quantity { get; set; }
-        public float PricePerUnit { get; set; }
-        public int TaxId { get; set; }
-        public DateTime DeliveryDeadline { get; set; }
-        public string? Note { get; set; }
+        public int SatisId { get; set; }
+        public int CariId { get; set; }
+        public int DepoId { get; set; }
+        public int StokId { get; set; }
+        public float Miktar { get; set; }
+        public float BirimFiyat { get; set; }
+        public int VergiId { get; set; }
+        public DateTime TeslimSuresi { get; set; }
+        public string? Bilgi { get; set; }
     }
 
 
@@ -63,24 +63,32 @@ namespace DAL.DTO
     public class SatısDeleteItems
     {
         public int id { get; set; }
-        public int ItemId { get; set; }
+        public int StokId { get; set; }
         public int OrdersId { get; set; }
     }
     public class SatısUpdateItems
     {
         public int id { get; set; }
         public string? Tip { get; set; }
-        public int SalesOrderId { get; set; }
-        public int ManufacturingOrderId { get; set; }
-        public int ContactId { get; set; }
-        public int LocationId { get; set; }
-        public int ItemId { get; set; }
-        public float Quantity { get; set; }
-        public float PricePerUnit { get; set; }
-        public int TaxId { get; set; }
+        public int SatisId { get; set; }
+        public int UretimId { get; set; }
+        public int CariId { get; set; }
+        public int DepoId { get; set; }
+        public int StokId { get; set; }
+        public float Miktar { get; set; }
+        public float BirimFiyat { get; set; }
+        public int VergiId { get; set; }
         public int Conditions { get; set; }
-        public DateTime DeliveryDeadline { get; set; }
-        public string? Note { get; set; }
+        public DateTime TeslimSuresi { get; set; }
+        public string? Bilgi { get; set; }
+    }
+    public class SatisDetay
+    {
+        public int DepoId { get; set; }
+        public int StokId { get; set; }
+        public int id { get; set; }
+        public int SatisId { get; set; }
+        public float Miktar { get; set; }
     }
 
 

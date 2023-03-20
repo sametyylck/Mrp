@@ -27,17 +27,17 @@ namespace DAL.StockControl
             var prm = new DynamicParameters();
             prm.Add("@ItemId", ItemId);
             prm.Add("@LocationId", LocationId);
-            var locationstock = _db.Query<LocaVarmı>($@"select (select id from LocationStock where ItemId=@ItemId and LocationId=@LocationId)as LocationStockId,(Select Tip from Items where id=@ItemId)as Tip", prm);
+            var locationstock = _db.Query<LocaVarmı>($@"select (select id from DepoStoklar where StokId=@ItemId and DepoId=@LocationId)as DepoStokId,(Select Tip from Urunler where id=@ItemId)as Tip", prm);
             string Tip = locationstock.First().Tip;
-            if (locationstock.First().DepoId == 0)
+            if (locationstock.First().DepoStokId == 0)
             {
              int id= await _locationstock.Insert(Tip, ItemId, LocationId);
             }
            
             var adetbul =  _db.QueryFirst<int>($@"select
-            (Select StockCount from LocationStock where ItemId = @ItemId and CompanyId = @CompanyId and LocationId = @LocationId)
+            (Select StokAdeti from DepoStoklar where StokId = @ItemId and DepoId = @LocationId)
             -
-            (select ISNULL(SUM(RezerveCount),0) from Rezerve where ItemId = @ItemId and CompanyId = @CompanyId and LocationId = @LocationId and Status = 1)",prm);
+            (select ISNULL(SUM(RezerveDeger),0) from Rezerve where StokId = @ItemId and DepoId = @LocationId and Durum = 1)",prm);
             return adetbul;
         }
     }

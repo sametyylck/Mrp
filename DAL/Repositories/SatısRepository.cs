@@ -36,90 +36,90 @@ namespace DAL.Repositories
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@Tip", T.Tip);
-            prm.Add("@ContactId", T.ContactId);
-            prm.Add("@DeliveryDeadLine", T.DeliveryDeadline);
-            prm.Add("@CreateDate", T.CreateDate);
-            prm.Add("@DeliveryId", 0);
-            prm.Add("@OrderName", T.OrderName);
-            prm.Add("@Info", T.Info);
+            prm.Add("@CariId", T.CariId);
+            prm.Add("@TeslimSuresi", T.TeslimSuresi);
+            prm.Add("@OlusturmaTarihi", T.OlusturmaTarihi);
+            prm.Add("@DurumBelirteci", 0);
+            prm.Add("@SatisIsmi", T.SatisIsmi);
+            prm.Add("@Bilgi", T.Bilgi);
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@LocationId", T.LocationId);
-            prm.Add("@IsActive", true);
+            prm.Add("@DepoId", T.DepoId);
+            prm.Add("@Aktif", true);
 
-            return await _db.QuerySingleAsync<int>($"Insert into SalesOrder (Tip,ContactId,DeliveryDeadline,CreateDate,OrderName,LocationId,Info,CompanyId,IsActive,DeliveryId) OUTPUT INSERTED.[id] values (@Tip,@ContactId,@DeliveryDeadline,@CreateDate,@OrderName,@LocationId,@Info,@CompanyId,@IsActive,@DeliveryId)", prm);
+            return await _db.QuerySingleAsync<int>($"Insert into Satis (Tip,CariId,TeslimSuresi,OlusturmaTarihi,SatisIsmi,DepoId,Bilgi,Aktif,DurumBelirteci) OUTPUT INSERTED.[id] values (@Tip,@CariId,@TeslimSuresi,@OlusturmaTarihi,@SatisIsmi,@DepoId,@Bilgi,@Aktif,@DurumBelirteci)", prm);
         }
         public async Task<int> InsertPurchaseItem(SatısInsertItem T, int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@ItemId", T.ItemId);
+            prm.Add("@StokId", T.StokId);
             var liste = await _db.QueryAsync<LocaVarmı>($@"select 
-            (select Rate from Tax where id=(select DefaultTaxPurchaseOrderId from GeneralDefaultSettings where CompanyId=@CompanyId))as Rate,
-            (select DefaultPrice from Items where id =@ItemId and CompanyId=@CompanyId)as DefaultPrice", prm);
-            prm.Add("@TaxId", T.TaxId);
-            float rate = await _db.QueryFirstAsync<int>($"select  Rate from Tax where id =@TaxId and CompanyId=@CompanyId", prm);
+            (select VergiDegeri from Vergi where id=(select VarsayilanSatinAlimVergi from GenelAyarlar))as VergiDegeri,
+            (select VarsayilanFiyat from Urunler where id =@StokId)as VarsayilanFiyat", prm);
+            prm.Add("@VergiId", T.VergiId);
+            float rate = await _db.QueryFirstAsync<int>($"select  Rate from Tax where id =@VergiId", prm);
 
 
             var PriceUnit = liste.First().VarsayilanFiyat;
 
-            var TotalPrice = (T.Quantity * PriceUnit); //adet*fiyat
-            float? PlusTax = (TotalPrice * rate) / 100; //tax fiyatı hesaplama
-            var TotalAll = TotalPrice + PlusTax; //toplam fiyat hesaplama  
-            prm.Add("@Quantity", T.Quantity);
-            prm.Add("@PricePerUnit", PriceUnit);
-            prm.Add("@TaxValue", rate);
-            prm.Add("@OrdersId", T.SalesOrderId);
-            prm.Add("@PlusTax", PlusTax);
-            prm.Add("@TotalPrice", TotalPrice);
-            prm.Add("@TotalAll", TotalAll);
-            prm.Add("@location", T.LocationId);
-            prm.Add("@ContactId", T.ContactId);
-            prm.Add("@Stance", 0);
+            var ToplamTutar = (T.Miktar * PriceUnit); //adet*fiyat
+            float? VergiTutari = (ToplamTutar * rate) / 100; //tax fiyatı hesaplama
+            var TumToplam = ToplamTutar + VergiTutari; //toplam fiyat hesaplama  
+            prm.Add("@Miktar", T.Miktar);
+            prm.Add("@BirimFiyat", PriceUnit);
+            prm.Add("@VergiOrani", rate);
+            prm.Add("@OrdersId", T.SatisId);
+            prm.Add("@VergiTutari", VergiTutari);
+            prm.Add("@ToplamTutar", ToplamTutar);
+            prm.Add("@TumToplam", TumToplam);
+            prm.Add("@location", T.DepoId);
+            prm.Add("@CariId", T.CariId);
+            prm.Add("@Durus", 0);
 
 
 
             string sqla = $@"select
-                (Select ISNULL(Tip,'') from Items where id = @ItemId and CompanyId = @CompanyId)as Tip,     
-                (Select ISNULL(id,0) from LocationStock where ItemId =  @ItemId  and LocationId = @location and CompanyId = @CompanyId)   as    LocationStockId,
-               (select ISNULL(SUM(ManufacturingOrder.PlannedQuantity),0) as Quantity from ManufacturingOrder where     ManufacturingOrder.ItemId=@ItemId and ManufacturingOrder.CompanyId=@CompanyId and   ManufacturingOrder.CustomerId=@ContactId )as ManufacturingQuantity";
+                (Select ISNULL(Tip,'') from Urunler where id = @StokId)as Tip,     
+                (Select ISNULL(id,0) from DepoStoklar where StokId =  @StokId  and DepoId = @location)   as    DepoStokId,
+               (select ISNULL(SUM(Uretim.PlanlananMiktar),0) as Miktar from Uretim where     Uretim.StokId=@StokId and  Uretim.CariId=@CariId )as PlanlananMiktar";
             var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, prm);
-            var Stock =await _control.Count(T.ItemId,  T.LocationId);
-            var locationStockId = sorgu.First().LocationStockId;
+            var Stock = await _control.Count(T.StokId, T.DepoId);
+            var locationStockId = sorgu.First().DepoStokId;
             var tip = sorgu.First().Tip;
             prm.Add("@LocationStockId", locationStockId);
             int rezervid = 0;
 
             //STOKDA ürün var mı kontrol
-            rezervid = await Control(T, T.SalesOrderId, tip, CompanyId);
-            if (T.Status == 3)
+            rezervid = await Control(T, T.SatisId, tip, CompanyId);
+            if (T.Durum == 3)
             {
-                prm.Add("@SalesItem", 3);
+                prm.Add("@SatisOgesi", 3);
             }
             else
             {
-                prm.Add("@SalesItem", 1);
+                prm.Add("@SatisOgesi", 1);
             }
 
 
-            if (T.Status == 3)
+            if (T.Durum == 3)
             {
-                prm.Add("@SalesItem", 3);
-                prm.Add("@Production", 4);
+                prm.Add("@SatisOgesi", 3);
+                prm.Add("@Uretme", 4);
                 prm.Add("@Ingredient", 3);
 
-                await _db.ExecuteAsync($"Update SalesOrder set TotalAll=@TotalAll where CompanyId=@CompanyId and id=@OrdersId", prm);
+                await _db.ExecuteAsync($"Update Satis set TumToplam=@TumToplam where id=@OrdersId", prm);
 
 
-                int itemid = await _db.QuerySingleAsync<int>($"Insert into SalesOrderItem(ItemId,Quantity,PricePerUnit,TaxId,TaxValue,SalesOrderId,SalesItem,TotalPrice,PlusTax,TotalAll,Stance,Ingredients,CompanyId,Production) OUTPUT INSERTED.[id] values (@ItemId,@Quantity,@PricePerUnit,@TaxId,@TaxValue,@OrdersId,@SalesItem,@TotalPrice,@PlusTax,@TotalAll,@Stance,@Ingredient,@CompanyId,@Production)", prm);
-                prm.Add("@SalesOrderItemId", itemid);
+                int itemid = await _db.QuerySingleAsync<int>($"Insert into SatisDetay(StokId,Miktar,BirimFiyat,VergiId,VergiOrani,SatisId,SatisOgesi,ToplamTutar,VergiTutari,TumToplam,Durus,Malzemeler,Uretme) OUTPUT INSERTED.[id] values (@StokId,@Miktar,@BirimFiyat,@VergiId,@VergiOrani,@OrdersId,@SatisOgesi,@ToplamTutar,@VergiTutari,@TumToplam,@Durus,@Ingredient,@Uretme)", prm);
+                prm.Add("@SatisDetayId", itemid);
                 prm.Add("@RezerveId", rezervid);
 
-                await _db.ExecuteAsync($"Update Rezerve set SalesOrderItemId=@SalesOrderItemId where  CompanyId=@CompanyId and CustomerId=@ContactId and SalesOrderId=@OrdersId and LocationId=@location and id=@RezerveId  ", prm);
+                await _db.ExecuteAsync($"Update Rezerve set SatisDetayId=@SatisDetayId where  CariId=@CariId and SatisId=@OrdersId and DepoId=@location and id=@RezerveId  ", prm);
                 return itemid;
             }
-            if (tip!="Material")
+            if (tip != "Material")
             {
-                await IngredientsControl(T, T.SalesOrderId, CompanyId);
+                await IngredientsControl(T, T.SatisId, CompanyId);
                 if (T.Conditions == 3)
                 {
                     prm.Add("@Ingredient", 2);
@@ -129,29 +129,29 @@ namespace DAL.Repositories
                     prm.Add("@Ingredient", 0);
                 }
             }
-            if (tip=="Material")
+            if (tip == "Material")
             {
                 prm.Add("@Ingredient", 0);
 
             }
-            string sqlquery = $@"select * from ManufacturingOrder where CustomerId is null and SalesOrderId is null and SalesOrderItemId is null and Status!=3 and Private='false' and IsActive=1 and ItemId=@ItemId and LocationId=@location Order by id DESC";
+            string sqlquery = $@"select * from Uretim where CariId is null and SatisId is null and SatisDetayId is null and Durum!=3 and Private='false' and Aktif=1 and StokId=@StokId and DepoId=@location Order by id DESC";
             var EmptyManufacturing = await _db.QueryAsync<SalesOrderUpdateMakeBatchItems>(sqlquery, prm);
 
 
-       
-            await _db.ExecuteAsync($"Update SalesOrder set TotalAll=@TotalAll where CompanyId=@CompanyId and id=@OrdersId", prm);
-            prm.Add("@Production", 0);
 
-            int id = await _db.QuerySingleAsync<int>($"Insert into SalesOrderItem(ItemId,Quantity,PricePerUnit,TaxId,TaxValue,SalesOrderId,TotalPrice,PlusTax,TotalAll,Stance,SalesItem,Ingredients,CompanyId,Production) OUTPUT INSERTED.[id] values (@ItemId,@Quantity,@PricePerUnit,@TaxId,@TaxValue,@OrdersId,@TotalPrice,@PlusTax,@TotalAll,@Stance,@SalesItem,@Ingredient,@CompanyId,@Production)", prm);
+            await _db.ExecuteAsync($"Update Satis set TumToplam=@TumToplam where id=@OrdersId", prm);
+            prm.Add("@Uretme", 0);
 
-            prm.Add("@SalesOrderItemId", id);
-            prm.Add("@id", T.SalesOrderId);
-            if (tip!="Material")
+            int id = await _db.QuerySingleAsync<int>($"Insert into SatisDetay(StokId,Miktar,BirimFiyat,VergiId,VergiOrani,SatisId,ToplamTutar,VergiTutari,TumToplam,Durus,SatisOgesi,Malzemeler,Uretme) OUTPUT INSERTED.[id] values (@StokId,@Miktar,@BirimFiyat,@VergiId,@VergiOrani,@OrdersId,@ToplamTutar,@VergiTutari,@TumToplam,@Durus,@SatisOgesi,@Ingredient,@Uretme)", prm);
+
+            prm.Add("@SatisDetayId", id);
+            prm.Add("@id", T.SatisId);
+            if (tip != "Material")
             {
                 if (EmptyManufacturing.Count() != 0)
                 {
                     var degerler = 0;
-                    string sqlp = $" select ISNULL(RezerveCount,0) from Rezerve where SalesOrderId=@id and  LocationId=@location and ItemId=@ItemId and CompanyId=@CompanyId";
+                    string sqlp = $" select ISNULL(RezerveDeger,0) from Rezerve where SatisId=@id and  DepoId=@location and StokId=@StokId ";
                     var deger = await _db.QueryAsync<int>(sqlp, prm);
                     if (deger.Count() == 0)
                     {
@@ -162,7 +162,7 @@ namespace DAL.Repositories
                         degerler = deger.First();
                     }
                     int varmi = 0;
-                    float? aranandeger = T.Quantity - degerler;
+                    float? aranandeger = T.Miktar - degerler;
                     if (aranandeger == 0)
                     {
 
@@ -171,52 +171,52 @@ namespace DAL.Repositories
                     {
                         foreach (var item in EmptyManufacturing)
                         {
-                            float toplamuretimadeti = item.PlannedQuantity;
+                            float toplamuretimadeti = item.PlanlananMiktar;
                             if (varmi == 0)
                             {
 
 
                                 if (toplamuretimadeti >= aranandeger)
                                 {
-                                    prm.Add("@SalesOrderId", T.SalesOrderId);
+                                    prm.Add("@SatisId", T.SatisId);
                                     prm.Add("@CompanyId", CompanyId);
-                                    prm.Add("@SalesOrderItemId", id);
-                                    prm.Add("@ItemId", T.ItemId);
-                                    prm.Add("@ManufacturingOrderId", item.id);
-                                    prm.Add("@ContactId", T.ContactId);
+                                    prm.Add("@SatisDetayId", id);
+                                    prm.Add("@StokId", T.StokId);
+                                    prm.Add("@UretimId", item.id);
+                                    prm.Add("@CariId", T.CariId);
 
-                                    prm.Add("@SalesItem", 2);
-                                    await _db.ExecuteAsync($@"Update SalesOrderItem set SalesItem=@SalesItem where CompanyId=@CompanyId and id=@SalesOrderItemId and SalesOrderId=@SalesOrderId", prm);
-                                    await _db.ExecuteAsync($@"Update ManufacturingOrder set CustomerId=@ContactId,SalesOrderId=@SalesOrderId,SalesOrderItemId=@SalesOrderItemId where CompanyId=@CompanyId and id=@ManufacturingOrderId", prm);
+                                    prm.Add("@SatisOgesi", 2);
+                                    await _db.ExecuteAsync($@"Update SatisDetay set SatisOgesi=@SatisOgesi where id=@SatisDetayId and SatisId=@SatisId", prm);
+                                    await _db.ExecuteAsync($@"Update Uretim set CariId=@CariId,SatisId=@SatisId,SatisDetayId=@SatisDetayId where id=@UretimId", prm);
 
-                                    string sqlr = $@"(select MIN(ManufacturingOrderItems.Availability)as Ingredients from ManufacturingOrderItems
-                    left join ManufacturingOrder on ManufacturingOrder.id=ManufacturingOrderItems.OrderId
-                    where ManufacturingOrder.id=@ManufacturingOrderId  and ManufacturingOrderItems.Tip='Ingredients' and ManufacturingOrderItems.CompanyId=@CompanyId)";
+                                    string sqlr = $@"(select MIN(UretimDetay.MalzemeDurum)as Malzemeler from UretimDetay
+                    left join Uretim on Uretim.id=UretimDetay.UretimId
+                    where Uretim.id=@UretimId  and UretimDetay.Tip='Malzemeler' and UretimDetay.)";
                                     var availability = await _db.QueryAsync<int>(sqlr, prm);
-                                    prm.Add("@Ingredients", availability.First());
-                                    await _db.ExecuteAsync($"Update SalesOrderItem set Ingredients=@Ingredients where CompanyId=@CompanyId and SalesOrderId=@SalesOrderId and id=@SalesOrderItemId and ItemId=@ItemId ", prm);
+                                    prm.Add("@Malzemeler", availability.First());
+                                    await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler where  SatisId=@SatisId and id=@SatisDetayId and StokId=@StokId ", prm);
                                     varmi++;
 
                                 }
                                 else if (toplamuretimadeti < aranandeger)
                                 {
 
-                                    prm.Add("@SalesOrderId", T.SalesOrderId);
+                                    prm.Add("@SatisId", T.SatisId);
                                     prm.Add("@CompanyId", CompanyId);
-                                    prm.Add("@SalesOrderItemId", id);
-                                    prm.Add("@ItemId", T.ItemId);
-                                    prm.Add("@ManufacturingOrderId", item.id);
-                                    prm.Add("@ContactId", T.ContactId);
-                                    prm.Add("@SalesItem", 1);
-                                    await _db.ExecuteAsync($@"Update SalesOrderItem set SalesItem=@SalesItem where CompanyId=@CompanyId and id=@SalesOrderItemId and SalesOrderId=@SalesOrderId", prm);
-                                    await _db.ExecuteAsync($@"Update ManufacturingOrder set CustomerId=@ContactId,SalesOrderId=@SalesOrderId,SalesOrderItemId=@SalesOrderItemId where CompanyId=@CompanyId and id=@ManufacturingOrderId", prm);
+                                    prm.Add("@SatisDetayId", id);
+                                    prm.Add("@StokId", T.StokId);
+                                    prm.Add("@UretimId", item.id);
+                                    prm.Add("@CariId", T.CariId);
+                                    prm.Add("@SatisOgesi", 1);
+                                    await _db.ExecuteAsync($@"Update SatisDetay set SatisOgesi=@SatisOgesi where id=@SatisDetayId and SatisId=@SatisId", prm);
+                                    await _db.ExecuteAsync($@"Update Uretim set CariId=@CariId,SatisId=@SatisId,SatisDetayId=@SatisDetayId where id=@UretimId", prm);
 
-                                    string sqlr = $@"(select MIN(ManufacturingOrderItems.Availability)as Ingredients from ManufacturingOrderItems
-                    left join ManufacturingOrder on ManufacturingOrder.id=ManufacturingOrderItems.OrderId
-                    where ManufacturingOrder.id=@ManufacturingOrderId  and ManufacturingOrderItems.Tip='Ingredients' and ManufacturingOrderItems.CompanyId=@CompanyId)";
+                                    string sqlr = $@"(select MIN(UretimDetay.MalzemeDurum)as Malzemeler from UretimDetay
+                    left join Uretim on Uretim.id=UretimDetay.retimId
+                    where Uretim.id=@UretimId  and UretimDetay.Tip='Malzemeler' and UretimDetay.)";
                                     var availability = await _db.QueryAsync<int>(sqlr, prm);
-                                    prm.Add("@Ingredients", availability.First());
-                                    await _db.ExecuteAsync($"Update SalesOrderItem set Ingredients=@Ingredients where CompanyId=@CompanyId and SalesOrderId=@SalesOrderId and id=@SalesOrderItemId and ItemId=@ItemId ", prm);
+                                    prm.Add("@Malzemeler", availability.First());
+                                    await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler where SatisId=@SatisId and id=@SatisDetayId and StokId=@StokId ", prm);
                                     aranandeger = aranandeger - toplamuretimadeti;
 
 
@@ -231,8 +231,8 @@ namespace DAL.Repositories
 
                 }
             }
-       
-            await _db.ExecuteAsync($"Update Rezerve set SalesOrderItemId=@SalesOrderItemId where  CompanyId=@CompanyId and CustomerId=@ContactId and SalesOrderId=@OrdersId and LocationId=@location and SalesOrderItemId is null ", prm);
+
+            await _db.ExecuteAsync($"Update Rezerve set SatisDetayId=@SatisDetayId where  CariId=@CariId and SatisId=@OrdersId and DepoId=@location and SatisDetayId is null ", prm);
             return id;
 
 
@@ -241,52 +241,52 @@ namespace DAL.Repositories
         {
 
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@SalesOrderId", OrdersId);
+            prm.Add("@SatisId", OrdersId);
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@ItemId", T.ItemId);
-            prm.Add("@ContactId", T.ContactId);
-            prm.Add("@location", T.LocationId);
+            prm.Add("@StokId", T.StokId);
+            prm.Add("@CariId", T.CariId);
+            prm.Add("@location", T.DepoId);
             prm.Add("@Tip", Tip);
 
             //kullanılabilir stok sayisi
-            var rezervecount = await _control.Count(T.ItemId, T.LocationId);
+            var rezervecount = await _control.Count(T.StokId, T.DepoId);
             rezervecount = rezervecount >= 0 ? rezervecount : 0;
 
-            if (rezervecount >= T.Quantity)//Stok sayısı istesnilenden büyük ise rezerve sayısı adet olur
+            if (rezervecount >= T.Miktar)//Stok sayısı istesnilenden büyük ise rezerve sayısı adet olur
             {
-                prm.Add("@RezerveCount", T.Quantity);
+                prm.Add("@RezerveCount", T.Miktar);
                 prm.Add("@LocationStockCount", rezervecount);
-                T.Status = 3;
+                T.Durum = 3;
 
             }
             else
             {
                 prm.Add("@RezerveCount", rezervecount);//Stok sayısı adetten kücük ise rezer sayısı Stok adeti kadar olur.
                 prm.Add("@LocationStockCount", rezervecount);
-                T.Status = 1;
+                T.Durum = 1;
             }
-            if (Tip=="Material")
+            if (Tip == "Material")
             {
-                prm.Add("@Status", 3);
+                prm.Add("@Durum", 3);
 
             }
             else
             {
-                prm.Add("@Status", 1);
+                prm.Add("@Durum", 1);
 
             }
 
-            return await _db.QuerySingleAsync<int>($"Insert into Rezerve (SalesOrderId,Tip,ItemId,RezerveCount,CustomerId,LocationId,Status,LocationStockCount,CompanyId) OUTPUT INSERTED.[id]  values (@SalesOrderId,@Tip,@ItemId,@RezerveCount,@ContactId,@location,@Status,@LocationStockCount,@CompanyId)", prm);
+            return await _db.QuerySingleAsync<int>($"Insert into Rezerve (SatisId,Tip,StokId,RezerveDegeri,DepoId,Durum) OUTPUT INSERTED.[id]  values (@SatisId,@Tip,@StokId,@RezerveCount,@location,@Durum)", prm);
         }
         public async Task IngredientsControl(SatısInsertItem T, int OrdersId, int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@SalesOrderId", OrdersId);
+            prm.Add("@SatisId", OrdersId);
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@ItemId", T.ItemId);
-            prm.Add("@ContactId", T.ContactId);
-            prm.Add("@location", T.LocationId);
-            var BomList = await _db.QueryAsync<BOM>($"Select * From Bom where CompanyId = {CompanyId} and ProductId = {T.ItemId} and IsActive = 1");
+            prm.Add("@StokId", T.StokId);
+            prm.Add("@CariId", T.CariId);
+            prm.Add("@location", T.DepoId);
+            var BomList = await _db.QueryAsync<BOM>($"Select * From UrunRecetesi where  MamulId = {T.StokId} and Aktif = 1");
             var b = 0;
 
 
@@ -294,19 +294,19 @@ namespace DAL.Repositories
             {
 
                 DynamicParameters prm2 = new DynamicParameters();
-                prm2.Add("@ItemId", item.MalzemeId);
-                prm2.Add("@location", T.LocationId);
+                prm2.Add("@StokId", item.MalzemeId);
+                prm2.Add("@location", T.DepoId);
                 string sqlb = $@"select
-                (Select ISNULL(Tip,'') from Items where id = @ItemId and CompanyId = @CompanyId)as Tip,
-                 (Select ISNULL(id,0) from LocationStock where ItemId = @ItemId  and LocationId = @location and CompanyId = @CompanyId) as     LocationStockId ";
+                (Select ISNULL(Tip,'') from Urunler where id = @StokId)as Tip,
+                 (Select ISNULL(id,0) from DepoStoklar where StokId = @StokId  and DepoId = @location) as     DepoStokId ";
                 var sorgu1 = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqlb, prm2);
-                prm2.Add("@LocationStockId", sorgu1.First().LocationStockId);
-                prm2.Add("@stockId", sorgu1.First().StockId);
+                prm2.Add("@LocationStockId", sorgu1.First().DepoStokId);
+                prm2.Add("@stockId", sorgu1.First().StokId);
 
-                var RezerveCount = await _control.Count(item.MalzemeId, T.LocationId);//stocktaki adet
+                var RezerveCount = await _control.Count(item.MalzemeId, T.DepoId);//stocktaki adet
                 RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
 
-                var stokcontrol = T.Quantity * item.Miktar; //bir materialin kaç tane gideceği hesaplanıyor
+                var stokcontrol = T.Miktar * item.Miktar; //bir materialin kaç tane gideceği hesaplanıyor
                 if (RezerveCount >= stokcontrol) //yeterli stok var mı
                 {
                     var yenistockdeğeri = RezerveCount - stokcontrol;
@@ -334,11 +334,11 @@ namespace DAL.Repositories
                 {
                     T.Conditions = 3;
                 }
-                prm2.Add("@Status", 1);
+                prm2.Add("@Durum", 1);
                 prm2.Add("@OrdersId", OrdersId);
                 prm2.Add("@Tip", sorgu1.First().Tip);
-                prm2.Add("@ContactsId", T.ContactId);
-                await _db.ExecuteAsync($"Insert into Rezerve(SalesOrderId,Tip,ItemId,RezerveCount,CustomerId,LocationId,Status,LocationStockCount,CompanyId) values (@OrdersId,@Tip,@ItemId,@RezerveCount,@ContactsId,@location,@Status,@LocationStockCount,@CompanyId)", prm2);
+                prm2.Add("@ContactsId", T.CariId);
+                await _db.ExecuteAsync($"Insert into Rezerve(SatisId,Tip,StokId,RezerveDeger,DepoId,Durum) values (@OrdersId,@Tip,@StokId,@RezerveCount,@location,@Durum)", prm2);
 
 
 
@@ -348,94 +348,94 @@ namespace DAL.Repositories
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@ContactId", T.ContactId);
-            prm.Add("@DeliveryDeadLine", T.DeliveryDeadline);
-            prm.Add("@CreateDate", T.CreateDate);
-            prm.Add("@OrderName", T.OrderName);
+            prm.Add("@CariId", T.CariId);
+            prm.Add("@TeslimSuresi", T.TeslimSuresi);
+            prm.Add("@OlusturmaTarihi", T.OlusturmaTarihi);
+            prm.Add("@SatisIsmi", T.SatisIsmi);
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@LocationId", T.LocationId);
-            prm.Add("@Total", T.Total);
-            prm.Add("@Info", T.Info);
-            var location = await _db.QueryAsync<int>($"Select LocationId from SalesOrder where id=@id and CompanyId=@CompanyId ", prm);
+            prm.Add("@DepoId", T.DepoId);
+            prm.Add("@Total", T.Toplam);
+            prm.Add("@Bilgi", T.Bilgi);
+            var location = await _db.QueryAsync<int>($"Select DepoId from Satis where id=@id", prm);
             prm.Add("@eskilocationId", location.First());
 
 
-            if (location.First() == T.LocationId)
+            if (location.First() == T.DepoId)
             {
-                await _db.ExecuteAsync($"Update SalesOrder set ContactId=@ContactId,DeliveryDeadLine=@DeliveryDeadLine,CreateDate=@CreateDate,OrderName=@OrderName,Info=@Info,LocationId=@LocationId,TotalAll=@Total where CompanyId=@CompanyId and id=@id", prm);
+                await _db.ExecuteAsync($"Update Satis set CariId=@CariId,TeslimSuresi=@TeslimSuresi,OlusturmaTarihi=@OlusturmaTarihi,SatisIsmi=@SatisIsmi,Bilgi=@Bilgi,DepoId=@DepoId,TumToplam=@Total where id=@id", prm);
             }
             else
             {
-                await _db.ExecuteAsync($"Update SalesOrder set ContactId=@ContactId,DeliveryDeadLine=@DeliveryDeadLine,CreateDate=@CreateDate,OrderName=@OrderName,Info=@Info,LocationId=@LocationId,TotalAll=@Total where CompanyId=@CompanyId and id=@id", prm);
+                await _db.ExecuteAsync($"Update Satis set CariId=@CariId,TeslimSuresi=@TeslimSuresi,OlusturmaTarihi=@OlusturmaTarihi,SatisIsmi=@SatisIsmi,Bilgi=@Bilgi,DepoId=@DepoId,TumToplam=@Total where id=@id", prm);
 
-                List<Manufacturing> ItemsCount = (await _db.QueryAsync<Manufacturing>($"select ItemId,RezerveCount from Rezerve where SalesOrderId=@id and CompanyId=@CompanyId and Status=1", prm)).ToList();
+                List<Manufacturing> ItemsCount = (await _db.QueryAsync<Manufacturing>($"select StokId,RezerveDeger from Rezerve where SatisId=@id and Durum=1", prm)).ToList();
                 foreach (var item in ItemsCount)
                 {
-                    prm.Add("@ItemId", item.StokId);
-                    await _db.ExecuteAsync($"Delete from Rezerve where SalesOrderId=@id and CompanyId=@CompanyId and ItemId=@ItemId", prm);
+                    prm.Add("@StokId", item.StokId);
+                    await _db.ExecuteAsync($"Delete from Rezerve where SatisId=@id and StokId=@StokId", prm);
 
                 }
-                List<ManufacturingOrderItemsIngredientsUpdate> Itemdegerler = (await _db.QueryAsync<ManufacturingOrderItemsIngredientsUpdate>($@"select ItemId,Quantity,SalesOrderItem.id from SalesOrderItem 
-                inner join SalesOrder on SalesOrder.id=SalesOrderItem.SalesOrderId
-                where SalesOrderItem.CompanyId=@CompanyId and SalesOrderItem.SalesOrderId=@id and SalesOrder.IsActive=1 and SalesOrder.DeliveryId!=4", prm)).ToList();
+                List<ManufacturingOrderItemsIngredientsUpdate> Itemdegerler = (await _db.QueryAsync<ManufacturingOrderItemsIngredientsUpdate>($@"select StokId,Miktar,SatisDetay.id from SatisDetay 
+                inner join Satis on Satis.id=SatisDetay.SatisId
+                where SatisDetay.SatisId=@id and Satis.Aktif=1 and Satis.DurumBelirteci!=4", prm)).ToList();
                 foreach (var item in Itemdegerler)
                 {
                     DynamicParameters param = new DynamicParameters();
-                    param.Add("@ItemId", item.StokId);
+                    param.Add("@StokId", item.StokId);
                     param.Add("@CompanyId", CompanyId);
-                    param.Add("@location", T.LocationId);
+                    param.Add("@location", T.DepoId);
                     param.Add("@id", T.id);
                     param.Add("@OrderItemId", item.id);
-                    param.Add("@ContactId", T.ContactId);
+                    param.Add("@CariId", T.CariId);
 
                     string sqla = $@"select
-                    (Select ISNULL(Tip,'') from Items where id = @ItemId and CompanyId = @CompanyId)as Tip,
-                    (Select ISNULL(id,0) from LocationStock where ItemId=@ItemId and LocationId = @location and CompanyId = @CompanyId)   as    LocationStockId,
-                     (select ISNULL(SUM(ManufacturingOrder.PlannedQuantity),0) as Quantity from ManufacturingOrder where  ManufacturingOrder.ItemId=@ItemId and ManufacturingOrder.CompanyId=@CompanyId and   ManufacturingOrder.CustomerId=@ContactId )as ManufacturingQuantity";
+                    (Select ISNULL(Tip,'') from Urunler where id = @StokId )as Tip,
+                    (Select ISNULL(id,0) from DepoStoklar where StokId=@StokId and DepoId = @location)   as    DepoStokId,
+                     (select ISNULL(SUM(Uretim.PlanlananMiktar),0) as Miktar from Uretim where  Uretim.StokId=@StokId and Uretim.CariId=@CariId )as ManufacturingQuantity";
                     var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, param);
-                    var RezerveCount = await _control.Count(item.StokId, T.LocationId);
+                    var RezerveCount = await _control.Count(item.StokId, T.DepoId);
                     RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
 
-                    var locationStockId = sorgu.First().LocationStockId;
+                    var locationStockId = sorgu.First().DepoStokId;
                     var tip = sorgu.First().Tip;
                     param.Add("@LocationStockId", locationStockId);
-                    var stokkontrol = await _control.Count(item.StokId, T.LocationId);
+                    var stokkontrol = await _control.Count(item.StokId, T.DepoId);
                     int rezervid = 0;
                     SatısInsertItem A = new SatısInsertItem();
-                    A.ItemId = item.StokId;
-                    A.LocationId = T.LocationId;
-                    A.ContactId = T.ContactId;
-                    A.Quantity = item.Miktar;
+                    A.StokId = item.StokId;
+                    A.DepoId = T.DepoId;
+                    A.CariId = T.CariId;
+                    A.Miktar = item.Miktar;
                     if (RezerveCount > 0)
                     {
 
 
                         rezervid = await Control(A, T.id, tip, CompanyId);
-                        if (A.Status == 3)
+                        if (A.Durum == 3)
                         {
-                            param.Add("@SalesItem", 3);
+                            param.Add("@SatisOgesi", 3);
                         }
                         else
                         {
-                            param.Add("@SalesItem", 1);
+                            param.Add("@SatisOgesi", 1);
                         }
 
                     }
 
                     else
-                        param.Add("@SalesItem", 1);
-                    if (A.Status == 3)
+                        param.Add("@SatisOgesi", 1);
+                    if (A.Durum == 3)
                     {
-                        param.Add("@SalesItem", 3);
-                        param.Add("@Production", 4);
+                        param.Add("@SatisOgesi", 3);
+                        param.Add("@Uretme", 4);
                         param.Add("@Ingredient", 3);
 
 
-                        await _db.ExecuteAsync($"Update SalesOrderItem set SalesItem=@SalesItem,Production=@Production,Ingredients=@Ingredient where CompanyId=@CompanyId and id=@OrderItemId", param);
+                        await _db.ExecuteAsync($"Update SatisDetay set SatisOgesi=@SatisOgesi,Uretme=@Uretme,Malzemeler=@Ingredient where id=@OrderItemId", param);
 
                         param.Add("@RezerveId", rezervid);
 
-                        await _db.ExecuteAsync($"Update Rezerve set SalesOrderItemId=@OrderItemId where  CompanyId=@CompanyId and CustomerId=@ContactId and SalesOrderId=@id and LocationId=@location and id=@RezerveId ", param);
+                        await _db.ExecuteAsync($"Update Rezerve set SatisDetayId=@OrderItemId where CariId=@CariId and SatisId=@id and DepoId=@location and id=@RezerveId ", param);
 
                     }
                     else
@@ -451,11 +451,11 @@ namespace DAL.Repositories
                         {
                             param.Add("@Ingredient", 0);
                         }
-                        param.Add("@Production", 0);
+                        param.Add("@Uretme", 0);
 
-                        await _db.ExecuteAsync($"Update Rezerve set SalesOrderItemId=@OrderItemId where  CompanyId=@CompanyId and CustomerId=@ContactId and SalesOrderId=@id and LocationId=@location and SalesOrderItemId is null ", param);
+                        await _db.ExecuteAsync($"Update Rezerve set SatisDetayId=@OrderItemId where CariId=@CariId and SatisId=@id and DepoId=@location and SatisDetayId is null ", param);
 
-                        await _db.ExecuteAsync($"Update SalesOrderItem set SalesItem=@SalesItem,Production=@Production,Ingredients=@Ingredient where CompanyId=@CompanyId and id=@OrderItemId", param);
+                        await _db.ExecuteAsync($"Update SatisDetay set SatisOgesi=@SatisOgesi,Uretme=@Uretme,Malzemeler=@Ingredient where id=@OrderItemId", param);
 
                     }
 
@@ -467,43 +467,43 @@ namespace DAL.Repositories
         public async Task UpdateItems(SatısUpdateItems T, int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@id", T.SalesOrderId);
+            prm.Add("@id", T.SatisId);
             prm.Add("@OrderItemId", T.id);
-            prm.Add("@ItemId", T.ItemId);
-            prm.Add("@Quantity", T.Quantity);
-            prm.Add("@PricePerUnit", T.PricePerUnit);
+            prm.Add("@StokId", T.StokId);
+            prm.Add("@Miktar", T.Miktar);
+            prm.Add("@BirimFiyat", T.BirimFiyat);
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@TaxId", T.TaxId);
-            prm.Add("@CustomerId", T.ContactId);
-            var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id from ManufacturingOrder mo where SalesOrderId=@id and SalesOrderItemId=@OrderItemId and CompanyId=@CompanyId and IsActive=1 and Status!=3", prm);
-            var adetbul = await _db.QueryFirstAsync<float>($"Select Quantity From SalesOrderItem where CompanyId = {CompanyId} and id =@OrderItemId and SalesOrderId=@id", prm);
+            prm.Add("@VergiId", T.VergiId);
+            prm.Add("@CariId", T.CariId);
+            var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id from Uretim mo where SatisId=@id and SatisDetayId=@OrderItemId and Aktif=1 and Durum!=3", prm);
+            var adetbul = await _db.QueryFirstAsync<float>($"Select Miktar From SatisDetay where id =@OrderItemId and SatisId=@id", prm);
             float eski = adetbul;
-            string sqlv = $@"Select ItemId  from  SalesOrderItem where CompanyId=@CompanyId and id=@OrderItemId";
+            string sqlv = $@"Select StokId  from  SatisDetay where id=@OrderItemId";
             var Item = await _db.QuerySingleAsync<int>(sqlv, prm);
-            if (T.ItemId != Item)
+            if (T.StokId != Item)
             {
-                if (T.Tip=="Material")
+                if (T.Tip == "Material")
                 {
-                    prm.Add("@Status", 3);
+                    prm.Add("@Durum", 3);
 
                 }
                 else
                 {
-                    prm.Add("@Status", 1);
+                    prm.Add("@Durum", 1);
 
                 }
-                List<Manufacturing> ItemsCount = (await _db.QueryAsync<Manufacturing>($"select ItemId,RezerveCount from Rezerve where SalesOrderId=@id and CompanyId=@CompanyId and SalesOrderItemId=@OrderItemId  and Status=@Status", prm)).ToList();
+                List<Manufacturing> ItemsCount = (await _db.QueryAsync<Manufacturing>($"select StokId,RezerveDeger from Rezerve where SatisId=@id and  SatisDetayId=@OrderItemId  and Durum=@Durum", prm)).ToList();
                 foreach (var item in ItemsCount)
                 {
-                    prm.Add("@ItemId", item.StokId);
-                    await _db.ExecuteAsync($"Delete from  Rezerve where SalesOrderId=@id and SalesOrderItemId=@OrderItemId and CompanyId=@CompanyId and ItemId=@ItemId", prm);
+                    prm.Add("@StokId", item.StokId);
+                    await _db.ExecuteAsync($"Delete from  Rezerve where SatisId=@id and SatisDetayId=@OrderItemId and StokId=@StokId", prm);
                 }
                 var liste = await _db.QueryAsync<LocaVarmı>($@"select 
-            (select Rate from Tax where id=(select DefaultTaxPurchaseOrderId from GeneralDefaultSettings where CompanyId=@CompanyId))as Rate,
-            (select DefaultPrice from Items where id =@ItemId and CompanyId=@CompanyId)as DefaultPrice", prm);
-                prm.Add("@TaxId", T.TaxId);
+            (select VergiDegeri from Vergi where id=(select VarsayilanSatinAlimVergi from GenelAyarlar where ))as VergiDegeri,
+            (select VarsayilanFiyat from Urunler where id =@StokId and )as VarsayilanFiyat", prm);
+                prm.Add("@VergiId", T.VergiId);
                 var Birimfiyat = liste.First().VarsayilanFiyat;
-                T.PricePerUnit = Birimfiyat;
+                T.BirimFiyat = Birimfiyat;
 
             }
 
@@ -516,16 +516,16 @@ namespace DAL.Repositories
             {
                 makeorderId = make.First().id;
             }
-            T.ManufacturingOrderId = makeorderId;
+            T.UretimId = makeorderId;
 
 
 
-            prm.Add("@location", T.LocationId);
+            prm.Add("@location", T.DepoId);
 
-            if (makeorderId == 0 && T.Tip!="Material")
+            if (makeorderId == 0 && T.Tip != "Material")
             {
                 int degerler;
-                string sqlp = $" select ISNULL(RezerveCount,0) from Rezerve where SalesOrderId=@id and SalesOrderItemId=@OrderItemId and LocationId=@location and ItemId=@ItemId and CompanyId=@CompanyId and Status=1";
+                string sqlp = $" select ISNULL(RezerveDegeri,0) from Rezerve where SatisId=@id and SatisDetayId=@OrderItemId and DepoId=@location and StokId=@StokId and Durum=1";
                 var deger = await _db.QueryAsync<int>(sqlp, prm);
                 if (deger.Count() == 0)
                 {
@@ -536,78 +536,78 @@ namespace DAL.Repositories
                     degerler = deger.First();
                 }
                 prm.Add("@CompanyId", CompanyId);
-                prm.Add("@ItemId", T.ItemId);
+                prm.Add("@StokId", T.StokId);
                 prm.Add("@Null", null);
-                await _db.ExecuteAsync($"Update SalesOrderItem set Tip=@Null where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
+                await _db.ExecuteAsync($"Update SatisDetay set Tip=@Null where id=@OrderItemId and SatisId=@id", prm);
 
-                var Rate = await _db.QuerySingleAsync<float>($"(select Rate from Tax where id =@TaxId and CompanyId=@CompanyId)", prm);
+                var Rate = await _db.QuerySingleAsync<float>($"(select VergiDegeri from Vergi where id =@VergiId)", prm);
                 float TaxRate = Rate;
 
 
-                var PriceUnit = T.PricePerUnit;
-                float totalprice = (T.Quantity * PriceUnit); //adet*fiyat
-                float? PlusTax = (totalprice * TaxRate) / 100; //tax fiyatı hesaplama
-                float? total = totalprice + PlusTax; //toplam fiyat hesaplama  
-                prm.Add("@Quantity", T.Quantity);
-                prm.Add("@PricePerUnit", PriceUnit);
-                prm.Add("@TaxId", T.TaxId);
-                prm.Add("@TaxValue", TaxRate);
-                prm.Add("@OrdersId", T.SalesOrderId);
-                prm.Add("@PlusTax", PlusTax);
-                prm.Add("@TotalPrice", totalprice);
-                prm.Add("@TotalAll", total);
-                prm.Add("@ContactsId", T.ContactId);
+                var PriceUnit = T.BirimFiyat;
+                float totalprice = (T.Miktar * PriceUnit); //adet*fiyat
+                float? VergiTutari = (totalprice * TaxRate) / 100; //tax fiyatı hesaplama
+                float? total = totalprice + VergiTutari; //toplam fiyat hesaplama  
+                prm.Add("@Miktar", T.Miktar);
+                prm.Add("@BirimFiyat", PriceUnit);
+                prm.Add("@VergiId", T.VergiId);
+                prm.Add("@VergiOrani", TaxRate);
+                prm.Add("@OrdersId", T.SatisId);
+                prm.Add("@VergiTutari", VergiTutari);
+                prm.Add("@ToplamTutar", totalprice);
+                prm.Add("@TumToplam", total);
+                prm.Add("@ContactsId", T.CariId);
                 string sqla = $@"select
-                  (Select ISNULL(Tip,'') from Items where id = @ItemId and CompanyId = @CompanyId)as Tip,
-                  (Select ISNULL(id,0) from LocationStock where ItemId = @ItemId  and LocationId = @location and CompanyId = @CompanyId)   as    LocationStockId ";
+                  (Select ISNULL(Tip,'') from Urunler where id = @StokId and )as Tip,
+                  (Select ISNULL(id,0) from DepoStoklar where StokId = @StokId  and DepoId = @location )   as    DepoStokId ";
                 var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, prm);
-                var RezerveCount = await _control.Count(T.ItemId, T.LocationId);
+                var RezerveCount = await _control.Count(T.StokId, T.DepoId);
                 RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
-                var locationStockId = sorgu.First().LocationStockId;
+                var locationStockId = sorgu.First().DepoStokId;
                 var tip = sorgu.First().Tip;
                 prm.Add("@LocationStockId", locationStockId);
                 var status = 0;
 
 
-                if (degerler >= T.Quantity)
+                if (degerler >= T.Miktar)
                 {
-                    prm.Add("@RezerveCount", T.Quantity);
+                    prm.Add("@RezerveCount", T.Miktar);
                     prm.Add("@LocationStockCount", RezerveCount);
-                    prm.Add("@SalesItem", 3);
+                    prm.Add("@SatisOgesi", 3);
                     status = 3;
-                    await _db.ExecuteAsync($"Update Rezerve set RezerveCount=@RezerveCount,LocationStockCount=@LocationStockCount where CompanyId=@CompanyId and SalesOrderId=@id and ItemId=@ItemId and SalesOrderItemId=@OrderItemId and Status=1", prm);
+                    await _db.ExecuteAsync($"Update Rezerve set RezerveDegeri=@RezerveCount where SatisId=@id and StokId=@StokId and SatisDetayId=@OrderItemId and Durum=1", prm);
                 }
 
-                else if (RezerveCount >= T.Quantity - degerler && RezerveCount > 0)
+                else if (RezerveCount >= T.Miktar - degerler && RezerveCount > 0)
                 {
-                    prm.Add("@RezerveCount", T.Quantity);
+                    prm.Add("@RezerveCount", T.Miktar);
                     prm.Add("@LocationStockCount", RezerveCount);
-                    prm.Add("@SalesItem", 3);
+                    prm.Add("@SatisOgesi", 3);
                     status = 3;
-                    await _db.ExecuteAsync($"Update Rezerve set RezerveCount=@RezerveCount,LocationStockCount=@LocationStockCount where CompanyId=@CompanyId and SalesOrderId=@id and ItemId=@ItemId and SalesOrderItemId=@OrderItemId and Status=1", prm);
+                    await _db.ExecuteAsync($"Update Rezerve set RezerveDeger=@RezerveCount where SatisId=@id and StokId=@StokId and SatisDetayId=@OrderItemId and Durum=1", prm);
                 }
                 else
                 {
                     prm.Add("@RezerveCount", degerler + RezerveCount);
                     prm.Add("@LocationStockCount", RezerveCount);
-                    prm.Add("@SalesItem", 1);
-                    await _db.ExecuteAsync($"Update Rezerve set RezerveCount=@RezerveCount,LocationStockCount=@LocationStockCount where CompanyId=@CompanyId and SalesOrderId=@id and ItemId=@ItemId and SalesOrderItemId=@OrderItemId and Status=1", prm);
+                    prm.Add("@SatisOgesi", 1);
+                    await _db.ExecuteAsync($"Update Rezerve set RezerveDegeri=@RezerveCount where SatisId=@id and StokId=@StokId and SatisDetayId=@OrderItemId and Durum=1", prm);
                 }
 
 
 
                 if (status == 3)
                 {
-                    prm.Add("@SalesItem", 3);
-                    prm.Add("@Production", 4);
+                    prm.Add("@SatisOgesi", 3);
+                    prm.Add("@Uretme", 4);
 
-                    await _db.ExecuteAsync($"Update SalesOrder set TotalAll=@TotalAll where CompanyId=@CompanyId and id=@OrdersId", prm);
+                    await _db.ExecuteAsync($"Update Satis set TumToplam=@TumToplam where id=@OrdersId", prm);
                     prm.Add("@Ingredient", 3);
-                    await _db.ExecuteAsync($"Update SalesOrderItem set ItemId=@ItemId,Quantity=@Quantity,PricePerUnit=@PricePerUnit,TaxId=@TaxId,TaxValue=@TaxValue,SalesOrderId=@id,TotalPrice=@TotalPrice,PlusTax=@PlusTax,TotalAll=@TotalAll,SalesItem=@SalesItem,Ingredients=@Ingredient,Production=@Production where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id ", prm);
+                    await _db.ExecuteAsync($"Update SatisDetay set StokId=@StokId,Miktar=@Miktar,BirimFiyat=@BirimFiyat,VergiId=@VergiId,VergiOrani=@VergiOrani,SatisId=@id,ToplamTutar=@ToplamTutar,VergiTutari=@VergiTutari,TumToplam=@TumToplam,SatisOgesi=@SatisOgesi,Malzemeler=@Ingredient,Uretme=@Uretme where id=@OrderItemId and SatisId=@id ", prm);
                 }
                 else
                 {
-                    await UpdateIngredientsControl(T, T.SalesOrderId, CompanyId);
+                    await UpdateIngredientsControl(T, T.SatisId, CompanyId);
                     if (T.Conditions == 3)
                     {
                         prm.Add("@Ingredient", 2);
@@ -618,10 +618,10 @@ namespace DAL.Repositories
                     }
                 }
 
-                await _db.ExecuteAsync($"Update SalesOrder set TotalAll=@TotalAll where CompanyId=@CompanyId and id=@OrdersId", prm);
+                await _db.ExecuteAsync($"Update Satis set TumToplam=@TumToplam where id=@OrdersId", prm);
 
-                await _db.ExecuteAsync($@"Update SalesOrderItem set ItemId=@ItemId,Quantity=@Quantity,PricePerUnit=@PricePerUnit,TaxId=@TaxId,TaxValue=@TaxValue,TotalPrice=@TotalPrice,PlusTax=@PlusTax,
-                TotalAll=@TotalAll,SalesItem=@SalesItem,Ingredients=@Ingredient where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
+                await _db.ExecuteAsync($@"Update SatisDetay set StokId=@StokId,Miktar=@Miktar,BirimFiyat=@BirimFiyat,VergiId=@VergiId,VergiOrani=@VergiOrani,ToplamTutar=@ToplamTutar,VergiTutari=@VergiTutari,
+                TumToplam=@TumToplam,SatisOgesi=@SatisOgesi,Malzemeler=@Ingredient where  id=@OrderItemId and SatisId=@id", prm);
 
 
 
@@ -629,91 +629,86 @@ namespace DAL.Repositories
             else
             {
                 prm.Add("@CompanyId", CompanyId);
-                prm.Add("@ItemId", T.ItemId);
-                var Rate = await _db.QueryFirstAsync<float>($"(select Rate from Tax where id =@TaxId and CompanyId=@CompanyId)", prm);
+                prm.Add("@StokId", T.StokId);
+                var Rate = await _db.QueryFirstAsync<float>($"(select VergiDegeri from Vergi where id =@VergiId and )", prm);
                 float TaxRate = Rate;
-                var PriceUnit = T.PricePerUnit;
-                float totalprice = (T.Quantity * PriceUnit); //adet*fiyat
-                float? PlusTax = (totalprice * TaxRate) / 100; //tax fiyatı hesaplama
-                float? total = totalprice + PlusTax; //toplam fiyat hesaplama  
-                prm.Add("@Quantity", T.Quantity);
-                prm.Add("@PricePerUnit", PriceUnit);
-                prm.Add("@TaxId", T.TaxId);
-                prm.Add("@TaxValue", TaxRate);
-                prm.Add("@OrdersId", T.SalesOrderId);
-                prm.Add("@PlusTax", PlusTax);
-                prm.Add("@TotalPrice", totalprice);
-                prm.Add("@TotalAll", total);
-                prm.Add("@ContactsId", T.ContactId);
-                if (T.Tip=="MakeBatch")
+                var PriceUnit = T.BirimFiyat;
+                float totalprice = (T.Miktar * PriceUnit); //adet*fiyat
+                float? VergiTutari = (totalprice * TaxRate) / 100; //tax fiyatı hesaplama
+                float? total = totalprice + VergiTutari; //toplam fiyat hesaplama  
+                prm.Add("@Miktar", T.Miktar);
+                prm.Add("@BirimFiyat", PriceUnit);
+                prm.Add("@VergiId", T.VergiId);
+                prm.Add("@VergiOrani", TaxRate);
+                prm.Add("@OrdersId", T.SatisId);
+                prm.Add("@VergiTutari", VergiTutari);
+                prm.Add("@ToplamTutar", totalprice);
+                prm.Add("@TumToplam", total);
+                prm.Add("@ContactsId", T.CariId);
+                if (T.Tip == "MakeBatch")
                 {
-                    await _db.ExecuteAsync($@"Update SalesOrderItem set Quantity=@Quantity,TotalAll=@TotalAll,PricePerUnit=@PricePerUnit,TaxId=@TaxId,TaxValue=@TaxValue where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
+                    await _db.ExecuteAsync($@"Update SatisDetay set Miktar=@Miktar,TumToplam=@TumToplam,BirimFiyat=@BirimFiyat,VergiId=@VergiId,VergiOrani=@VergiOrani where id=@OrderItemId and SatisId=@id", prm);
                     await UpdateMakeBatchItems(T, CompanyId, eski);
                 }
                 else if (T.Tip == "MakeOrder")
                 {
-                    prm.Add("@SalesItem", 2);
-                    await _db.ExecuteAsync($@"Update SalesOrderItem set Quantity=@Quantity,TotalAll=@TotalAll,PricePerUnit=@PricePerUnit,SalesItem=@SalesItem,TaxId=@TaxId,TaxValue=@TaxValue where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
+                    prm.Add("@SatisOgesi", 2);
+                    await _db.ExecuteAsync($@"Update SatisDetay set Miktar=@Miktar,TumToplam=@TumToplam,BirimFiyat=@BirimFiyat,SatisOgesi=@SatisOgesi,VergiId=@VergiId,VergiOrani=@VergiOrani where  id=@OrderItemId and SatisId=@id", prm);
                     await UpdateMakeItems(T, eski, CompanyId);
                 }
                 else if (T.Tip == "Material")
                 {
-                    await _db.ExecuteAsync($@"Update SalesOrderItem set Quantity=@Quantity,TotalAll=@TotalAll,PricePerUnit=@PricePerUnit,TaxId=@TaxId,TaxValue=@TaxValue where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
-                    var StokMiktari = await _control.Count(T.ItemId,T.LocationId);
+                    await _db.ExecuteAsync($@"Update SatisDetay set Miktar=@Miktar,TumToplam=@TumToplam,BirimFiyat=@BirimFiyat,VergiId=@VergiId,VergiOrani=@VergiOrani where id=@OrderItemId and SatisId=@id", prm);
+                    var StokMiktari = await _control.Count(T.StokId, T.DepoId);
                     StokMiktari = StokMiktari >= 0 ? StokMiktari : 0;
                     //stocktaki adet
 
-                    string sqlp = $" select id,ISNULL(RezerveCount,0) as RezerveCount from Rezerve where SalesOrderId=@OrdersId and SalesOrderItemId=@OrderItemId and LocationId=@location and ItemId=@ItemId and CompanyId=@CompanyId and Status=3";
+                    string sqlp = $" select id,ISNULL(RezerveCount,0) as RezerveDegeri from Rezerve where SatisId=@OrdersId and SatisDetayId=@OrderItemId and DepoId=@location and StokId=@StokId and Durum=3";
                     var deger = await _db.QueryAsync<LocaVarmı>(sqlp, prm);
                     int rezerveid = deger.First().id;
                     prm.Add("@rezerveid", rezerveid);
 
                     float? rezervecount = deger.First().RezerveDeger;
 
-                    string sqlb = $@"select ISNULL(SUM(Quantity),0) from Orders 
-                left join OrdersItem on OrdersItem.OrdersId = Orders.id and Orders.LocationId=@location
-                and OrdersItem.ItemId = @ItemId where Orders.CompanyId = @CompanyId
-                and DeliveryId = 1 and Orders.ManufacturingOrderId is null and Orders.SalesOrderId is null  and Orders.IsActive=1";
-                    var expected = await _db.QueryFirstAsync<float>(sqlb,prm);
+                    string sqlb = $@"select ISNULL(SUM(Miktar),0) from SatinAlma 
+                left join SatinAlmaDetay on SatinAlmaDetay.SatisId = SatinAlma.id and SatinAlma.DepoId=@location
+                and SatinAlmaDetay.StokId = @StokId where DurumBelirteci = 1 and SatinAlma.UretimId is null and SatinAlma.SatisId is null  and SatinAlma.Aktif=1";
+                    var expected = await _db.QueryFirstAsync<float>(sqlb, prm);
 
-                    if (T.Quantity<=rezervecount)
+                    if (T.Miktar <= rezervecount)
                     {
-                        prm.Add("@SalesItem", 3);
-                        prm.Add("@Production", 4);
+                        prm.Add("@SatisOgesi", 3);
+                        prm.Add("@Uretme", 4);
                         prm.Add("@Ingredient", 3);
-                        prm.Add("@RezerveCount", T.Quantity);
+                        prm.Add("@RezerveCount", T.Miktar);
 
-                        await _db.ExecuteAsync($"Update Rezerve set RezerveCount=@RezerveCount where CompanyId=@CompanyId and id=@rezerveid ", prm);
+                    }
+                    else if (StokMiktari >= T.Miktar - rezervecount)
+                    {
+                        prm.Add("@SatisOgesi", 3);
+                        prm.Add("@Uretme", 4);
+                        prm.Add("@Ingredient", 3);
+
+                        prm.Add("@RezerveCount", T.Miktar);
 
 
                     }
-                    else if (StokMiktari>=T.Quantity-rezervecount)
+                    else if (expected >= T.Miktar - rezervecount)
                     {
-                        prm.Add("@SalesItem", 3);
-                        prm.Add("@Production", 4);
-                        prm.Add("@Ingredient", 3);
-
-                        prm.Add("@RezerveCount", T.Quantity);
-                        prm.Add("@LocationStockCount", StokMiktari-T.Quantity);
-
-                        await _db.ExecuteAsync($"Update Rezerve set RezerveCount=@RezerveCount ,LocationStockCount=@LocationStockCount where CompanyId=@CompanyId and id=@rezerveid ", prm);
-
-                    }
-                    else if (expected>=T.Quantity-rezervecount)
-                    {
-                        prm.Add("@SalesItem", 2);
-                        prm.Add("@Production", 3);
+                        prm.Add("@SatisOgesi", 2);
+                        prm.Add("@Uretme", 3);
                         prm.Add("@Ingredient", 1);
 
                     }
                     else
                     {
-                        prm.Add("@SalesItem", 1);
-                        prm.Add("@Production", 0);
+                        prm.Add("@SatisOgesi", 1);
+                        prm.Add("@Uretme", 0);
                         prm.Add("@Ingredient", 0);
 
                     }
-                    await _db.ExecuteAsync($@"Update SalesOrderItem set Quantity=@Quantity,TotalAll=@TotalAll,ItemId=@ItemId,PricePerUnit=@PricePerUnit,SalesItem=@SalesItem,Production=@Production,Ingredients=@Ingredient,TaxId=@TaxId,TaxValue=@TaxValue where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
+                    await _db.ExecuteAsync($"Update Rezerve set RezerveDeger=@RezerveCount where id=@rezerveid ", prm);
+                    await _db.ExecuteAsync($@"Update SatisDetay set Miktar=@Miktar,TumToplam=@TumToplam,StokId=@StokId,BirimFiyat=@BirimFiyat,SatisOgesi=@SatisOgesi,Uretme=@Uretme,Malzemeler=@Ingredient,VergiId=@VergiId,VergiOrani=@VergiOrani where  and id=@OrderItemId and SatisId=@id", prm);
 
                 }
 
@@ -735,20 +730,20 @@ namespace DAL.Repositories
             prm.Add("ZipPostal", A.ZipPostal);
             prm.Add("Country", A.Country);
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@IsActive", true);
+            prm.Add("@Aktif", true);
             if (A.Tip == "ShippingAddress")
             {
                 prm.Add("@Tip", "ShippingAddress");
 
-                await _db.ExecuteAsync($"Update Locations set Tip=@Tip,FirstName=@FirstName,LastName=@LastName,CompanyName=@CompanyName,Phone=@Phone, AddressLine1=@AddressLine1,AddressLine2=@AddressLine2,CityTown=@CityTown,StateRegion=@StateRegion,ZipPostalCode=@ZipPostal,Country=@Country where CompanyId=@CompanyId and id=@id", prm);
+                await _db.ExecuteAsync($"Update DepoVeAdresler set Tip=@Tip,Ad=@FirstName,Soyisim=@LastName,SirketIsmi=@CompanyName,Telefon=@Phone, Adres1=@AddressLine1,Adres2=@AddressLine2,Sehir=@CityTown,Cadde=@StateRegion,PostaKodu=@ZipPostal,Ulke=@Country where id=@id", prm);
             }
             else if (A.Tip == "BillingAddress")
             {
                 prm.Add("@Tip", "BillingAddress");
-                await _db.ExecuteAsync($"Update Locations set Tip=@Tip,FirstName=@FirstName,LastName=@LastName,CompanyName=@CompanyName,Phone=@Phone, AddressLine1=@AddressLine1,AddressLine2=@AddressLine2,CityTown=@CityTown,StateRegion=@StateRegion,ZipPostalCode=@ZipPostal,Country=@Country where CompanyId=@CompanyId and id=@id", prm);
+                await _db.ExecuteAsync($"Update DepoVeAdresler set Tip=@Tip,Ad=@FirstName,Soyisim=@LastName,SirketIsmi=@CompanyName,Telefon=@Phone, Adres1=@AddressLine1,Adres2=@AddressLine2,Sehir=@CityTown,Cadde=@StateRegion,PostaKodu=@ZipPostal,Ulke=@Country where id=@id", prm);
             }
         }
-        public async Task<int> InsertAddress(SalesOrderCloneAddress A,  int id)
+        public async Task<int> InsertAddress(SalesOrderCloneAddress A, int id)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@Tip", A.Tip);
@@ -762,15 +757,15 @@ namespace DAL.Repositories
             prm.Add("StateRegion", A.StateRegion);
             prm.Add("ZipPostal", A.ZipPostal);
             prm.Add("Country", A.Country);
-            prm.Add("@IsActive", true);
+            prm.Add("@Aktif", true);
             int adressid = 0;
             if (A.Tip == "BillingAddress")
             {
-                adressid = await _db.QuerySingleAsync<int>($"Insert into Locations (Tip,FirstName,LastName,CompanyName,Phone, AddressLine1,AddressLine2,CityTown,StateRegion,ZipPostalCode,Country,CompanyId,IsActive)  OUTPUT INSERTED.[id]  values (@Tip,@FirstName,@LastName,@CompanyName,@Phone,@AddressLine1,@AddressLine2,@CityTown,@StateRegion,@ZipPostal,@Country,@CompanyId,@IsActive)", prm);
+                adressid = await _db.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Tip,Ad,Soyisim,SirketIsmi,Telefon, Adres1,Adres2,Sehir,Cadde,PostaKodu,Ulke,Aktif)  OUTPUT INSERTED.[id]  values (@Tip,@FirstName,@LastName,@CompanyName,@Phone,@AddressLine1,@AddressLine2,@CityTown,@StateRegion,@ZipPostal,@Country,@CompanyId,@Aktif)", prm);
             }
             else if (A.Tip == "ShippingAddress")
             {
-                adressid = await _db.QuerySingleAsync<int>($"Insert into Locations (Tip,FirstName,LastName,CompanyName,Phone, AddressLine1,AddressLine2,CityTown,StateRegion,ZipPostalCode,Country,CompanyId,IsActive)  OUTPUT INSERTED.[id]  values (@Tip,@FirstName,@LastName,@CompanyName,@Phone,@AddressLine1,@AddressLine2,@CityTown,@StateRegion,@ZipPostal,@Country,@CompanyId,@IsActive)", prm);
+                adressid = await _db.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Tip,Ad,Soyisim,SirketIsmi,Telefon, Adres1,Adres2,Sehir,Cadde,PostaKodu,Ulke,Aktif)  OUTPUT INSERTED.[id]  values (@Tip,@FirstName,@LastName,@CompanyName,@Phone,@AddressLine1,@AddressLine2,@CityTown,@StateRegion,@ZipPostal,@Country,@CompanyId,@Aktif)", prm);
             }
             return adressid;
 
@@ -780,15 +775,15 @@ namespace DAL.Repositories
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
             prm.Add("@OrdersId", T.OrdersId);
-            prm.Add("@ItemId", T.ItemId);
+            prm.Add("@StokId", T.StokId);
             prm.Add("@CompanyId", CompanyId);
-            if (T.ItemId != 0)
+            if (T.StokId != 0)
             {
 
-                await _db.ExecuteAsync($"Delete from  Rezerve  where SalesOrderId=@OrdersId and CompanyId=@CompanyId and SalesOrderItemId=@id and ItemId=@ItemId", prm);
+                await _db.ExecuteAsync($"Delete from  Rezerve  where SatisId=@OrdersId and  SatisDetayId=@id and StokId=@StokId", prm);
 
-                List<ManufacturingOrderA> MANU = (await _db.QueryAsync<ManufacturingOrderA>($@"select ManufacturingOrder.id from ManufacturingOrder 
-                where  ManufacturingOrder.SalesOrderId=@OrdersId and ManufacturingOrder.SalesOrderItemId=@id and ManufacturingOrder.ItemId=@ItemId and ManufacturingOrder.IsActive=1 and ManufacturingOrder.CompanyId=@CompanyId ", prm)).ToList();
+                List<ManufacturingOrderA> MANU = (await _db.QueryAsync<ManufacturingOrderA>($@"select Uretim.id from Uretim 
+                where  Uretim.SatisId=@OrdersId and Uretim.SatisDetayId=@id and Uretim.StokId=@StokId and Uretim.Aktif=1 ", prm)).ToList();
                 int varmı = 1;
                 if (MANU.Count() == 0)
                 {
@@ -796,37 +791,37 @@ namespace DAL.Repositories
                 }
 
 
-                var status = await _db.QueryFirstAsync<int>($@"select SalesOrderItem.SalesItem from SalesOrderItem 
-                    where SalesOrderItem.SalesOrderId=@OrdersId and SalesOrderItem.id=@id and CompanyId=@CompanyId", prm);
-                await _db.ExecuteAsync($"Delete From SalesOrderItem  where ItemId = @ItemId and CompanyId = @CompanyId and id=@id and SalesOrderId=@OrdersId", prm);
+                var status = await _db.QueryFirstAsync<int>($@"select SatisDetay.SatisOgesi from SatisDetay 
+                    where SatisDetay.SatisId=@OrdersId and SatisDetay.id=@id", prm);
+                await _db.ExecuteAsync($"Delete From SatisDetay  where StokId = @StokId and id=@id and SatisId=@OrdersId", prm);
                 if (varmı == 0)
                 {
 
                     if (status != 3)
                     {
-                        var BomList = await _db.QueryAsync<BOM>($"Select * From Bom where CompanyId =@CompanyId and ProductId =@ItemId  and IsActive = 1", prm);
+                        var BomList = await _db.QueryAsync<BOM>($"Select * From UrunRecetesi where  MamulId =@StokId  and Aktif = 1", prm);
                         foreach (var item in BomList)
                         {
                             prm.Add("@MaterialId", item.MalzemeId);
 
-                            prm.Add("@Status", 4);
-                            await _db.ExecuteAsync($"Delete from  Rezerve where SalesOrderId=@OrdersId and SalesOrderItemId=@id and CompanyId=@CompanyId and ItemId=@MaterialId", prm);
+                            prm.Add("@Durum", 4);
+                            await _db.ExecuteAsync($"Delete from  Rezerve where SatisId=@OrdersId and SatisDetayId=@id and  StokId=@MaterialId", prm);
 
                         }
-                        await _db.ExecuteAsync($"Delete from SalesOrderItem where id=@id and SalesOrderId=@OrdersId and CompanyId=@CompanyId", prm);
+                        await _db.ExecuteAsync($"Delete from SatisDetay where id=@id and SatisId=@OrdersId  ", prm);
 
                     }
 
                 }
                 else
                 {
-                    await _db.ExecuteAsync($"Delete from SalesOrderItem where id=@id and SalesOrderId=@OrdersId and CompanyId=@CompanyId", prm);
+                    await _db.ExecuteAsync($"Delete from SatisDetay where id=@id and SatisId=@OrdersId ", prm);
                 }
 
             }
             else
             {
-                await _db.ExecuteAsync($"Delete From SalesOrderItem  where  CompanyId = @CompanyId and id=@id and SalesOrderId=@OrdersId", prm);
+                await _db.ExecuteAsync($"Delete From SatisDetay  where id=@id and SatisId=@OrdersId", prm);
 
             }
         }
@@ -838,84 +833,84 @@ namespace DAL.Repositories
                 DynamicParameters param = new DynamicParameters();
                 param.Add("@CompanyId", CompanyId);
                 param.Add("@id", T.id);
-                param.Add("@IsActive", false);
+                param.Add("@Aktif", false);
                 param.Add("@User", User);
                 param.Add("@Date", DateTime.Now);
-                var IsActived = await _db.QueryAsync<bool>($"select IsActive from SalesOrder where id=@id and CompanyId=@CompanyId ", param);
+                var IsActived = await _db.QueryAsync<bool>($"select Aktif from Satis where id=@id", param);
                 if (IsActived.First() == false)
                 {
 
                 }
                 else
                 {
-                    List<OperationsUpdate> MANU = (await _db.QueryAsync<OperationsUpdate>($"select ManufacturingOrder.id from ManufacturingOrder where  SalesOrderId=@id and IsActive=1 and CompanyId=@CompanyId", param)).ToList();
+                    List<OperationsUpdate> MANU = (await _db.QueryAsync<OperationsUpdate>($"select Uretim.id from Uretim where  SatisId=@id and Aktif=1", param)).ToList();
                     foreach (var item in MANU)
                     {
                         param.Add("@manuid", item.id);
-                        await _db.ExecuteAsync($"Update ManufacturingOrder Set SalesOrderId=NULL , SalesOrderItemId=NULL , CustomerId=NULL where id = @manuid and CompanyId = @CompanyId ", param);
-                        await _db.ExecuteAsync($"Update Rezerve Set SalesOrderId=NULL , SalesOrderItemId=NULL , CustomerId=NULL where ManufacturingOrderId = @manuid and CompanyId = @CompanyId ", param);
+                        await _db.ExecuteAsync($"Update Uretim Set SatisId=NULL , SatisDetayId=NULL , CariId=NULL where id = @manuid  ", param);
+                        await _db.ExecuteAsync($"Update Rezerve Set SatisId=NULL , SatisDetayId=NULL , CariId=NULL where UretimId = @manuid ", param);
                     }
-                    var order = await _db.QueryAsync<OperationsUpdate>($"select Orders.id from Orders where  SalesOrderId=@id and IsActive=1 and CompanyId=@CompanyId", param);
+                    var order = await _db.QueryAsync<OperationsUpdate>($"select SatinAlma.id from SatinAlma where  SatisId=@id and Aktif=1", param);
                     foreach (var item in order)
                     {
                         param.Add("@orderid", item.id);
 
-                        await _db.ExecuteAsync($"Update Order Set SalesOrderId=NULL , SalesOrderItemId=NULL  where id = @orderid and CompanyId = @CompanyId ", param);
+                        await _db.ExecuteAsync($"Update SatinAlma Set SatisId=NULL , SatisDetayId=NULL  where id = @orderid", param);
 
                     }
 
-                    List<Manufacturing> ItemsCount = (await _db.QueryAsync<Manufacturing>($"select ItemId,RezerveCount from Rezerve where SalesOrderId=@id and CompanyId=@CompanyId and Status=1", param)).ToList();
-                    await _db.ExecuteAsync($"Update SalesOrder Set IsActive=@IsActive,DeleteDate=@Date,DeletedUser=@User where id = @id and CompanyId = @CompanyId ", param);
+                    List<Manufacturing> ItemsCount = (await _db.QueryAsync<Manufacturing>($"select StokId,RezerveDegeri from Rezerve where SatisId=@id and  Durum=1", param)).ToList();
+                    await _db.ExecuteAsync($"Update Satis Set Aktif=@Aktif,SilinmeTarihi=@Date,SilenKullanıcı=@User where id = @id ", param);
                     foreach (var item in ItemsCount)
                     {
-                        param.Add("@ItemId", item.StokId);
-                        await _db.ExecuteAsync($"Delete from  Rezerve where SalesOrderId=@id and CompanyId=@CompanyId and ItemId=@ItemId", param);
+                        param.Add("@StokId", item.StokId);
+                        await _db.ExecuteAsync($"Delete from  Rezerve where SatisId=@id and  StokId=@StokId", param);
                     }
                 }
 
             }
-         
+
         }
 
         public async Task UpdateMakeItems(SatısUpdateItems T, float eski, int CompanyId)
         {
 
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@id", T.SalesOrderId);
-            prm.Add("@ManufacturingOrderId", T.ManufacturingOrderId);
+            prm.Add("@id", T.SatisId);
+            prm.Add("@UretimId", T.UretimId);
             prm.Add("@CompanyId", CompanyId);
             prm.Add("@OrderItemId", T.id);
-            prm.Add("@ItemsId", T.ItemId);
+            prm.Add("@ItemsId", T.StokId);
 
 
-            var LocationId = await _db.QueryFirstAsync<int>($"Select LocationId From SalesOrder where CompanyId =@CompanyId and id =@id", prm);
-            prm.Add("@LocationId", LocationId);
+            var DepoId = await _db.QueryFirstAsync<int>($"Select DepoId From Satis where id =@id", prm);
+            prm.Add("@DepoId", DepoId);
 
-            prm.Add("@PlannedQuantity", T.Quantity);
-            string sqlp = $@"Update ManufacturingOrder Set PlannedQuantity=@PlannedQuantity where CompanyId=@CompanyId and id=@ManufacturingOrderId and SalesOrderId=@id and SalesOrderItemId=@OrderItemId and ItemId=@ItemsId  ";
+            prm.Add("@PlanlananMiktar", T.Miktar);
+            string sqlp = $@"Update Uretim Set PlanlananMiktar=@PlanlananMiktar where  id=@UretimId and SatisId=@id and SatisDetayId=@OrderItemId and StokId=@ItemsId  ";
             await _db.ExecuteAsync(sqlp, prm);
 
 
             //Eklenen Ordera ait ıtemin  Bomlarını buluyoruz
-            var BomList = await _db.QueryAsync<BOM>($"Select id,ISNULL(ItemId,0) as MaterialId,ISNULL(PlannedQuantity,0) as Quantity,ISNULL(Notes,'') as Note from ManufacturingOrderItems where CompanyId = {CompanyId} and ManufacturingOrderItems.OrderId=@ManufacturingOrderId  and Tip='Ingredients'", prm);
-            float adet = T.Quantity;
+            var BomList = await _db.QueryAsync<BOM>($"Select id,ISNULL(StokId,0) as MalzemeId,ISNULL(PlanlananMiktar,0) as Miktar,ISNULL(Bilgi,'') as Bilgi from UretimDetay where  UretimDetay.UretimId=@UretimId  and Tip='Malzemeler'", prm);
+            float adet = T.Miktar;
 
 
             foreach (var item in BomList)
             {
 
                 DynamicParameters param = new DynamicParameters();
-                param.Add("@Tip", "Ingredients");
-                param.Add("@ManufacturingOrderItemId", item.id);
-                param.Add("@ManufacturingOrderId", T.ManufacturingOrderId);
-                param.Add("@id", T.SalesOrderId);
+                param.Add("@Tip", "Malzemeler");
+                param.Add("@UretimDetayId", item.id);
+                param.Add("@UretimId", T.UretimId);
+                param.Add("@id", T.SatisId);
                 param.Add("@CompanyId", CompanyId);
                 param.Add("@OrderItemId", T.id);
-                param.Add("@ItemId", item.MalzemeId);
+                param.Add("@StokId", item.MalzemeId);
                 param.Add("@Notes", item.Bilgi);
                 if (adet == eski)
                 {
-                    param.Add("@PlannedQuantity", item.Miktar);
+                    param.Add("@PlanlananMiktar", item.Miktar);
                 }
                 else if (adet > eski)
                 {
@@ -923,51 +918,50 @@ namespace DAL.Repositories
                     float yenideger = adet - eski;
                     var artışdegeri = yenideger * anadeger;
                     item.Miktar = item.Miktar + artışdegeri;
-                    param.Add("@PlannedQuantity", item.Miktar);
+                    param.Add("@PlanlananMiktar", item.Miktar);
                 }
                 else
                 {
                     var yenideger = item.Miktar / eski;
                     var deger = eski - adet;
                     item.Miktar = item.Miktar - (yenideger * deger);
-                    param.Add("@PlannedQuantity", item.Miktar);
+                    param.Add("@PlanlananMiktar", item.Miktar);
                 }
 
 
                 param.Add("@CompanyId", CompanyId);
-                param.Add("@LocationId", LocationId);
-                string sql = $@"Update ManufacturingOrderItems Set PlannedQuantity=@PlannedQuantity where CompanyId=@CompanyId and OrderId=@ManufacturingOrderId and id=@ManufacturingOrderItemId and ItemId=@ItemId ";
+                param.Add("@DepoId", DepoId);
+                string sql = $@"Update UretimDetay Set PlanlananMiktar=@PlanlananMiktar where   UretimId=@UretimId and id=@UretimDetayId and StokId=@StokId ";
                 await _db.ExecuteAsync(sql, param);
-                // materyalin DefaultPrice
+                // materyalin VarsayilanFiyat
                 // Bul
-                string sqlb = $@"select ISNULL(SUM(Quantity),0) from Orders 
-                left join OrdersItem on OrdersItem.OrdersId = Orders.id and Orders.LocationId=@LocationId
-                and OrdersItem.ItemId = @ItemId where Orders.CompanyId = @CompanyId
-                and DeliveryId = 1 and Orders.ManufacturingOrderId=@ManufacturingOrderId and Orders.IsActive=1 and Orders.Tip='PurchaseOrder' ";
+                string sqlb = $@"select ISNULL(SUM(Miktar),0) from SatinAlma 
+                left join SatinAlmaDetay on SatinAlmaDetay.SatisId = SatinAlma.id and SatinAlma.DepoId=@DepoId
+                and SatinAlmaDetay.StokId = @StokId where  DurumBelirteci = 1 and SatinAlma.UretimId=@UretimId and SatinAlma.Aktif=1 and SatinAlma.Tip='PurchaseOrder' ";
                 var expectedsorgu = await _db.QueryAsync<float>(sqlb, param);
                 float expected = expectedsorgu.First();
 
 
 
-                List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(id, 0) from LocationStock where ItemId=@ItemId and LocationId = @LocationId and CompanyId = @CompanyId)   as LocationStockId, (select ISNULL(DefaultPrice, 0) From Items where CompanyId = @CompanyId and id = @ItemId)as  DefaultPrice", param)).ToList();
-                float DefaultPrice = sorgu.First().VarsayilanFiyat;
-                param.Add("@Cost", DefaultPrice * item.Miktar);
+                List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(id, 0) from DepoStoklar where StokId=@StokId and DepoId = @DepoId )   as DepoStokId, (select ISNULL(VarsayilanFiyat, 0) From Urunler where  and id = @StokId)as  VarsayilanFiyat", param)).ToList();
+                float VarsayilanFiyat = sorgu.First().VarsayilanFiyat;
+                param.Add("@Tutar", VarsayilanFiyat * item.Miktar);
                 param.Add("@LocationStockId", sorgu.First().DepoStokId);
 
                 string sqlTY = $@"select
-           (moi.PlannedQuantity-SUM(ISNULL(OrdersItem.Quantity,0))-ISNULL((Rezerve.RezerveCount),0))as Missing
+           (moi.PlanlananMiktar-SUM(ISNULL(SatinAlmaDetay.Miktar,0))-ISNULL((Rezerve.RezerveDegeri),0))as Missing
             
-            from ManufacturingOrderItems moi
-            left join Items on Items.id=moi.ItemId
-            left join ManufacturingOrder on ManufacturingOrder.id=moi.OrderId 
-			LEFT join Rezerve on Rezerve.ManufacturingOrderId=ManufacturingOrder.id and Rezerve.ManufacturingOrderItemId=moi.id and Rezerve.Status=1
-            left join LocationStock on LocationStock.ItemId=Items.id and LocationStock.LocationId=@LocationId
-            left join Orders on Orders.ManufacturingOrderId=ManufacturingOrder.id and  Orders.SalesOrderId is null  and moi.id=Orders.ManufacturingOrderItemId and Orders.ManufacturingOrderItemId=moi.id
-            left join OrdersItem on OrdersItem.OrdersId=Orders.id  and DeliveryId = 1 and OrdersItem.ItemId=moi.ItemId
-            where  moi.CompanyId = @CompanyId and moi.OrderId = @ManufacturingOrderId and moi.Tip='Ingredients'  and ManufacturingOrder.id=@ManufacturingOrderId and moi.id=@ManufacturingOrderItemId and 
-			 ManufacturingOrder.Status!=3
-            Group by moi.id,moi.Tip,moi.ItemId,Items.Name,Notes,moi.Cost,moi.Availability
-            ,LocationStock.StockCount,moi.PlannedQuantity,Rezerve.RezerveCount";
+            from UretimDetay moi
+            left join Urunler on Urunler.id=moi.StokId
+            left join Uretim on Uretim.id=moi.UretimId 
+			LEFT join Rezerve on Rezerve.UretimId=Uretim.id and Rezerve.UretimDetayId=moi.id and Rezerve.Durum=1
+            left join DepoStoklar on DepoStoklar.StokId=Urunler.id and DepoStoklar.DepoId=@DepoId
+            left join SatinAlma on SatinAlma.UretimId=Uretim.id and  SatinAlma.SatisId is null  and moi.id=SatinAlma.UretimDetayId
+            left join SatinAlmaDetay on SatinAlmaDetay.SatinAlmaId=SatinAlma.id  and DurumBelirteci = 1 and SatinAlmaDetay.StokId=moi.StokId
+            where  moi. and moi.UretimId = @UretimId and moi.Tip='Malzemeler'  and Uretim.id=@UretimId and moi.id=@UretimDetayId and 
+			 Uretim.Durum!=3
+            Group by moi.id,moi.Tip,moi.StokId,Urunler.Name,Bilgi,moi.Tutar,moi.MalzemeDurum
+            ,DepoStoklar.StokAdeti,moi.PlanlananMiktar,Rezerve.RezerveDegeri";
                 var missingdeger = await _db.QueryAsync<float>(sqlTY, param);
                 float missingcount;
                 if (missingdeger.Count() == 0)
@@ -980,9 +974,9 @@ namespace DAL.Repositories
                 }
 
 
-                float RezerveStockCount = await _control.Count(item.MalzemeId, LocationId);
+                float RezerveStockCount = await _control.Count(item.MalzemeId, DepoId);
                 RezerveStockCount = RezerveStockCount >= 0 ? RezerveStockCount : 0;
-                List<int> Count = (await _db.QueryAsync<int>($"Select ISNULL(Rezerve.RezerveCount,0)as Count from Rezerve where CompanyId=@CompanyId and ItemId=@ItemId and ManufacturingOrderId=@ManufacturingOrderId and ManufacturingOrderItemId=@ManufacturingOrderItemId and ItemId=@ItemId and SalesOrderId=@id and SalesOrderItemId=@OrderItemId and Rezerve.Status=1", param)).ToList();
+                List<int> Count = (await _db.QueryAsync<int>($"Select ISNULL(Rezerve.RezerveDegeri,0)as Count from Rezerve where StokId=@StokId and UretimId=@UretimId and UretimDetayId=@UretimDetayId and StokId=@StokId and SatisId=@id and SatisDetayId=@OrderItemId and Rezerve.Durum=1", param)).ToList();
                 float Counts;
                 if (Count.Count() == 0)
                 {
@@ -998,7 +992,7 @@ namespace DAL.Repositories
                     newQuantity = Count[0];
                     param.Add("@RezerveCount", newQuantity);//Stok sayısı adetten kücük ise rezer sayısıStokadeti kadar olur.
                     param.Add("@LocationStockCount", RezerveStockCount);
-                    param.Add("@Availability", 2);
+                    param.Add("@MalzemeDurum", 2);
                 }
 
                 else if (RezerveStockCount >= item.Miktar - Counts)
@@ -1006,7 +1000,7 @@ namespace DAL.Repositories
 
                     param.Add("@RezerveCount", item.Miktar);
                     param.Add("@LocationStockCount", RezerveStockCount);
-                    param.Add("@Availability", 2);
+                    param.Add("@MalzemeDurum", 2);
                 }
                 else
                 {
@@ -1018,45 +1012,45 @@ namespace DAL.Repositories
                     }
                     if (missingcount * (-1) <= expected && degeryok != 1 && missingcount * (-1) > 0 && expected > 0)
                     {
-                        param.Add("@Availability", 1);
-                        param.Add("@RezerveCount", RezerveStockCount+Counts);
+                        param.Add("@MalzemeDurum", 1);
+                        param.Add("@RezerveCount", RezerveStockCount + Counts);
 
                     }
                     else
                     {
-                        param.Add("@Availability", 0);
-                        param.Add("@RezerveCount", RezerveStockCount+ Counts);
+                        param.Add("@MalzemeDurum", 0);
+                        param.Add("@RezerveCount", RezerveStockCount + Counts);
 
                     }
 
                 }
 
-                param.Add("@Status", 1);
+                param.Add("@Durum", 1);
 
-                await _db.ExecuteAsync($"Update Rezerve set  Tip=@Tip,ItemId=@ItemId,RezerveCount=@RezerveCount,LocationId=@LocationId,Status=@Status,LocationStockCount=@LocationStockCount where CompanyId=@CompanyId and ManufacturingOrderId=@ManufacturingOrderId and ItemId=@ItemId and ManufacturingOrderItemId=@ManufacturingOrderItemId and SalesOrderId=@id and SalesOrderItemId=@OrderItemId ", param);
-
-
+                await _db.ExecuteAsync($"Update Rezerve set  Tip=@Tip,StokId=@StokId,RezerveDegeri=@RezerveCount,DepoId=@DepoId,Durum=@Durum where  UretimId=@UretimId and StokId=@StokId and UretimDetayId=@UretimDetayId and SatisId=@id and SatisDetayId=@OrderItemId ", param);
 
 
 
-                string sqlw = $@"Update ManufacturingOrderItems Set Tip=@Tip,ItemId=@ItemId,Notes=@Notes,PlannedQuantity=@PlannedQuantity,Cost=@Cost,Availability=@Availability where CompanyId=@CompanyId and OrderId=@ManufacturingOrderId and ItemId=@ItemId and id=@ManufacturingOrderItemId  ";
+
+
+                string sqlw = $@"Update UretimDetay Set Tip=@Tip,StokId=@StokId,Bilgi=@Notes,PlanlananMiktar=@PlanlananMiktar,Tutar=@Tutar,MalzemeDurum=@MalzemeDurum where  UretimId=@UretimId and StokId=@StokId and id=@UretimDetayId  ";
                 await _db.ExecuteAsync(sqlw, param);
 
-                if (T.SalesOrderId != 0 || T.SalesOrderId != null)
+                if (T.SatisId != 0 || T.SatisId != null)
                 {
-                    prm.Add("@OrderId", T.SalesOrderId);
+                    prm.Add("@OrderId", T.SatisId);
                     prm.Add("@CompanyId", CompanyId);
-                    prm.Add("@ItemId", T.ItemId);
-                    prm.Add("@SalesOrderId", T.id);
-                    prm.Add("@SalesOrderItemId", T.id);
-                    prm.Add("@ManufacturingOrderItemId", item.id);
+                    prm.Add("@StokId", T.StokId);
+                    prm.Add("@SatisId", T.id);
+                    prm.Add("@SatisDetayId", T.id);
+                    prm.Add("@UretimDetayId", item.id);
 
-                    string sqlr = $@"(select MIN(ManufacturingOrderItems.Availability)as Ingredients from ManufacturingOrderItems
-                    left join ManufacturingOrder on ManufacturingOrder.id=ManufacturingOrderItems.OrderId
-                    where ManufacturingOrder.id=@ManufacturingOrderId and ManufacturingOrderItems.id=@ManufacturingOrderItemId and ManufacturingOrderItems.Tip='Ingredients')";
+                    string sqlr = $@"(select MIN(UretimDetay.MalzemeDurum)as Malzemeler from UretimDetay
+                    left join Uretim on Uretim.id=UretimDetay.UretimId
+                    where Uretim.id=@UretimId and UretimDetay.id=@UretimDetayId and UretimDetay.Tip='Malzemeler')";
                     var availability = await _db.QueryAsync<int>(sqlr, prm);
-                    prm.Add("@Ingredients", availability.First());
-                    await _db.ExecuteAsync($"Update SalesOrderItem set Ingredients=@Ingredients where CompanyId=@CompanyId and SalesOrderId=@SalesOrderId and id=@SalesOrderItemId and ItemId=@ItemId ", prm);
+                    prm.Add("@Malzemeler", availability.First());
+                    await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler where SatisId=@SatisId and id=@SatisDetayId and StokId=@StokId ", prm);
                 }
 
             }
@@ -1069,18 +1063,18 @@ namespace DAL.Repositories
 
 
             //Eklenen Ordera ait ıtemin Operation Bomlarını buluyoruz
-            var OperationList = await _db.QueryAsync<ProductOperationsBOM>($"Select ISNULL(id,0)As id,ISNULL(OperationId,0) as OperationId,ISNULL(ResourceId,0)as ResourceId,ISNULL(CostPerHour,0)as CostHour,ISNULL(PlannedTime,0)as OperationTime  from ManufacturingOrderItems where CompanyId = {CompanyId} and ManufacturingOrderItems.OrderId = {T.SalesOrderId} and Tip = 'Operations'");
+            var OperationList = await _db.QueryAsync<ProductOperationsBOM>($"Select ISNULL(id,0)As id,ISNULL(OperasyonId,0) as OperasyonId,ISNULL(KaynakId,0)as KaynakId,ISNULL(SaatlikUcret,0)as SaatlikUcret,ISNULL(PlanlananZaman,0)as OperationTime  from UretimDetay where  UretimDetay.UretimId = {T.SatisId} and Tip = 'Operations'");
 
             foreach (var item in OperationList)
             {
                 DynamicParameters param = new DynamicParameters();
                 param.Add("@Tip", "Operations");
-                param.Add("@OrderId", T.SalesOrderId);
-                param.Add("@OperationId", item.OperasyonId);
-                param.Add("@ResourceId", item.KaynakId);
+                param.Add("@OrderId", T.SatisId);
+                param.Add("@OperasyonId", item.OperasyonId);
+                param.Add("@KaynakId", item.KaynakId);
                 if (adet == eski)
                 {
-                    param.Add("@PlannedQuantity", item.OperasyonZamani);
+                    param.Add("@PlanlananMiktar", item.OperasyonZamani);
                 }
                 else if (adet > eski)
                 {
@@ -1097,53 +1091,53 @@ namespace DAL.Repositories
 
                 }
 
-                param.Add("@PlannedTime ", item.OperasyonZamani);
-                param.Add("@Status", 0);
-                param.Add("@Cost", (item.SaatlikUcret / 60 / 60) * item.OperasyonZamani);
+                param.Add("@PlanlananZaman ", item.OperasyonZamani);
+                param.Add("@Durum", 0);
+                param.Add("@Tutar", (item.SaatlikUcret / 60 / 60) * item.OperasyonZamani);
                 param.Add("@CompanyId", CompanyId);
 
-                string sql = $@"Update ManufacturingOrderItems Set Tip=@Tip,OrderId=@OrderId,OperationId=@OperationId,ResourceId=@ResourceId,PlannedTime=@PlannedTime,Status=@Status,Cost=@Cost where CompanyId=@CompanyId and OrderId=@OrderId and OperationId=@OperationId and ResourceId=ResourceId  ";
+                string sql = $@"Update UretimDetay Set Tip=@Tip,OrderId=@OrderId,OperasyonId=@OperasyonId,KaynakId=@KaynakId,PlanlananZaman=@PlanlananZaman,Durum=@Durum,Tutar=@Tutar where UretimId=@OrderId and OperasyonId=@OperasyonId and KaynakId=KaynakId  ";
                 await _db.ExecuteAsync(sql, param);
             }
         }
         public async Task UpdateMakeBatchItems(SatısUpdateItems T, int CompanyId, float eskiQuantity)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@id", T.SalesOrderId);
+            prm.Add("@id", T.SatisId);
             prm.Add("@CompanyId", CompanyId);
             prm.Add("@OrderItemId", T.id);
-            prm.Add("@ItemId", T.ItemId);
-            var LocationIdAl = await _db.QueryFirstAsync<int>($"Select LocationId From SalesOrder where CompanyId =@CompanyId and id =@id", prm);
-            int LocationId = LocationIdAl;
-            prm.Add("@LocationId", LocationId);
+            prm.Add("@StokId", T.StokId);
+            var LocationIdAl = await _db.QueryFirstAsync<int>($"Select DepoId From Satis where id =@id", prm);
+            int DepoId = LocationIdAl;
+            prm.Add("@DepoId", DepoId);
 
-            var status = await _db.QueryFirstAsync<int>($@"select SalesOrderItem.SalesItem from SalesOrderItem 
-                    where SalesOrderItem.SalesOrderId=@id and SalesOrderItem.id=@OrderItemId and CompanyId=@CompanyId", prm);
+            var status = await _db.QueryFirstAsync<int>($@"select SatisDetay.SatisOgesi from SatisDetay 
+                    where SatisDetay.SatisId=@id and SatisDetay.id=@OrderItemId ", prm);
             int statusId = status;
-            prm.Add("@ItemsId", T.ItemId);
+            prm.Add("@ItemsId", T.StokId);
 
 
             //Adet azaltılırken hangi üretimin olacağı belirlenecek
-            string sqlsorgu = $@"select ManufacturingOrder.id,ManufacturingOrder.PlannedQuantity from ManufacturingOrder 
-            where ManufacturingOrder.CompanyId=@CompanyId and ManufacturingOrder.SalesOrderId=@id  
-            and ManufacturingOrder.SalesOrderItemId=@OrderItemId and ManufacturingOrder.Status!=3 and ManufacturingOrder.IsActive=1 and ManufacturingOrder.Private='false' and ManufacturingOrder.ItemId=@ItemId  Order by id DESC ";
+            string sqlsorgu = $@"select Uretim.id,Uretim.PlanlananMiktar from Uretim 
+            where Uretim. and Uretim.SatisId=@id  
+            and Uretim.SatisDetayId=@OrderItemId and Uretim.Durum!=3 and Uretim.Aktif=1 and Uretim.Private='false' and Uretim.StokId=@StokId  Order by id DESC ";
             var Manufacturing = await _db.QueryAsync<SalesOrderUpdateMakeBatchItems>(sqlsorgu, prm);
 
 
-            string sqlquerys = $@"select SUM(ISNULL(ManufacturingOrder.PlannedQuantity,0)) from ManufacturingOrder 
-            where ManufacturingOrder.CompanyId=@CompanyId and ManufacturingOrder.SalesOrderId=@id  
-            and ManufacturingOrder.SalesOrderItemId=@OrderItemId and ManufacturingOrder.Status!=3 and ManufacturingOrder.IsActive=1 and ManufacturingOrder.Private='false' and ManufacturingOrder.ItemId=@ItemId";
+            string sqlquerys = $@"select SUM(ISNULL(Uretim.PlanlananMiktar,0)) from Uretim 
+            where Uretim. and Uretim.SatisId=@id  
+            and Uretim.SatisDetayId=@OrderItemId and Uretim.Durum!=3 and Uretim.Aktif=1 and Uretim.Ozel='false' and Uretim.StokId=@StokId";
             var expected = await _db.QueryFirstAsync<int>(sqlquerys, prm);
 
             //adet yükseltilirken stokta yok ise boşta bir üretim var ise onu alır.
-            string sqlquery = $@"select * from ManufacturingOrder where CustomerId is null and SalesOrderId is null and SalesOrderItemId is null and Status!=3 and Private='false' and IsActive=1 and ItemId=@ItemsId Order by id DESC";
+            string sqlquery = $@"select * from Uretim where CariId is null and SatisId is null and SatisDetayId is null and Durum!=3 and Ozel='false' and Aktif=1 and StokId=@ItemsId Order by id DESC";
             var EmptyManufacturing = await _db.QueryAsync<SalesOrderUpdateMakeBatchItems>(sqlquery, prm);
 
-            string sqlb = $@"Select ISNULL(id,0) from LocationStock where ItemId =@ItemId and LocationId = @LocationId and CompanyId = @CompanyId";
+            string sqlb = $@"Select ISNULL(id,0) from DepoStoklar where StokId =@StokId and DepoId = @DepoId";
             var locationstockid = await _db.QueryFirstAsync<int>(sqlb, prm);
             prm.Add("@LocationStockId", locationstockid);
             float degerler;
-            string sqlp = $" select ISNULL(RezerveCount,0) from Rezerve where SalesOrderId=@id and SalesOrderItemId=@OrderItemId and LocationId=@LocationId and ItemId=@ItemId and CompanyId=@CompanyId";
+            string sqlp = $" select ISNULL(RezerveDegeri,0) from Rezerve where SatisId=@id and SatisDetayId=@OrderItemId and DepoId=@DepoId and StokId=@StokId";
             var deger = await _db.QueryAsync<int>(sqlp, prm);
             if (deger.Count() == 0)
             {
@@ -1154,73 +1148,73 @@ namespace DAL.Repositories
                 degerler = deger.First();
             }
 
-            var RezerveCount = await _control.Count(T.ItemId, LocationId);//stocktaki adet
+            var RezerveCount = await _control.Count(T.StokId, DepoId);//stocktaki adet
             RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
 
-            if (degerler > T.Quantity)
+            if (degerler > T.Miktar)
             {
-                prm.Add("@SalesItem", 3);
+                prm.Add("@SatisOgesi", 3);
                 prm.Add("@Ingredient", 3);
                 prm.Add("@ProductionId", 4);
-                prm.Add("@RezerveCount", T.Quantity);
+                prm.Add("@RezerveCount", T.Miktar);
                 prm.Add("@LocationStockCount", RezerveCount);
-                await _db.ExecuteAsync($@"Update SalesOrderItem set SalesItem=@SalesItem,Production=@ProductionId,Ingredients=@Ingredient where CompanyId=@CompanyId and id=@OrderItemId and OrdersId=@id", prm);
-                await _db.ExecuteAsync($"Update Rezerve set  RezerveCount=@RezerveCount,LocationStockCount=@LocationStockCount where CompanyId=@CompanyId and ManufacturingOrderId=@ManufacturingOrderId and ItemId=@ItemId and ManufacturingOrderItemId=@ManufacturingOrderItemId and SalesOrderId=@id and SalesOrderItemId=@OrderItemId ", prm);
+                await _db.ExecuteAsync($@"Update SatisDetay set SatisOgesi=@SatisOgesi,Uretme=@ProductionId,Malzemeler=@Ingredient where id=@OrderItemId and SatisId=@id", prm);
+                await _db.ExecuteAsync($"Update Rezerve set  RezerveDeger=@RezerveCount where UretimId=@UretimId and StokId=@StokId and UretimDetayId=@UretimDetayId and SatisId=@id and SatisDetayId=@OrderItemId ", prm);
                 if (statusId == 2)
                 {
 
-                    if (T.Quantity < eskiQuantity)
+                    if (T.Miktar < eskiQuantity)
                     {
                         foreach (var item in Manufacturing)
                         {
-                            await _db.ExecuteAsync($@"Update ManufacturingOrder set CustomerId=NULL ,SalesOrderId=NULL,SalesOrderItemId=NULL where CompanyId=@CompanyId and id=@ManufacturingOrderId", prm);
+                            await _db.ExecuteAsync($@"Update Uretim set CariId=NULL ,SatisId=NULL,SatisDetayId=NULL where id=@UretimId", prm);
                         }
                     }
 
                 }
             }
-            else if (RezerveCount >= T.Quantity - degerler)
+            else if (RezerveCount >= T.Miktar - degerler)
             {
-                prm.Add("@SalesItem", 3);
+                prm.Add("@SatisOgesi", 3);
                 prm.Add("@Ingredient", 3);
                 prm.Add("@ProductionId", 4);
-                prm.Add("@RezerveCount", T.Quantity);
+                prm.Add("@RezerveCount", T.Miktar);
                 prm.Add("@LocationStockCount", RezerveCount);
-                await _db.ExecuteAsync($@"Update SalesOrderItem set SalesItem=@SalesItem,Production=@ProductionId,Ingredients=@Ingredient where CompanyId=@CompanyId and id=@OrderItemId and OrdersId=@id", prm);
-                await _db.ExecuteAsync($"Update Rezerve set  RezerveCount=@RezerveCount,LocationStockCount=@LocationStockCount where CompanyId=@CompanyId and ManufacturingOrderId=@ManufacturingOrderId and ItemId=@ItemId and ManufacturingOrderItemId=@ManufacturingOrderItemId and SalesOrderId=@id and SalesOrderItemId=@OrderItemId ", prm);
+                await _db.ExecuteAsync($@"Update SatisDetay set SatisOgesi=@SatisOgesi,Uretme=@ProductionId,Malzemeler=@Ingredient where id=@OrderItemId and SatisId=@id", prm);
+                await _db.ExecuteAsync($"Update Rezerve set  RezerveCount=@RezerveCount where  and UretimId=@UretimId and StokId=@StokId and UretimDetayId=@UretimDetayId and SatisId=@id and SatisDetayId=@OrderItemId ", prm);
                 if (statusId == 2)
                 {
 
-                    if (T.Quantity < eskiQuantity)
+                    if (T.Miktar < eskiQuantity)
                     {
                         foreach (var item in Manufacturing)
                         {
-                            await _db.ExecuteAsync($@"Update ManufacturingOrder set CustomerId=NULL ,SalesOrderId=NULL,SalesOrderItemId=NULL where CompanyId=@CompanyId and id=@ManufacturingOrderId", prm);
+                            await _db.ExecuteAsync($@"Update Uretim set CariId=NULL ,SatisId=NULL,SatisDetayId=NULL where id=@UretimId", prm);
                         }
                     }
 
                 }
             }
-            else if (eskiQuantity > T.Quantity && Manufacturing.Count() != 0)
+            else if (eskiQuantity > T.Miktar && Manufacturing.Count() != 0)
             {
 
                 int varmi = 0;
                 float toplamuretimadeti = 0;
-                var dususmıktarı = eskiQuantity - T.Quantity;
+                var dususmıktarı = eskiQuantity - T.Miktar;
                 var uretimfarki = eskiQuantity - expected - degerler;
                 uretimfarki = Math.Abs(uretimfarki);
 
-                float dusuculecekdeger = eskiQuantity - T.Quantity;
+                float dusuculecekdeger = eskiQuantity - T.Miktar;
                 foreach (var item in Manufacturing)
                 {
-                    prm.Add("@ManufacturingOrderId", item.id);
-                    toplamuretimadeti = item.PlannedQuantity;
+                    prm.Add("@UretimId", item.id);
+                    toplamuretimadeti = item.PlanlananMiktar;
                     if (varmi == 0)
                     {
 
                         if (toplamuretimadeti <= dusuculecekdeger)
                         {
-                            await _db.ExecuteAsync($@"Update ManufacturingOrder set CustomerId=NULL ,SalesOrderId=NULL,SalesOrderItemId=NULL where CompanyId=@CompanyId and id=@ManufacturingOrderId", prm);
+                            await _db.ExecuteAsync($@"Update Uretim set CariId=NULL ,SatisId=NULL,SatisDetayId=NULL where id=@UretimId", prm);
 
                         }
 
@@ -1232,67 +1226,67 @@ namespace DAL.Repositories
 
 
             }
-            else if (eskiQuantity < T.Quantity && EmptyManufacturing.Count() != 0)
+            else if (eskiQuantity < T.Miktar && EmptyManufacturing.Count() != 0)
             {
                 int varmi = 0;
                 float toplamuretimadeti = 0;
-                float aranandeger = T.Quantity - degerler;
+                float aranandeger = T.Miktar - degerler;
                 foreach (var item in EmptyManufacturing)
                 {
-                    toplamuretimadeti = item.PlannedQuantity;
+                    toplamuretimadeti = item.PlanlananMiktar;
                     if (varmi == 0)
                     {
 
 
                         if (toplamuretimadeti >= aranandeger)
                         {
-                            prm.Add("@SalesItem", 2);
-                            await _db.ExecuteAsync($@"Update SalesOrderItem set SalesItem=@SalesItem where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
+                            prm.Add("@SatisOgesi", 2);
+                            await _db.ExecuteAsync($@"Update SatisDetay set SatisOgesi=@SatisOgesi where id=@OrderItemId and SatisId=@id", prm);
 
-                            prm.Add("@SalesOrderId", T.SalesOrderId);
+                            prm.Add("@SatisId", T.SatisId);
                             prm.Add("@CompanyId", CompanyId);
-                            prm.Add("@SalesOrderItemId", T.id);
-                            prm.Add("@ItemId", T.ItemId);
-                            prm.Add("@ManufacturingOrderId", item.id);
-                            prm.Add("@ContactId", T.ContactId);
-                            await _db.ExecuteAsync($@"Update ManufacturingOrder set CustomerId=@ContactId,SalesOrderId=@SalesOrderId,SalesOrderItemId=@SalesOrderItemId where CompanyId=@CompanyId and id=@ManufacturingOrderId", prm);
+                            prm.Add("@SatisDetayId", T.id);
+                            prm.Add("@StokId", T.StokId);
+                            prm.Add("@UretimId", item.id);
+                            prm.Add("@CariId", T.CariId);
+                            await _db.ExecuteAsync($@"Update Uretim set CariId=@CariId,SatisId=@SatisId,SatisDetayId=@SatisDetayId where id=@UretimId", prm);
 
-                            string sqlr = $@"(select MIN(ManufacturingOrderItems.Availability)as Ingredients from ManufacturingOrderItems
-                    left join ManufacturingOrder on ManufacturingOrder.id=ManufacturingOrderItems.OrderId
-                    where ManufacturingOrder.id=@ManufacturingOrderId  and ManufacturingOrderItems.Tip='Ingredients' and ManufacturingOrderItems.CompanyId=@CompanyId)";
+                            string sqlr = $@"(select MIN(UretimDetay.MalzemeDurum)as Malzemeler from UretimDetay
+                    left join Uretim on Uretim.id=UretimDetay.UretimId
+                    where Uretim.id=@UretimId  and UretimDetay.Tip='Malzemeler' and UretimDetay.)";
                             var availability = await _db.QueryAsync<int>(sqlr, prm);
-                            prm.Add("@Ingredients", availability.First());
-                            await _db.ExecuteAsync($"Update SalesOrderItem set Ingredients=@Ingredients where CompanyId=@CompanyId and SalesOrderId=@SalesOrderId and id=@SalesOrderItemId and ItemId=@ItemId ", prm);
+                            prm.Add("@Malzemeler", availability.First());
+                            await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler where  SatisId=@SatisId and id=@SatisDetayId and StokId=@StokId ", prm);
 
                             varmi++;
 
                         }
                         else if (toplamuretimadeti < aranandeger)
                         {
-                            prm.Add("@SalesItem", 1);
-                            await _db.ExecuteAsync($@"Update SalesOrderItem set SalesItem=@SalesItem where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
-                            prm.Add("@SalesOrderId", T.SalesOrderId);
+                            prm.Add("@SatisOgesi", 1);
+                            await _db.ExecuteAsync($@"Update SatisDetay set SatisOgesi=@SatisOgesi where id=@OrderItemId and SatisId=@id", prm);
+                            prm.Add("@SatisId", T.SatisId);
                             prm.Add("@CompanyId", CompanyId);
-                            prm.Add("@SalesOrderItemId", T.id);
-                            prm.Add("@ItemId", T.ItemId);
-                            prm.Add("@ManufacturingOrderId", item.id);
-                            prm.Add("@ContactId", T.ContactId);
-                            await _db.ExecuteAsync($@"Update ManufacturingOrder set CustomerId=@ContactId,SalesOrderId=@SalesOrderId,SalesOrderItemId=@SalesOrderItemId where CompanyId=@CompanyId and id=@ManufacturingOrderId", prm);
+                            prm.Add("@SatisDetayId", T.id);
+                            prm.Add("@StokId", T.StokId);
+                            prm.Add("@UretimId", item.id);
+                            prm.Add("@CariId", T.CariId);
+                            await _db.ExecuteAsync($@"Update Uretim set CariId=@CariId,SatisId=@SatisId,SatisDetayId=@SatisDetayId where id=@UretimId", prm);
 
-                            string sqlr = $@"(select MIN(ManufacturingOrderItems.Availability)as Ingredients from ManufacturingOrderItems
-                    left join ManufacturingOrder on ManufacturingOrder.id=ManufacturingOrderItems.OrderId
-                    where ManufacturingOrder.id=@ManufacturingOrderId  and ManufacturingOrderItems.Tip='Ingredients' and ManufacturingOrderItems.CompanyId=@CompanyId)";
+                            string sqlr = $@"(select MIN(UretimDetay.MalzemeDurum)as Malzemeler from UretimDetay
+                    left join Uretim on Uretim.id=UretimDetay.UretimId
+                    where Uretim.id=@UretimId  and UretimDetay.Tip='Malzemeler' and UretimDetay.)";
                             var availability = await _db.QueryAsync<int>(sqlr, prm);
-                            prm.Add("@Ingredients", availability.First());
-                            await _db.ExecuteAsync($"Update SalesOrderItem set Ingredients=@Ingredients where CompanyId=@CompanyId and SalesOrderId=@SalesOrderId and id=@SalesOrderItemId and ItemId=@ItemId ", prm);
+                            prm.Add("@Malzemeler", availability.First());
+                            await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler where SatisId=@SatisId and id=@SatisDetayId and StokId=@StokId ", prm);
                             aranandeger = aranandeger - toplamuretimadeti;
 
 
                         }
                         else
                         {
-                            prm.Add("@SalesItem", 1);
-                            await _db.ExecuteAsync($@"Update SalesOrderItem set SalesItem=@SalesItem where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
+                            prm.Add("@SatisOgesi", 1);
+                            await _db.ExecuteAsync($@"Update SatisDetay set SatisOgesi=@SatisOgesi where  id=@OrderItemId and SatisId=@id", prm);
                             await UpdateIngredientsControl(T, T.id, CompanyId);
                         }
                     }
@@ -1303,12 +1297,12 @@ namespace DAL.Repositories
 
                 }
 
-               
+
             }
             else
             {
-                prm.Add("@SalesItem", 1);
-                await _db.ExecuteAsync($@"Update SalesOrderItem set SalesItem=@SalesItem where CompanyId=@CompanyId and id=@OrderItemId and SalesOrderId=@id", prm);
+                prm.Add("@SatisOgesi", 1);
+                await _db.ExecuteAsync($@"Update SatisDetay set SatisOgesi=@SatisOgesi where id=@OrderItemId and SatisId=@id", prm);
                 await UpdateIngredientsControl(T, T.id, CompanyId);
             }
 
@@ -1320,32 +1314,32 @@ namespace DAL.Repositories
         public async Task UpdateIngredientsControl(SatısUpdateItems T, int OrdersId, int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@SalesOrderId", OrdersId);
+            prm.Add("@SatisId", OrdersId);
             prm.Add("@OrderItemId", T.id);
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@ItemId", T.ItemId);
-            prm.Add("@ContactId", T.ContactId);
-            prm.Add("@location", T.LocationId);
+            prm.Add("@StokId", T.StokId);
+            prm.Add("@CariId", T.CariId);
+            prm.Add("@location", T.DepoId);
             string sqla = $@"select
-        (Select Tip from Items where id = @ItemId and CompanyId = @CompanyId) as Tip,
-       (Select ISNULL(id,0) from LocationStock where ItemId = @ItemId  and LocationId = @location and CompanyId = @CompanyId) as  LocationStockId";
+        (Select Tip from Urunler where id = @StokId) as Tip,
+       (Select ISNULL(id,0) from DepoStoklar where StokId = @StokId  and DepoId = @location ) as  LocationStockId";
             var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, prm);
-            var BomList = await _db.QueryAsync<BOM>($"Select * From Bom where CompanyId = {CompanyId} and ProductId = {T.ItemId} and IsActive = 1");
+            var BomList = await _db.QueryAsync<BOM>($"Select * From UrunRecetesi where  MamulId = {T.StokId} and Aktif = 1");
             var b = 0;
             foreach (var item in BomList)
             {
 
                 DynamicParameters prm2 = new DynamicParameters();
-                prm2.Add("@ItemId", item.MalzemeId);
-                prm2.Add("@SalesOrderId", OrdersId);
+                prm2.Add("@StokId", item.MalzemeId);
+                prm2.Add("@SatisId", OrdersId);
                 prm2.Add("@OrderItemId", T.id);
-                prm2.Add("@location", T.LocationId);
+                prm2.Add("@location", T.DepoId);
                 string sqlb = $@"select
-                (Select ISNULL(Tip,'') from Items where id = @ItemId and CompanyId = @CompanyId)as Tip,
-                 (Select ISNULL(id,0) from LocationStock where ItemId =  @ItemId and LocationId = @location and CompanyId = @CompanyId) as     LocationStockId";
+                (Select ISNULL(Tip,'') from Urunler where id = @StokId)as Tip,
+                 (Select ISNULL(id,0) from DepoStoklar where StokId =  @StokId and DepoId = @location and ) as     DepoStokId";
                 var sorgu1 = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqlb, prm2);
                 int degerler;
-                string sqlp = $" select ISNULL(RezerveCount,0) from Rezerve where SalesOrderId=@SalesOrderId and SalesOrderItemId=@OrderItemId and LocationId=@location and ItemId=@ItemId and CompanyId=@CompanyId and Status=1";
+                string sqlp = $" select ISNULL(RezerveDeger,0) from Rezerve where SatisId=@SatisId and SatisDetayId=@OrderItemId and DepoId=@location and StokId=@StokId and  Durum=1";
                 var deger = await _db.QueryAsync<int>(sqlp, prm2);
                 if (deger.Count() == 0)
                 {
@@ -1359,17 +1353,17 @@ namespace DAL.Repositories
 
 
 
-                var RezerveCount = await _control.Count(item.MalzemeId, T.LocationId);
+                var RezerveCount = await _control.Count(item.MalzemeId, T.DepoId);
                 RezerveCount = RezerveCount >= 0 ? RezerveCount : 0;
                 //stocktaki adet
-                var stokcontrol = T.Quantity * item.Miktar; //bir materialin kaç tane gideceği hesaplanıyor
+                var stokcontrol = T.Miktar * item.Miktar; //bir materialin kaç tane gideceği hesaplanıyor
                 if (deger.Count() == 0)
                 {
 
 
                     DynamicParameters param2 = new DynamicParameters();
-                    param2.Add("@ItemId", item.MalzemeId);
-                    param2.Add("@location", T.LocationId);
+                    param2.Add("@StokId", item.MalzemeId);
+                    param2.Add("@location", T.DepoId);
                     if (RezerveCount >= stokcontrol) //yeterli stok var mı
                     {
 
@@ -1399,12 +1393,12 @@ namespace DAL.Repositories
                     {
                         T.Conditions = 3;
                     }
-                    prm2.Add("@Status", 1);
+                    prm2.Add("@Durum", 1);
                     prm2.Add("@OrdersId", OrdersId);
                     prm2.Add("@Tip", sorgu1.First().Tip);
-                    prm2.Add("@ContactsId", T.ContactId);
+                    prm2.Add("@ContactsId", T.CariId);
                     prm2.Add("@OrderItemId", T.id);
-                    await _db.ExecuteAsync($"Insert into Rezerve (SalesOrderId,SalesOrderItemId,Tip,ItemId,RezerveCount,CustomerId,LocationId,Status,LocationStockCount,CompanyId) values (@OrdersId,@OrderItemId,@Tip,@ItemId,@RezerveCount,@ContactsId,@location,@Status,@LocationStockCount,@CompanyId)", prm2);
+                    await _db.ExecuteAsync($"Insert into Rezerve (SatisId,SatisDetayId,Tip,StokId,RezerveDeger,DepoId,Durum) values (@OrdersId,@OrderItemId,@Tip,@StokId,@RezerveCount,@location,@Durum)", prm2);
 
 
 
@@ -1448,11 +1442,11 @@ namespace DAL.Repositories
                 {
                     T.Conditions = 3;
                 }
-                prm2.Add("@Status", 1);
+                prm2.Add("@Durum", 1);
                 prm2.Add("@OrdersId", OrdersId);
                 prm2.Add("@Tip", sorgu1.First().Tip);
-                prm2.Add("@ContactsId", T.ContactId);
-                await _db.ExecuteAsync($"Update Rezerve set Tip=@Tip,RezerveCount=@RezerveCount,CustomerId=@ContactsId,LocationId=@location,Status=@Status,LocationStockCount=@LocationStockCount where CompanyId=@CompanyId and SalesOrderId=@OrdersId and ItemId=@ItemId and Status=1", prm2);
+                prm2.Add("@ContactsId", T.CariId);
+                await _db.ExecuteAsync($"Update Rezerve set Tip=@Tip,RezerveDeger=@RezerveCount,DepoId=@location,Durum=@Durum where SatisId=@OrdersId and StokId=@StokId and Durum=1", prm2);
 
 
 
@@ -1461,20 +1455,20 @@ namespace DAL.Repositories
             {
                 prm.Add("@OrderId", OrdersId);
                 prm.Add("@CompanyId", CompanyId);
-                prm.Add("@ItemId", T.ItemId);
-                prm.Add("@SalesOrderId", T.SalesOrderId);
-                prm.Add("@SalesOrderItemId", T.id);
+                prm.Add("@StokId", T.StokId);
+                prm.Add("@SatisId", T.SatisId);
+                prm.Add("@SatisDetayId", T.id);
 
                 if (b > 0)
                 {
-                    prm.Add("@Ingredients", 0);
+                    prm.Add("@Malzemeler", 0);
                 }
                 else
                 {
-                    prm.Add("@Ingredients", 2);
+                    prm.Add("@Malzemeler", 2);
                 }
 
-                await _db.ExecuteAsync($"Update SalesOrderItem set Ingredients=@Ingredients where CompanyId=@CompanyId and SalesOrderId=@SalesOrderId and id=@SalesOrderItemId and ItemId=@ItemId ", prm);
+                await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler where  SatisId=@SatisId and id=@SatisDetayId and StokId=@StokId ", prm);
             }
 
         }
@@ -1482,52 +1476,52 @@ namespace DAL.Repositories
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@CompanyId", CompanyId);
-            prm.Add("@ItemId", T.ItemId);
-            prm.Add("@SalesOrderId", T.SalesOrderId);
-            prm.Add("@SalesOrderItemId", T.SalesOrderItemId);
-            prm.Add("@CustomerId", T.ContactId);
-            prm.Add("@location", T.LocationId);
+            prm.Add("@StokId", T.StokId);
+            prm.Add("@SatisId", T.SatisId);
+            prm.Add("@SatisDetayId", T.SatisDetayId);
+            prm.Add("@CariId", T.CariId);
+            prm.Add("@location", T.DepoId);
             prm.Add("@Tip", T.Tip);
 
-            var ItemId = T.ItemId;
+            var StokId = T.StokId;
             int id = 0;
             UretimDTO A = new UretimDTO();
-            A.StokId = T.ItemId;
-            A.PlananlananMiktar = T.PlannedQuantity;
-            A.DepoId = T.LocationId;
+            A.StokId = T.StokId;
+            A.PlananlananMiktar = T.PlanlananMiktar;
+            A.DepoId = T.DepoId;
             A.Tip = T.Tip;
-            A.BeklenenTarih = T.ExpectedDate;
-            A.OlusturmTarihi = T.CreatedDate;
-            A.UretimTarihi = T.ProductionDeadline;
+            A.BeklenenTarih = T.BeklenenTarih;
+            A.OlusturmTarihi = T.OlusturmaTarihi;
+            A.UretimTarihi = T.UretimTarihi;
             if (T.Tip == "MakeBatch")
             {
-                if (T.SalesOrderId != 0)
+                if (T.SatisId != 0)
                 {
-                    await _db.ExecuteAsync($"Update SalesOrderItem set Tip=@Tip where CompanyId=@CompanyId and id=@SalesOrderItemId and SalesOrderId=@SalesOrderId ", prm);
+                    await _db.ExecuteAsync($"Update SatisDetay set Tip=@Tip where id=@SatisDetayId and SatisId=@SatisId ", prm);
                 }
                 id = await _manufacturingOrderItem.Insert(A, CompanyId);
                 prm.Add("@Manufacid", id);
-                await _db.ExecuteAsync($"Update ManufacturingOrder set SalesOrderId=@SalesOrderId , SalesOrderItemId=@SalesOrderItemId , CustomerId=@CustomerId where id=@Manufacid and  CompanyId=@CompanyId", prm);
-                await _manufacturingOrderItem.InsertOrderItems(id, T.ItemId, T.LocationId, T.PlannedQuantity,T.SalesOrderId, T.SalesOrderItemId);
+                await _db.ExecuteAsync($"Update Uretim set SatisId=@SatisId , SatisDetayId=@SatisDetayId , CariId=@CariId where id=@Manufacid ", prm);
+                await _manufacturingOrderItem.InsertOrderItems(id, T.StokId, T.DepoId, T.PlanlananMiktar, T.SatisId, T.SatisDetayId);
 
             }
             else if (T.Tip == "MakeOrder")
             {
-                if (T.SalesOrderId != 0)
+                if (T.SatisId != 0)
                 {
-                    await _db.ExecuteAsync($"Update SalesOrderItem set Tip=@Tip where CompanyId=@CompanyId and id=@SalesOrderItemId and SalesOrderId=@SalesOrderId ", prm);
+                    await _db.ExecuteAsync($"Update SatisDetay set Tip=@Tip where id=@SatisDetayId and SatisId=@SatisId ", prm);
                 }
-                List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(id, 0) from LocationStock where ItemId =  @ItemId  and LocationId = @location and CompanyId = @CompanyId)   as LocationStockId, (select ISNULL(DefaultPrice, 0) From Items where CompanyId = @CompanyId and id = @ItemId)as  DefaultPrice,(select Rezerve.RezerveCount from Rezerve where CompanyId=@CompanyId and ItemId=@ItemId and CustomerId=@CustomerId and LocationId=@location and SalesOrderId=@SalesOrderId and SalesOrderItemId=@SalesOrderItemId)as RezerveCount", prm)).ToList();
+                List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(id, 0) from DepoStoklar where StokId =  @StokId  and DepoId = @location )   as DepoStokId, (select ISNULL(VarsayilanFiyat, 0) From Urunler where id = @StokId)as  VarsayilanFiyat,(select Rezerve.RezerveDeger from Rezerve where StokId=@StokId and CariId=@CariId and DepoId=@location and SatisId=@SatisId and SatisDetayId=@SatisDetayId)as RezerveDeger", prm)).ToList();
                 float? rezervecount = sorgu.First().RezerveDeger;
                 float LocationStockId = sorgu.First().DepoStokId;
                 prm.Add("@LocationStockId", LocationStockId);
-                var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id from ManufacturingOrder mo where SalesOrderId=@SalesOrderId and SalesOrderItemId=@SalesOrderItemId and CompanyId=@CompanyId  and IsActive=1 and Status!=3", prm);
+                var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id from Uretim mo where SatisId=@SatisId and SatisDetayId=@SatisDetayId  and Aktif=1 and Durum!=3", prm);
 
                 foreach (var item in make)
                 {
                     prm.Add("@manuid", item.id);
                     prm.Add("@Null", null);
-                    await _db.ExecuteAsync($"Update ManufacturingOrder set SalesOrderId=@Null , SalesOrderItemId=@Null , CustomerId=@Null where id=@manuid and  CompanyId=@CompanyId", prm);
+                    await _db.ExecuteAsync($"Update Uretim set SatisId=@Null , SatisDetayId=@Null , CariId=@Null where id=@manuid", prm);
 
                 }
 
@@ -1535,45 +1529,45 @@ namespace DAL.Repositories
 
                 if (rezervecount != null)
                 {
-                    await _db.ExecuteAsync($"Delete from  Rezerve where SalesOrderId=@SalesOrderId and SalesOrderItemId=@SalesOrderItemId and  CompanyId=@CompanyId AND ItemId!=@ItemId", prm);
-                    await _db.ExecuteAsync($"Update Rezerve set RezerveCount=0  where SalesOrderId=@SalesOrderId and SalesOrderItemId=@SalesOrderItemId and  CompanyId=@CompanyId AND ItemId=@ItemId", prm);
+                    await _db.ExecuteAsync($"Delete from  Rezerve where SatisId=@SatisId and SatisDetayId=@SatisDetayId and  StokId!=@StokId", prm);
+                    await _db.ExecuteAsync($"Update Rezerve set RezerveDeger=0  where SatisId=@SatisId and SatisDetayId=@SatisDetayId and  StokId=@StokId", prm);
 
                     id = await _manufacturingOrderItem.Insert(A, CompanyId);
                     prm.Add("@Manufacid", id);
 
-                    await _db.ExecuteAsync($"Update ManufacturingOrder set SalesOrderId=@SalesOrderId , SalesOrderItemId=@SalesOrderItemId , CustomerId=@CustomerId where id=@Manufacid and  CompanyId=@CompanyId", prm);
-                    await _manufacturingOrderItem.InsertOrderItems(id, T.ItemId, T.LocationId, T.PlannedQuantity, T.SalesOrderId, T.SalesOrderItemId);
+                    await _db.ExecuteAsync($"Update Uretim set SatisId=@SatisId , SatisDetayId=@SatisDetayId , CariId=@CariId where id=@Manufacid and  ", prm);
+                    await _manufacturingOrderItem.InsertOrderItems(id, T.StokId, T.DepoId, T.PlanlananMiktar, T.SatisId, T.SatisDetayId);
                 }
                 else
                 {
                     id = await _manufacturingOrderItem.Insert(A, CompanyId);
                     prm.Add("@Manufacid", id);
 
-                    await _db.ExecuteAsync($"Update ManufacturingOrder set SalesOrderId=@SalesOrderId , SalesOrderItemId=@SalesOrderItemId , CustomerId=@CustomerId where id=@Manufacid and  CompanyId=@CompanyId", prm);
-                    await _manufacturingOrderItem.InsertOrderItems(id, T.ItemId, T.LocationId, T.PlannedQuantity, T.SalesOrderId, T.SalesOrderItemId);
+                    await _db.ExecuteAsync($"Update Uretim set SatisId=@SatisId , SatisDetayId=@SatisDetayId , CariId=@CariId where id=@Manufacid  ", prm);
+                    await _manufacturingOrderItem.InsertOrderItems(id, T.StokId, T.DepoId, T.PlanlananMiktar, T.SatisId, T.SatisDetayId);
                 }
 
 
             }
-            var sales = await _db.QueryAsync<int>($@"select SalesItem from SalesOrderItem where CompanyId=@CompanyId and id=@SalesOrderItemId", prm);
+            var sales = await _db.QueryAsync<int>($@"select SatisOgesi from SatisDetay where id=@SatisDetayId", prm);
             int salesId = sales.First();
             if (salesId != 1)
             {
                 if (salesId == 2)
                 {
                     prm.Add("@ProductionId", 1);
-                    await _db.ExecuteAsync($"Update SalesOrderItem set Production=@ProductionId where CompanyId=@CompanyId and id=@SalesOrderItemId", prm);
+                    await _db.ExecuteAsync($"Update SatisDetay set Uretme=@ProductionId where id=@SatisDetayId", prm);
                 }
                 else if (salesId == 3)
                 {
                     prm.Add("@ProductionId", 4);
-                    await _db.ExecuteAsync($"Update SalesOrderItem set Production=@ProductionId where CompanyId=@CompanyId and id=@SalesOrderItemId", prm);
+                    await _db.ExecuteAsync($"Update SatisDetay set Uretme=@ProductionId where id=@SatisDetayId", prm);
                 }
             }
             else if (salesId == 1)
             {
                 prm.Add("@ProductionId", 0);
-                await _db.ExecuteAsync($"Update SalesOrderItem set Production=@ProductionId where CompanyId=@CompanyId and id=@SalesOrderItemId", prm);
+                await _db.ExecuteAsync($"Update SatisDetay set Uretme=@ProductionId where id=@SatisDetayId", prm);
             }
 
 
@@ -1583,120 +1577,120 @@ namespace DAL.Repositories
 
         }
 
-        public async Task DoneSellOrder(SalesDone T , int CompanyId, int UserId)
+        public async Task DoneSellOrder(SalesDone T, int CompanyId, int UserId)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@id", T.id);
             param.Add("@CompanyId", CompanyId);
-            param.Add("@DeliveryId", T.DeliveryId);
-            string sql = $@"select DeliveryId from SalesOrder where CompanyId=@CompanyId and id=@id ";
+            param.Add("@DurumBelirteci", T.DurumBelirteci);
+            string sql = $@"select DurumBelirteci from Satis where  and id=@id ";
             var st = await _db.QueryAsync<int>(sql, param);
             int eskiStatus = st.First();
 
             if (eskiStatus == 0)
             {
 
-                if (T.DeliveryId == 2)
+                if (T.DurumBelirteci == 2)
                 {
-                    var List = await _db.QueryAsync<SalesOrderItem>($@"select SalesOrderItem.ItemId,SalesOrderItem.id,SalesOrderItem.SalesOrderId as SalesOrderId,SalesOrderItem.Quantity,LocationId from SalesOrder 
-                     left join SalesOrderItem on SalesOrderItem.SalesOrderId=SalesOrder.id
-                     where SalesOrder.CompanyId=@CompanyId and SalesOrder.id=@id and SalesOrderItem.Stance=0", param);
-                    param.Add("@LocationId", List.First().LocationId);
+                    var List = await _db.QueryAsync<SatisDetay>($@"select SatisDetay.StokId,SatisDetay.id,SatisDetay.SatisId as SatisId,SatisDetay.Miktar,DepoId from Satis 
+                     left join SatisDetay on SatisDetay.SatisId=Satis.id
+                     where Satis.id=@id and SatisDetay.Durus=0", param);
+                    param.Add("@DepoId", List.First().DepoId);
                     foreach (var item in List)
                     {
-                        param.Add("@SalesOrderItemId", item.id);
-                        param.Add("@ItemId", item.ItemId);
-                        var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id,Status from ManufacturingOrder mo where SalesOrderId=@id and SalesOrderItemId=@SalesOrderItemId and ItemId=@ItemId and CompanyId=@CompanyId and Status!=3 and IsActive=1", param);
+                        param.Add("@SatisDetayId", item.id);
+                        param.Add("@StokId", item.StokId);
+                        var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id,Durum from Uretim mo where SatisId=@id and SatisDetayId=@SatisDetayId and StokId=@StokId and  Durum!=3 and Aktif=1", param);
 
 
                         if (make.Count() != 0)
                         {
                             foreach (var items in make)
                             {
-                                if (items.Status != 3)
+                                if (items.Durum != 3)
                                 {
-                                    int Status = 3;
+                                    int Durum = 3;
                                     UretimTamamlama tamam = new();
                                     tamam.id = items.id;
-                                    tamam.Status = Status;
+                                    tamam.Durum = Durum;
                                     await _manufacturingOrderItem.DoneStock(tamam, UserId);
                                 }
 
                             }
-                            param.Add("@Stance", 1);
-                            param.Add("@Ingredients", 3);
-                            param.Add("@SalesItem", 4);
-                            param.Add("@Production", 4);
-                            await _db.ExecuteAsync($"Update SalesOrderItem set Ingredients=@Ingredients,Stance=@Stance,SalesItem=@SalesItem,Production=@Production where CompanyId=@CompanyId and SalesOrderId=@id and id=@SalesOrderItemId and ItemId=@ItemId ", param);
-                            param.Add("@Status", 4);
-                            await _db.ExecuteAsync($"Update Rezerve set Status=@Status where CompanyId=@CompanyId and SalesOrderId=@id and SalesOrderItemId=@SalesOrderItemId", param);
+                            param.Add("@Durus", 1);
+                            param.Add("@Malzemeler", 3);
+                            param.Add("@SatisOgesi", 4);
+                            param.Add("@Uretme", 4);
+                            await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler,Durus=@Durus,SatisOgesi=@SatisOgesi,Uretme=@Uretme where SatisId=@id and id=@SatisDetayId and StokId=@StokId ", param);
+                            param.Add("@Durum", 4);
+                            await _db.ExecuteAsync($"Update Rezerve set Durum=@Durum where  SatisId=@id and SatisDetayId=@SatisDetayId", param);
 
                         }
                         else
                         {
 
-                            param.Add("@Stance", 1);
-                            param.Add("@Ingredients", 3);
-                            param.Add("@SalesItem", 4);
-                            param.Add("@Production", 4);
-                            await _db.ExecuteAsync($"Update SalesOrderItem set Ingredients=@Ingredients,Stance=@Stance,SalesItem=@SalesItem,Production=@Production where CompanyId=@CompanyId and SalesOrderId=@id and id=@SalesOrderItemId and ItemId=@ItemId ", param);
-                            param.Add("@Status", 4);
-                            await _db.ExecuteAsync($"Update Rezerve set Status=@Status where CompanyId=@CompanyId and SalesOrderId=@id and SalesOrderItemId=@SalesOrderItemId", param);
+                            param.Add("@Durus", 1);
+                            param.Add("@Malzemeler", 3);
+                            param.Add("@SatisOgesi", 4);
+                            param.Add("@Uretme", 4);
+                            await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler,Durus=@Durus,SatisOgesi=@SatisOgesi,Uretme=@Uretme where SatisId=@id and id=@SatisDetayId and StokId=@StokId ", param);
+                            param.Add("@Durum", 4);
+                            await _db.ExecuteAsync($"Update Rezerve set Durum=@Durum where SatisId=@id and SatisDetayId=@SatisDetayId", param);
 
 
 
                         }
-                //        List<SalesOrderUpdateItems> aa = (await _db.QueryAsync<SalesOrderUpdateItems>($@"select o.id,oi.id as OrderItemId,oi.Quantity,oi.ItemId,oi.PricePerUnit,oi.TaxId,o.ContactId,o.LocationId,o.DeliveryDeadline from Orders o 
-                //left join OrdersItem oi on oi.OrdersId = o.id where o.CompanyId = @CompanyId and oi.Stance = 0 and o.IsActive = 1 and o.id=@id and oi.ItemId = @ItemId and o.DeliveryId = 0 Order by o.DeliveryDeadline ", param)).ToList();
-                //        SatısUpdateItems A = new SatısUpdateItems();
-                //        foreach (var liste in aa)
-                //        {
-                //            A.id = item.id;
-                //            A.SalesOrderId = liste.id;
-                //            A.TaxId = liste.TaxId;
-                //            A.Quantity = liste.Quantity;
-                //            A.ItemId = liste.ItemId;
-                //            A.ContactId = liste.ContactId;
-                //            A.LocationId = liste.LocationId;
-                //            A.DeliveryDeadline = liste.DeliveryDeadline;
-                //            A.PricePerUnit = liste.PricePerUnit;
-                //            param.Add("@RezerveCount", 0);
-                //            await _db.ExecuteAsync($"Update Rezerve set RezerveCount=@RezerveCount where CompanyId=@CompanyId and SalesOrderId={liste.id} and SalesOrderItemId={liste.OrderItemId} and ItemId={liste.ItemId} ", param);
-                //            await UpdateItems(A, CompanyId);
-                //        }
+                        //        List<SalesOrderUpdateItems> aa = (await _db.QueryAsync<SalesOrderUpdateItems>($@"select o.id,oi.id as OrderItemId,oi.Miktar,oi.StokId,oi.BirimFiyat,oi.VergiId,o.CariId,o.DepoId,o.TeslimSuresi from SatinAlma o 
+                        //left join SatinAlmaDetay oi on oi.OrdersId = o.id where o. and oi.Durus = 0 and o.Aktif = 1 and o.id=@id and oi.StokId = @StokId and o.DurumBelirteci = 0 Order by o.TeslimSuresi ", param)).ToList();
+                        //        SatısUpdateItems A = new SatısUpdateItems();
+                        //        foreach (var liste in aa)
+                        //        {
+                        //            A.id = item.id;
+                        //            A.SatisId = liste.id;
+                        //            A.VergiId = liste.VergiId;
+                        //            A.Miktar = liste.Miktar;
+                        //            A.StokId = liste.StokId;
+                        //            A.CariId = liste.CariId;
+                        //            A.DepoId = liste.DepoId;
+                        //            A.TeslimSuresi = liste.TeslimSuresi;
+                        //            A.BirimFiyat = liste.BirimFiyat;
+                        //            param.Add("@RezerveCount", 0);
+                        //            await _db.ExecuteAsync($"Update Rezerve set RezerveCount=@RezerveCount where  and SatisId={liste.id} and SatisDetayId={liste.OrderItemId} and StokId={liste.StokId} ", param);
+                        //            await UpdateItems(A, CompanyId);
+                        //        }
 
 
                     }
 
 
 
-                    param.Add("@DeliveryId", 2);
-                    await _db.ExecuteAsync($"Update SalesOrder set DeliveryId=@DeliveryId where CompanyId=@CompanyId and id=@id", param);
+                    param.Add("@DurumBelirteci", 2);
+                    await _db.ExecuteAsync($"Update Satis set DurumBelirteci=@DurumBelirteci where  and id=@id", param);
                 }
-                else if (T.DeliveryId == 4)
+                else if (T.DurumBelirteci == 4)
                 {
 
-                    var List = await _db.QueryAsync<SalesOrderItem>($@"select SalesOrderItem.ItemId,SalesOrderItem.id,SalesOrderItem.SalesOrderId as SalesOrderId,SalesOrderItem.Quantity,LocationId from SalesOrder 
-                left join SalesOrderItem on SalesOrderItem.SalesOrderId=SalesOrder.id
-                where SalesOrder.CompanyId=@CompanyId and SalesOrder.id=@id and SalesOrderItem.Stance=0", param);
-                    param.Add("@LocationId", List.First().LocationId);
+                    var List = await _db.QueryAsync<SatisDetay>($@"select SatisDetay.StokId,SatisDetay.id,SatisDetay.SatisId as SatisId,SatisDetay.Miktar,DepoId from Satis 
+                left join SatisDetay on SatisDetay.SatisId=Satis.id
+                where Satis.id=@id and SatisDetay.Durus=0", param);
+                    param.Add("@DepoId", List.First().DepoId);
                     foreach (var item in List)
                     {
-                        param.Add("@SalesOrderItemId", item.id);
-                        param.Add("@ItemId", item.ItemId);
-                        var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id,Status from ManufacturingOrder mo where SalesOrderId=@id and SalesOrderItemId=@SalesOrderItemId and ItemId=@ItemId and CompanyId=@CompanyId and Status!=3 and IsActive=1", param);
+                        param.Add("@SatisDetayId", item.id);
+                        param.Add("@StokId", item.StokId);
+                        var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id,Durum from Uretim mo where SatisId=@id and SatisDetayId=@SatisDetayId and StokId=@StokId and  Durum!=3 and Aktif=1", param);
 
 
                         if (make.Count() != 0)
                         {
                             foreach (var items in make)
                             {
-                                if (items.Status != 3)
+                                if (items.Durum != 3)
                                 {
-                                    int Status = 3;
+                                    int Durum = 3;
                                     UretimTamamlama tamam = new();
                                     tamam.id = items.id;
-                                    tamam.Status=Status;    
+                                    tamam.Durum = Durum;
                                     await _manufacturingOrderItem.DoneStock(tamam, UserId);
                                 }
 
@@ -1704,107 +1698,70 @@ namespace DAL.Repositories
 
 
 
-                            param.Add("@Stance", 2);
-                            param.Add("@Ingredients", 3);
-                            param.Add("@SalesItem", 4);
-                            param.Add("@Production", 4);
-                            await _db.ExecuteAsync($"Update SalesOrderItem set Ingredients=@Ingredients,Stance=@Stance,SalesItem=@SalesItem,Production=@Production where CompanyId=@CompanyId and SalesOrderId=@id and id=@SalesOrderItemId and ItemId=@ItemId ", param);
-                            param.Add("@Status", 4);
-                            await _db.ExecuteAsync($"Update Rezerve set Status=@Status where CompanyId=@CompanyId and SalesOrderId=@id and SalesOrderItemId=@SalesOrderItemId", param);
+                            param.Add("@Durus", 2);
+                            param.Add("@Malzemeler", 3);
+                            param.Add("@SatisOgesi", 4);
+                            param.Add("@Uretme", 4);
+                            await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler,Durus=@Durus,SatisOgesi=@SatisOgesi,Uretme=@Uretme where SatisId=@id and id=@SatisDetayId and StokId=@StokId ", param);
+                            param.Add("@Durum", 4);
+                            await _db.ExecuteAsync($"Update Rezerve set Durum=@Durum where SatisId=@id and SatisDetayId=@SatisDetayId", param);
 
-                            List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(AllStockQuantity, 0) from Items where id = @ItemId  and CompanyId = @CompanyId)as Quantity, (Select ISNULL(StockCount, 0) from LocationStock where ItemId = @ItemId  and LocationId = @LocationId and CompanyId = @CompanyId) as LocationStock, (Select ISNULL(id, 0) from LocationStock where ItemId = @ItemId and LocationId = @LocationId and CompanyId = @CompanyId)   as LocationStockId,(select RezerveCount from Rezerve where CompanyId=@CompanyId and SalesOrderId=@id and ItemId=@ItemId and Status!=4) as RezerveCount ", param)).ToList();
+                            List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"  (Select ISNULL(StokAdeti, 0) from DepoStoklar where StokId = @StokId  and DepoId = @DepoId) as StokMiktar, (Select ISNULL(id, 0) from DepoStoklar where StokId = @StokId and DepoId = @DepoId )   as DepoStokId,(select RezerveDeger from Rezerve where SatisId=@id and StokId=@StokId and Durum!=4) as RezerveDeger ", param)).ToList();
                             var stockall = sorgu.First().Miktari;
-                            float? stockcount = stockall - item.Quantity;
-                            param.Add("@StockCount", stockcount);
-                            await _db.ExecuteAsync($"Update Items set AllStockQuantity=@StockCount where CompanyId=@CompanyId and  id=@ItemId", param);
-                            param.Add("@User", UserId);
-                            param.Add("@StockMovementQuantity", item.Quantity);
-                            param.Add("@PreviousValue", stockall);
-                            param.Add("@Process", "AllStock");
-                            param.Add("@Date", DateTime.Now);
-                            param.Add("@Operation", "-");
-
-                            param.Add("@Where", "SalesOrderDone");
-                            await _db.ExecuteAsync($"Insert into StockMovement ([Where],Operation,Process,Quantity,PreviousValue,NextValue,Date,[User],CompanyId,LocationId,ItemId) values(@Where,@Operation,@Process,@StockMovementQuantity,@PreviousValue,@StockCount,@Date,@User,@CompanyId,@LocationId,@ItemId)", param);
 
 
 
-                            float? newstock = sorgu.First().LocationStock - item.Quantity;
+
+                            float? newstock = sorgu.First().StokMiktar - item.Miktar;
                             param.Add("@LocationStockCount", newstock);
                             param.Add("@LocationStockId", sorgu.First().DepoStokId);
-                            await _db.ExecuteAsync($"Update LocationStock set StockCount=@LocationStockCount where CompanyId=@CompanyId and  id=@LocationStockId", param);
+                            await _db.ExecuteAsync($"Update DepoStoklar set StockCount=@LocationStockCount where  and  id=@LocationStockId", param);
 
-                            param.Add("@PreviousValue", sorgu.First().LocationStock);
-                            param.Add("@Process", "LocationStock");
 
-                            await _db.ExecuteAsync($"Insert into StockMovement ([Where],Operation,Process,Quantity,PreviousValue,NextValue,Date,[User],CompanyId,LocationId,ItemId) values(@Where,@Operation,@Process,@StockMovementQuantity,@PreviousValue,@LocationStockCount,@Date,@User,@CompanyId,@LocationId,@ItemId)", param);
                         }
                         else
                         {
 
 
-                            List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(AllStockQuantity, 0) from Items where id =  @ItemId and CompanyId = @CompanyId)as Quantity, (Select ISNULL(StockCount, 0) from LocationStock where ItemId = @ItemId  and LocationId = @LocationId and CompanyId = @CompanyId) as LocationStock, (Select ISNULL(id, 0) from LocationStock where ItemId = @ItemId and LocationId = @LocationId and CompanyId = @CompanyId)   as LocationStockId", param)).ToList();
+                            param.Add("@Durus", 2);
+                            param.Add("@Malzemeler", 3);
+                            param.Add("@SatisOgesi", 4);
+                            param.Add("@Uretme", 4);
+                            await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler,Durus=@Durus,SatisOgesi=@SatisOgesi,Uretme=@Uretme where  and SatisId=@id and id=@SatisDetayId and StokId=@StokId ", param);
 
-                            param.Add("@Stance", 2);
-                            param.Add("@Ingredients", 3);
-                            param.Add("@SalesItem", 4);
-                            param.Add("@Production", 4);
-                            await _db.ExecuteAsync($"Update SalesOrderItem set Ingredients=@Ingredients,Stance=@Stance,SalesItem=@SalesItem,Production=@Production where CompanyId=@CompanyId and SalesOrderId=@id and id=@SalesOrderItemId and ItemId=@ItemId ", param);
-
-                            param.Add("@Status", 4);
-                            await _db.ExecuteAsync($"Update Rezerve set Status=@Status where CompanyId=@CompanyId and SalesOrderId=@id and SalesOrderItemId=@SalesOrderItemId", param);
-
-
+                            param.Add("@Durum", 4);
+                            await _db.ExecuteAsync($"Update Rezerve set Durum=@Durum where  and SatisId=@id and SatisDetayId=@SatisDetayId", param);
 
                         }
-                //        List<SalesOrderUpdateItems> aa = (await _db.QueryAsync<SalesOrderUpdateItems>($@"select o.id,oi.id as OrderItemId,oi.Quantity,oi.ItemId,oi.PricePerUnit,oi.TaxId,o.ContactId,o.LocationId,o.DeliveryDeadline from Orders o 
-                //left join OrdersItem oi on oi.OrdersId = o.id where o.CompanyId = @CompanyId and oi.Stance = 0 and o.IsActive = 1 and o.id=@id and oi.ItemId = @ItemId and o.DeliveryId = 0 Order by o.DeliveryDeadline ", param)).ToList();
-                //        SalesOrderUpdateItems A = new SalesOrderUpdateItems();
-                //        foreach (var liste in aa)
-                //        {
-                //            A.id = liste.id;
-                //            A.OrderItemId = liste.OrderItemId;
-                //            A.TaxId = liste.TaxId;
-                //            A.Quantity = liste.Quantity;
-                //            A.ItemId = liste.ItemId;
-                //            A.ContactId = liste.ContactId;
-                //            A.LocationId = liste.LocationId;
-                //            A.DeliveryDeadline = liste.DeliveryDeadline;
-                //            A.PricePerUnit = liste.PricePerUnit;
-                //            param.Add("@RezerveCount", 0);
-                //            await _db.ExecuteAsync($"Update Rezerve set RezerveCount=@RezerveCount where CompanyId=@CompanyId and SalesOrderId={liste.id} and SalesOrderItemId={liste.OrderItemId} and ItemId={liste.ItemId} ", param);
-                //            await UpdateItems(A, T.id, CompanyId);
-                //        }
+
+
+
+
+                        param.Add("@DurumBelirteci", 4);
+                        await _db.ExecuteAsync($"Update Satis set DurumBelirteci=@DurumBelirteci where  and id=@id", param);
+
+
 
 
                     }
-
-
-
-                    param.Add("@DeliveryId", 4);
-                    await _db.ExecuteAsync($"Update SalesOrder set DeliveryId=@DeliveryId where CompanyId=@CompanyId and id=@id", param);
-
-
-
-
                 }
-            }
 
-            else if (eskiStatus == 2)
-            {
-                if (T.DeliveryId == 4)
+                else if (eskiStatus == 2)
                 {
-                    param.Add("@DeliveryId", 4);
-                    await _db.ExecuteAsync($"Update SalesOrder set DeliveryId=@DeliveryId where CompanyId=@CompanyId and id=@id", param);
+                    if (T.DurumBelirteci == 4)
+                    {
+                        param.Add("@DurumBelirteci", 4);
+                        await _db.ExecuteAsync($"Update Satis set DurumBelirteci=@DurumBelirteci where id=@id", param);
+                    }
+                }
+                else if (eskiStatus == 4)
+                {
+
                 }
             }
-            else if (eskiStatus == 4)
-            {
 
-            }
+
+
         }
-
-        
-
     }
 }

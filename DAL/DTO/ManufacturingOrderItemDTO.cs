@@ -15,21 +15,21 @@ namespace DAL.DTO
 
             public int id { get; set; }
             [Required]
-            public int ProductId { get; set; }
+            public int MamulId { get; set; }
             [Required]
-            public int ItemId { get; set; }
+            public int StokId { get; set; }
             [Required]
             public int? ParentId { get; set; }
-            public float PlannedQuantity { get; set; }
+            public float PlanlananMiktar { get; set; }
             [RegularExpression(RegularExpression, ErrorMessage = "Özel karekter giremezsiniz")]
             [StringLength(50)]
-            public string Note { get; set; } = string.Empty;
+            public string Bilgi { get; set; } = string.Empty;
             public string Tip { get; set; } = string.Empty;
             public int RezerveId { get; set; }
-            public int Status { get; set; }
-            public int LocationId { get; set; }
-            public int SalesOrderId { get; set; }
-            public int SalesOrderItemId { get; set; }
+            public int Durum { get; set; }
+            public int DepoId { get; set; }
+            public int SatisId { get; set; }
+            public int SatisDetayId { get; set; }
         }
 
         public class ManufacturingOrderItems
@@ -55,8 +55,8 @@ namespace DAL.DTO
         }
         public class BuyKontrol
         {
-            public int MeasureId { get; set; }
-            public int TaxId { get; set; }
+            public int OlcuId { get; set; }
+            public int VergiId { get; set; }
 
         }
 
@@ -64,13 +64,13 @@ namespace DAL.DTO
         public class ManufacturingOrderItemsIngredientsDetail
         {
             public int id { get; set; }
-            public int? ItemId { get; set; }
-            public string Name { get; set; } = string.Empty;
-            public string Note { get; set; } = string.Empty;
-            public float Quantity { get; set; }
-            public float Cost { get; set; }
-            public int? Availability { get; set; }
-            public float Missing { get; set; }
+            public int? StokId { get; set; }
+            public string Isim { get; set; } = string.Empty;
+            public string Bilgi { get; set; } = string.Empty;
+            public float PlanlananMiktar { get; set; }
+            public float Tutar { get; set; }
+            public int? MalzemeDurum { get; set; }
+            public float Kayip { get; set; }
 
         }
         public class ManufacturingOrderItemsIngredientsUpdate

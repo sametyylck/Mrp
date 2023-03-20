@@ -99,7 +99,7 @@ namespace DAL.DTO
     public class UretimTamamlama
     {
         public int id { get; set; }
-        public int Status { get; set; }
+        public int Durum { get; set; }
     }
     public class UretimPurchaseOrder
     {
@@ -156,10 +156,10 @@ namespace DAL.DTO
     {
         public int? id { get; set; }
         public int? OrderId { get; set; }
-        public int? ItemId { get; set; }
-        public string Note { get; set; } = string.Empty;
-        public float? PlannedQuantity { get; set; }
-        public int? LocationId { get; set; }
+        public int? StokId { get; set; }
+        public string Bilgi { get; set; } = string.Empty;
+        public float? PlanlananMiktar { get; set; }
+        public int? DepoId { get; set; }
 
     }
 

@@ -400,23 +400,23 @@ namespace Api.Controllers
                     string sqlsorgu = $@"
 				 			 select  
               (select
-             -ISNULL(moi.PlannedQuantity,0)+ISNULL((rez.RezerveCount),0)as Missing
+             -ISNULL(moi.PlanlananMiktar,0)+ISNULL((rez.RezerveDeger),0)as Missing
             
-            from ManufacturingOrder mo
-			    left join ManufacturingOrderItems moi on mo.id=moi.OrderId 
-            left join Items on Items.id=moi.ItemId 
-		   LEFT join Rezerve rez on rez.ManufacturingOrderId=mo.id and rez.ManufacturingOrderItemId=moi.id and rez.Status=1 AND rez.LocationId=@LocationId
-            where  moi.CompanyId = @CompanyId and moi.id = @id and moi.Tip='Ingredients'  and mo.id=@OrderId and  mo.Status!=3
-            Group by moi.id,moi.Tip,moi.ItemId,Items.Name,Notes,moi.Cost,moi.Availability
-            ,moi.PlannedQuantity,rez.RezerveCount)+
-			(select ISNULL(SUM(OrdersItem.Quantity),0) from OrdersItem 
-			left join Orders on Orders.id=OrdersItem.OrdersId
-			where ManufacturingOrderId=@OrderId and ManufacturingOrderItemId=@id and Orders.DeliveryId=1 and Orders.IsActive=1 and Orders.LocationId=@LocationId)as missing";
+            from Uretim mo
+			    left join UretimDetay moi on mo.id=moi.UretimId 
+            left join Urunler on Urunler.id=moi.StokId 
+		   LEFT join Rezerve rez on rez.UretimId=mo.id and rez.UretimDetayId=moi.id and rez.Durum=1 AND rez.DepoId=@LocationId
+            where   moi.id = @id and moi.Tip='Ingredients'  and mo.id=@OrderId and  mo.Durum!=3
+            Group by moi.id,moi.Tip,moi.StokId,Urunler.Isim,mo.Bilgi,moi.Tutar,moi.MalzemeDurum
+            ,moi.PlanlananMiktar,rez.RezerveDeger)+
+			(select ISNULL(SUM(SatinAlmaDetay.Miktar),0) from SatinAlmaDetay 
+			left join SatinAlma on SatinAlma.id=SatinAlmaDetay.SatinAlmaId
+			where UretimId=@OrderId and UretimDetayId=@id and SatinALma.DurumBelirteci=1 and SatinALma.Aktif=1 and SatinALma.DepoId=@LocationId)as missing";
                     int? missingdeger = await _db.QueryFirstAsync<int>(sqlsorgu, prm);
 
                     string sqlquery = $@"select 
-            (select g.DefaultTaxPurchaseOrderId from GeneralDefaultSettings g where CompanyId=@CompanyId)as TaxId,
-            (select MeasureId from Items where id=@ItemId and CompanyId=@CompanyId) as MeasureId		 			 ";
+            (select g.VarsayilanSatinAlimVergi from GenelAyarlar g )as VergiId,
+            (select OlcuId from Urunler where id=@ItemId ) as OlcuId		 			 ";
                     var degerler = await _db.QueryAsync<BuyKontrol>(sqlquery, prm);
 
 
@@ -435,11 +435,11 @@ namespace Api.Controllers
 
                     int id = await _order.Insert(insert,UserId);
                     PurchaseOrderInsertItem insertitem = new();
-                    insertitem.OlcuId = degerler.First().MeasureId;
+                    insertitem.OlcuId = degerler.First().OlcuId;
                     insertitem.StokId = T.StokId;
                     insertitem.Miktar = T.Miktar;
                     insertitem.SatinAlmaId = id;
-                    insertitem.VergiId = degerler.First().TaxId;
+                    insertitem.VergiId = degerler.First().VergiId;
 
                     int inserid = await _order.InsertPurchaseItem(insertitem, id);
                     await _uretim.BuyStockControl(insert, missingdeger);
