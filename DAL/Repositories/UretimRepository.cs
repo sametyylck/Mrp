@@ -1054,7 +1054,7 @@ namespace DAL.Repositories
             // materyalin VarsayilanFiyat
             // Bul
 
-             var expectedsorgu = await _db.QueryAsync<LocaVarmı>($@"select ISNULL(SUM(Miktar),0) as Miktar from SatinAlma 
+             var expectedsorgu = await _db.QueryAsync<LocaVarmı>($@"select ISNULL(SUM(Miktar),0) as Miktari from SatinAlma 
                 left join SatinAlmaDetay on SatinAlmaDetay.SatinAlmaId = SatinAlma.id and SatinAlma.DepoId={T.DepoId}
                 and SatinAlmaDetay.StokId = {T.StokId} where  DurumBelirteci = 1 and SatinAlma.UretimId= {T.UretimId} and SatinAlma.UretimDetayId={T.UretimDetayId}  and SatinAlma.Aktif=1");
 

@@ -294,7 +294,7 @@ namespace DAL.Repositories
                         float missing;
                         string sqlsorgu = $@" 
 		select
-        (-ISNULL(moi.PlananlananMiktar,0)+(ISNULL(rez.RezerveDeger,0)))AS missing
+        (-ISNULL(moi.PlanlananMiktar,0)+(ISNULL(rez.RezerveDeger,0)))AS missing
         from UretimDetay moi
         left join Uretim mao on mao.id=moi.UretimId
         left join Urunler on Urunler.id=moi.StokId
@@ -302,8 +302,8 @@ namespace DAL.Repositories
         left join SatinAlma on SatinAlma.id=SatinAlmaDetay.SatinAlmaId and SatinAlma.UretimId=mao.id and SatinAlma.Aktif=1 and SatinAlma.DurumBelirteci=1
         left join Rezerve rez on rez.UretimId=mao.id and rez.UretimDetayId=moi.id and rez.StokId=@ItemId
         where mao.id=@ManufacturingOrderId and moi.Tip='Ingredients' and mao.DepoId=@locationId  and mao.Durum!=3 and  moi.id=@ManufacturingOrderItemId
-        Group by moi.id,moi.Tip,moi.StokId,Urunler.ıSİM,moi.Bilgi,moi.PlananlananMiktar ,moi.Tutar,moi.MalzemeDurum,
-        moi.PlannedQuantity,rez.RezerveCount";
+        Group by moi.id,moi.Tip,moi.StokId,Urunler.ıSİM,moi.Bilgi,moi.PlanlananMiktar ,moi.Tutar,moi.MalzemeDurum,
+        moi.PlanlananMiktar,rez.RezerveDeger";
                         List<int> missingdeger = (await _db.QueryAsync<int>(sqlsorgu, prm)).ToList();
 
                         if (missingdeger.Count() == 0)
