@@ -46,7 +46,7 @@ namespace DAL.Repositories
             prm.Add("@Aktif", true);
             prm.Add("@Buy", T.SatinAlma);
             prm.Add("@KullanıcıId", KullanıcıId);
-            return await _dbConnection.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Isim,GercekIsim,Satis,Uretim,SatinAlma,Adres1,Adres2,Tip,Sehir,Cadde,PostaKodu,Ulke,Aktif,KullanıcıId) OUTPUT INSERTED.[id] values (@LocationName,@LegalName,@Sell,@Make,@Buy,@AddressLine1,@AddressLine2,@Tip,@CityTown,@StateRegion,@ZipPostalCode, @Country,@Aktif,@KullanıcıId)", prm);
+            return await _dbConnection.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Isim,GercekIsim,Satis,Uretim,SatinAlma,Adres1,Adres2,Tip,Sehir,Cadde,PostaKodu,Ulke,Aktif,KullaniciId) OUTPUT INSERTED.[id] values (@LocationName,@LegalName,@Sell,@Make,@Buy,@AddressLine1,@AddressLine2,@Tip,@CityTown,@StateRegion,@ZipPostalCode, @Country,@Aktif,@KullanıcıId)", prm);
         }
 
         public async Task<IEnumerable<LocationsDTO>> List()

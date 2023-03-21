@@ -11,7 +11,7 @@ namespace DAL.Contracts
     public interface ICategoryRepository
     {
         Task<IEnumerable<CategoryClass>> List();
-        Task<int> Insert(CategoryInsert T, int CompanyId);
+        Task<int> Insert(CategoryInsert T,int KullanıcıId);
         Task Update(CategoryUpdate T);
         Task Delete(IdControl T);
     }

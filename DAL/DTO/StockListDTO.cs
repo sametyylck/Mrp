@@ -59,17 +59,17 @@ namespace DAL.DTO
         public class SatısList
         {
             public int? id { get; set; }
-            public int? LocationId { get; set; }
-            public string? OrderName { get; set; }
-            public int? ContactId { get; set; }
-            public string? CustomerName { get; set; }
-            public float? TotalAll { get; set; }
-            public DateTime DeliveryDeadline { get; set; }
-            public int? SalesItem { get; set; }
-            public int? Ingredients { get; set; }
-            public int? Production { get; set; }
-            public int? DeliveryId { get; set; }
-            public string? LocationName { get; set; }
+            public int? DepoId { get; set; }
+            public string? SatisIsmi  { get; set; }
+            public int? CariId { get; set; }
+            public string? CariAdSoyad { get; set; }
+            public float? TumToplam { get; set; }
+            public DateTime TeslimSuresi { get; set; }
+            public int? SatisOgesi { get; set; }
+            public int? Malzemeler { get; set; }
+            public int? Uretme { get; set; }
+            public int? DurumBelirteci { get; set; }
+            public string? DepoIsmi { get; set; }
             public DateTime? BaslangıcTarih { get; set; }
             public DateTime? SonTarih { get; set; }
 
@@ -77,14 +77,14 @@ namespace DAL.DTO
         }
         public class SatısListFiltre
         {
-            public int? LocationId { get; set; }
-            public string? OrderName { get; set; }
-            public string? CustomerName { get; set; }
-            public float? TotalAll { get; set; }
-            public int? SalesItem { get; set; }
-            public int? Ingredients { get; set; }
-            public int? Production { get; set; }
-            public int? DeliveryId { get; set; }
+            public int? DepoId { get; set; }
+            public string? SatisIsmi { get; set; }
+            public string? CariAdSoyad { get; set; }
+            public float? TumToplam { get; set; }
+            public int? SatisOgesi { get; set; }
+            public int? Malzemeler { get; set; }
+            public int? Uretme { get; set; }
+            public int? DurumBelirteci { get; set; }
             public string? BaslangıcTarih { get; set; }
             public string? SonTarih { get; set; }
         }
@@ -94,18 +94,18 @@ namespace DAL.DTO
             public int id { get; set; }
             public string? Tip { get; set; }
 
-            public int ItemId { get; set; }
-            public string? ItemName { get; set; }
-            public float Quantity { get; set; }
-            public float PricePerUnit { get; set; }
-            public int TaxId { get; set; }
-            public string? TaxName { get; set; }
-            public float Rate { get; set; }
-            public float? TotalAll { get; set; }
-            public int? SalesItem { get; set; }
-            public int? Ingredients { get; set; }
-            public int? Production { get; set; }
-            public int Missing { get; set; }
+            public int StokId { get; set; }
+            public string? UrunIsmi { get; set; }
+            public float Miktar { get; set; }
+            public float BirimFiyat { get; set; }
+            public int VergiId { get; set; }
+            public string? VergiIsim { get; set; }
+            public float VergiDegeri { get; set; }
+            public float? TumToplam { get; set; }
+            public int? SatisOgesi { get; set; }
+            public int? Malzemeler { get; set; }
+            public int? Uret { get; set; }
+            public int Kayıp { get; set; }
 
         }
 
@@ -113,10 +113,10 @@ namespace DAL.DTO
         {
             [Required]
             public int id { get; set; }
-            public int LocationId { get; set; }
-            public int SalesOrderItemId { get; set; }
+            public int DepoId { get; set; }
+            public int SatisDetayId { get; set; }
             [Required]
-            public int ProductId { get; set; }
+            public int MamulId { get; set; }
 
 
         }
@@ -124,8 +124,8 @@ namespace DAL.DTO
         {
             public int id { get; set; }
             public int? Quotes { get; set; }
-            public int LocationId { get; set; }
-            public int ContactId { get; set; }
+            public int DepoId { get; set; }
+            public int CariId { get; set; }
 
         }
 

@@ -12,14 +12,13 @@ namespace DAL.Contracts
 {
     public interface IStockAdjusmentRepository
     {
-        Task<int> Count(StockAdjusmentList T, int CompanyId);
-        Task<int> Insert(StockAdjusmentInsert t,int CompanyId);
-        Task<int> InsertItem(StockAdjusmentInsertItem T, int StockAdjusmentId, int CompanyId,int user);
-        Task Update(StockAdjusmentUpdate T, int CompanyId);
-        Task UpdateStockAdjusmentItem(StockAdjusmentUpdateItems T, int CompanyId,int User);
-        Task Delete(IdControl T, int CompanyId,int UserId);
-        Task DeleteItems(StockAdjusmentItemDelete T, int CompanyId,int User);
-        Task<IEnumerable<StockAdjusmentList>> List(StockAdjusmentList T, int CompanyId, int KAYITSAYISI, int SAYFA);
-         Task<IEnumerable<StockAdjusmentClas>> Detail(int CompanyId, int id);
+        Task<int> Insert(StockAdjusmentInsert t);
+        Task<int> InsertItem(StockAdjusmentInsertItem T, int StockAdjusmentId,int user);
+        Task Update(StockAdjusmentUpdate T);
+        Task UpdateStockAdjusmentItem(StockAdjusmentUpdateItems T,int User);
+        Task Delete(IdControl T,int UserId);
+        Task DeleteItems(StockAdjusmentItemDelete T,int User);
+        Task<IEnumerable<StockAdjusmentList>> List(StockAdjusmentList T,int KAYITSAYISI, int SAYFA);
+         Task<IEnumerable<StockAdjusmentClas>> Detail(int id);
     }
 }

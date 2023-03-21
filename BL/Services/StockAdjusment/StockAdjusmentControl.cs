@@ -27,13 +27,13 @@ namespace BL.Services.StockAdjusment
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<StockAdjusmentUpdateItems>($@"select
-             (Select id  From StokDuzenlemeDetay where id={T.id} and  StokDuzenlemeId={T.StockAdjusmentId})as id,
+             (Select id  From StokDuzenlemeDetay where id={T.id} and  StokDuzenlemeId={T.StokDuzenelemeId})as id,
 
-            (Select id as varmi From StokDuzenleme where  id = {T.StockAdjusmentId})as StockAdjusmentId,
-             (Select id  From StokDuzenlemeDetay where  StokId={T.ItemId} and StokDuzenlemeId={T.StockAdjusmentId})as ItemId
+            (Select id as varmi From StokDuzenleme where  id = {T.StokDuzenelemeId})as StokDuzenelemeId,
+             (Select id  From StokDuzenlemeDetay where  StokId={T.StokId} and StokDuzenlemeId={T.StokDuzenelemeId})as StokId
 
             ");
-            if (list.First().StockAdjusmentId == null)
+            if (list.First().StokDuzenlemeId == null)
             {
                 hatalar.Add("StockAdjusmentId,Boyle bir id yok");
             }
@@ -41,7 +41,7 @@ namespace BL.Services.StockAdjusment
             {
                 hatalar.Add("id ve StockAdjusmentId eslesmiyor");
             }
-            if (list.First().ItemId == 0)
+            if (list.First().StokId == 0)
             {
                 hatalar.Add("Boyle bir ItemId yok");
                 return hatalar;
@@ -58,14 +58,14 @@ namespace BL.Services.StockAdjusment
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<StockAdjusmentInsert>($@"select
-             (Select id  From StokSayim where id={T.StockTakesId})as StockTakesId,
-            (Select id as varmi From DepoVeAdresler where id = {T.LocationId})as LocationId
+             (Select id  From StokSayim where id={T.StokSayimId})as StokSayimId,
+            (Select id as varmi From DepoVeAdresler where id = {T.DepoId})as DepoId
             ");
-            if (T.StockTakesId!=0)
+            if (T.StokSayimId!=0)
             {
-                if (T.StockTakesId!=null)
+                if (T.StokSayimId !=null)
                 {
-                    if (list.First().StockTakesId == null)
+                    if (list.First().StokSayimId == null)
                     {
                         hatalar.Add("Boyle bir id bulunamadı");
                     }
@@ -73,7 +73,7 @@ namespace BL.Services.StockAdjusment
                
             }
      
-            if (list.First().LocationId == null)
+            if (list.First().DepoId == null)
             {
                 hatalar.Add("Boyle bir Location bulunamadı");
                 return hatalar;
@@ -90,40 +90,38 @@ namespace BL.Services.StockAdjusment
         {
             List<string> hatalar = new();
 
-            var stokcount = await _control.Count(T.ItemId, T.LocationId);
+            var stokcount = await _control.Count(T.StokId, T.DepoId);
             var list = await _db.QueryAsync<StockAdjusmentInsertItem>($@"select
-             (Select id  From Urunle where  id={T.ItemId} and IsActive=1)as ItemId,
-             (Select id  From StokDuzenleme where  id={T.StockAdjusmentId} and Aktif=1)as StockAdjusmentId,
+             (Select id  From Urunler where  id={T.StokId} and Aktif=1)as StokId,
+             (Select id  From StokDuzenleme where  id={T.StokDuzenlemeId} and Aktif=1)as StokDuzenlemeId,
 
-            (Select id as varmi From DepoVeAdresler where  id = {T.LocationId})as LocationId
+            (Select id as varmi From DepoVeAdresler where  id = {T.DepoId})as DepoId
             ");
-            if (list.First().ItemId == null)
+            if (list.First().StokId == null)
             {
                 hatalar.Add("ItemId,Boyle bir id bulunamadı");
             }
-            if (list.First().StockAdjusmentId == null)
+            if (list.First().StokDuzenlemeId == null)
             {
                 hatalar.Add("StockAdjusmentId,Boyle bir id bulunamadı");
             }
-            if (list.First().LocationId == null)
+            if (list.First().DepoId == null)
             {
                 hatalar.Add("LocationId,Boyle bir Location bulunamadı");
             }
-            if (T.Adjusment<0 && stokcount > 0)
+            if (T.Miktar <0 && stokcount > 0)
             {
-                if (T.Adjusment+stokcount<0)
+                if (T.Miktar +stokcount<0)
                 {
                     hatalar.Add("Yeterli stok bulunamamştır.");
 
                 }
-                hatalar.Add("true");
                 return hatalar;
 
             }
 
             else
             {
-                hatalar.Add("true");
                 return hatalar;
 
             }
@@ -137,15 +135,15 @@ namespace BL.Services.StockAdjusment
             var list = await _db.QueryAsync<StockAdjusmentUpdate>($@"select
              (Select id  From StokDuzenleme where  id={T.id} and Aktif=1)as id,
 
-            (Select id  From DepoVeAdresler where  id = {T.LocationId})as LocationId
+            (Select id  From DepoVeAdresler where  id = {T.DepoId})as DepoId
             ");
             if (list.First().id==null)
             {
                 hatalar.Add("id,boyle bir id yok");
             }
-            if (list.First().LocationId == null)
+            if (list.First().DepoId == null)
             {
-                hatalar.Add("LocationId,Boyle bir Location bulunamadı");
+                hatalar.Add("DepoId,Boyle bir DepoId bulunamadı");
                 return hatalar;
 
             }
@@ -164,19 +162,19 @@ namespace BL.Services.StockAdjusment
             string sql1 = $@"Select Miktar from StokDuzenlemeDetay where id={T.id}";
             var sorgu2 = await _db.QueryAsync<float>(sql1);
             float adjusment = sorgu2.First();
-            var adjusmentcount = T.Adjusment - adjusment;
+            var adjusmentcount = T.Miktar - adjusment;
             var liste = await _db.QueryAsync<StockAdjusmentUpdate>($@"
-            Select LocationId  From StokDuzenleme where id = {T.StockAdjusmentId}
+            Select DepoId  From StokDuzenleme where id = {T.StokDuzenlemeId}
             ");
-            var stokcount = await _control.Count(T.ItemId,liste.First().LocationId);
+            var stokcount = await _control.Count(T.StokId,liste.First().DepoId);
             var list = await _db.QueryAsync<StockAdjusmentUpdateItems>($@"select
-             (Select id  From StokDuzenlemeDetay where id={T.id} and  StokDuzenlemeId={T.StockAdjusmentId})as id,
+             (Select id  From StokDuzenlemeDetay where id={T.id} and  StokDuzenlemeId={T.StokDuzenlemeId})as id,
 
-            (Select id as varmi From StokDuzenleme where  id = {T.StockAdjusmentId})as StockAdjusmentId,
-             (Select id  From StokDuzenlemeDetay where  id={T.ItemId} and StokDuzenlemeId={T.StockAdjusmentId} )as ItemId
+            (Select id as varmi From StokDuzenleme where  id = {T.StokDuzenlemeId})as StokDuzenlemeId,
+             (Select id  From StokDuzenlemeDetay where  id={T.StokId} and StokDuzenlemeId={T.StokDuzenlemeId} )as StokId
 
             ");
-            if (list.First().StockAdjusmentId==null)
+            if (list.First().StokDuzenlemeId==null)
             {
                 hatalar.Add("StockAdjusmentId,Boyle bir id yok");
             }
@@ -184,7 +182,7 @@ namespace BL.Services.StockAdjusment
             {
                 hatalar.Add("id ve StockAdjusmentId eslesmiyor");
             }
-            if (list.First().ItemId==null)
+            if (list.First().StokId==null)
             {
                 hatalar.Add("Boyle bir ItemId yok");
             }

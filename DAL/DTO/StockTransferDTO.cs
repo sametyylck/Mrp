@@ -8,69 +8,76 @@ namespace DAL.DTO
 {
     public class StockTransferDTO
     {
+        public class StokAktarimDetay
+        {
+            public int id { get; set; }
+            public int? StokId { get; set; }
+            public float? Miktar { get; set; }
+            public int StokAktarimId { get; set; }
+        }
         public class StockTransferAll
         {
             public int id { get; set; }
-            public string StockTransferName { get; set; } = string.Empty;
-            public DateTime TransferDate { get; set; }
-            public int? OriginId { get; set; }
+            public string AktarimIsmi { get; set; } = string.Empty;
+            public DateTime AktarmaTarihi { get; set; }
+            public int? BaslangicDepo { get; set; }
 
-            public int? DestinationId { get; set; }
-            public string Info { get; set; } = string.Empty;
-            public int? ItemId { get; set; }
-            public float? Quantity { get; set; }
+            public int? HedefDepo { get; set; }
+            public string Bilgi { get; set; } = string.Empty;
+            public int? StokId { get; set; }
+            public float? Miktar { get; set; }
         }
         public class StockTransferInsert
         {
-            public string StockTransferName { get; set; } = string.Empty;
-            public DateTime TransferDate { get; set; }
-            public int OriginId { get; set; }
-            public int DestinationId { get; set; }
-            public string Info { get; set; } = string.Empty;
-            public int? ItemId { get; set; }
-            public float? Quantity { get; set; }
+            public string AktarimIsmi { get; set; } = string.Empty;
+            public DateTime AktarmaTarihi { get; set; }
+            public int BaslangicDepo { get; set; }
+            public int HedefDepo { get; set; }
+            public string Bilgi { get; set; } = string.Empty;
+            public int? StokId { get; set; }
+            public float? Miktar { get; set; }
 
         }
         public class StockTransferInsertItem
         {
-            public int? ItemId { get; set; }
-            public float? Quantity { get; set; }
-            public int? StockTransferId { get; set; }
+            public int? StokId { get; set; }
+            public float? Miktar { get; set; }
+            public int? StokAktarimId { get; set; }
         }
         public class StockUpdate
         {
             public int id { get; set; }
-            public string StockTransferName { get; set; }
-            public float Total { get; set; }
-            public DateTime TransferDate { get; set; }
-            public string Info { get; set; }
+            public string AktarimIsmi { get; set; }
+            public float Toplam { get; set; }
+            public DateTime AktarmaTarihi { get; set; }
+            public string Bilgi { get; set; }
         }
         public class StockTransferList
         {
             public int id { get; set; }
-            public string StockTransferName { get; set; } = string.Empty;
-            public DateTime TransferDate { get; set; }
+            public string AktarimIsmi { get; set; } = string.Empty;
+            public DateTime AktarmaTarihi { get; set; }
 
-            public int DestinationId { get; set; }
-            public string DestinationName { get; set; } = string.Empty;
-            public int OriginId { get; set; }
-            public string OriginName { get; set; } = string.Empty;
-            public string Info { get; set; } = string.Empty;
-            public string Total { get; set; } = string.Empty;
+            public int HedefDepo { get; set; }
+            public string HedefDepoIsmi { get; set; } = string.Empty;
+            public int BaslangicDepo { get; set; }
+            public string BaslangicDepoIsmi { get; set; } = string.Empty;
+            public string Bilgi { get; set; } = string.Empty;
+            public string Toplam { get; set; } = string.Empty;
         }
 
         public class StockTransferDetails
         {
             public int id { get; set; }
-            public string StockTransferName { get; set; } = string.Empty;
-            public DateTime TransferDate { get; set; }
+            public string AktarimIsmi { get; set; } = string.Empty;
+            public DateTime AktarimTarihi { get; set; }
 
-            public int DestinationId { get; set; }
-            public string DestinationName { get; set; } = string.Empty;
-            public int OriginId { get; set; }
-            public string OriginName { get; set; } = string.Empty;
-            public string Info { get; set; } = string.Empty;
-            public string Total { get; set; } = string.Empty;
+            public int HedefDepo { get; set; }
+            public string HedefDepoIsmi { get; set; } = string.Empty;
+            public int BaslangicDepo { get; set; }
+            public string BaslangıcDepoIsmi { get; set; } = string.Empty;
+            public string Bilgi { get; set; } = string.Empty;
+            public string Toplam { get; set; } = string.Empty;
             public IEnumerable<StockTransferDetailsItems> detay { get; set; }
         }
         public class StockTransferDelete
@@ -80,21 +87,21 @@ namespace DAL.DTO
         public class StockTransferDeleteItems
         {
             public int id { get; set; }
-            public int StockTransferId { get; set; }
+            public int StokAktarimId { get; set; }
 
-            public int ItemId { get; set; }
+            public int StokId { get; set; }
         }
 
         public class StockMergeSql
         {
-            public int DefaultPrice { get; set; }
+            public int VarsayilanFiyat { get; set; }
             public string Tip { get; set; } = string.Empty;
-            public int OriginId { get; set; }
-            public float OriginStockCount { get; set; }
-            public int DestinationId { get; set; }
-            public float DestinationStockCount { get; set; }
-            public float? Quantity { get; set; }
-            public int StockId { get; set; }
+            public int BaslangicDepo { get; set; }
+            public float BaslangicDepoStokAdeti { get; set; }
+            public int HedefDepo { get; set; }
+            public float HedefDepoStokAdeti { get; set; }
+            public float? Miktar { get; set; }
+            public int StokId { get; set; }
             public int originvarmi { get; set; }
             public int stockCountOrigin { get; set; }
             public int destinationvarmı { get; set; }
@@ -107,26 +114,26 @@ namespace DAL.DTO
         public class StockTransferDetailsItems
         {
             public int id { get; set; }
-            public int ItemId { get; set; }
-            public string ItemName { get; set; } = string.Empty;
-            public float Quantity { get; set; }
-            public int OriginId { get; set; }
-            public string OriginLocationName { get; set; } = string.Empty;
-            public float OriginLocationStockCount { get; set; }
-            public int DestinationId { get; set; }
-            public float CostPerUnit { get; set; }
-            public string DestinationLocationName { get; set; } = string.Empty;
-            public float DestinationLocationStockCount { get; set; }
+            public int StokId { get; set; }
+            public string UrunIsmi { get; set; } = string.Empty;
+            public float Miktar { get; set; }
+            public int BaslangıcDepo { get; set; }
+            public string BaslangıcDepoIsmi { get; set; } = string.Empty;
+            public float BaslangıcDepoStokAdeti { get; set; }
+            public int HedefDepo { get; set; }
+            public float BirimFiyat { get; set; }
+            public string HedefDepoIsim { get; set; } = string.Empty;
+            public float HedefDepoStokAdeti { get; set; }
 
-            public float TransferValue { get; set; }
+            public float TransferUcreti { get; set; }
         }
 
         public class StockTransferItems
         {
             public int? id { get; set; }
-            public int StockTransferId { get; set; }
-            public int? ItemId { get; set; }
-            public float Quantity { get; set; }
+            public int StokAktarimId { get; set; }
+            public int? StokId { get; set; }
+            public float Miktar { get; set; }
         }
     }
 }

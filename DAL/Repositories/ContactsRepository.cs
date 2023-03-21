@@ -82,7 +82,7 @@ namespace DAL.Repositories
             prm.Add("@VergiNumarası", T.VergiNumarası);
             prm.Add("@Telefon", T.Telefon);
             prm.Add("@ParaBirimiId", T.ParaBirimiId);
-            prm.Add("@CompanyId", KullaniciId);
+            prm.Add("@KullaniciId", KullaniciId);
             prm.Add("@IsActive", true);
 
             return await _dbConnection.QuerySingleAsync<int>($"Insert into Cari (AdSoyad,VergiDairesi,CariTipId,VergiNumarası, Mail,Telefon,ParaBirimiId,Aktif) OUTPUT INSERTED.[CariKod] values (@AdSoyad,@VergiDairesi,@CariTipId,@VergiNumarası,@Mail, @Telefon,@ParaBirimiId,@IsActive)", prm);

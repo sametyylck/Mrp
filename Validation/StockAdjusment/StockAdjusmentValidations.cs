@@ -12,20 +12,20 @@ namespace Validation.StockAdjusment
     {
         public StockAdjusmentItemDeleteValidations()
         {
-            RuleFor(x=>x.StockAdjusmentId).NotEmpty().WithMessage("StockAdjusmentId boş gecilmez").NotNull().WithMessage("StockAdjusmentId zorunlu alan");
+            RuleFor(x=>x.StokDuzenelemeId).NotEmpty().WithMessage("StockAdjusmentId boş gecilmez").NotNull().WithMessage("StockAdjusmentId zorunlu alan");
             RuleFor(x => x.id).NotEmpty().WithMessage("id boş gecilmez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId boş gecilmez").NotNull().WithMessage("ItemId zorunlu alan");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId boş gecilmez").NotNull().WithMessage("ItemId zorunlu alan");
         }
     }
     public class StockAdjusmentInsertItemValidations : AbstractValidator<StockAdjusmentInsertItem>
     {
         public StockAdjusmentInsertItemValidations()
         {
-            RuleFor(x => x.CostPerUnit).NotEmpty().WithMessage("CostPerUnit boş gecilmez").NotNull().WithMessage("CostPerUnit zorunlu alan");
-            RuleFor(x => x.LocationId).NotEmpty().WithMessage("LocationId boş gecilmez").NotNull().WithMessage("LocationId zorunlu alan");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId boş gecilmez").NotNull().WithMessage("ItemId zorunlu alan");
-            RuleFor(x => x.Adjusment).NotEmpty().WithMessage("Adjusment boş gecilmez").NotNull().WithMessage("Adjusment zorunlu alan");
-            RuleFor(x => x.StockAdjusmentId).NotEmpty().WithMessage("StockAdjusmentId boş gecilmez").NotNull().WithMessage("StockAdjusmentId zorunlu alan");
+            RuleFor(x => x.BirimFiyat).NotEmpty().WithMessage("CostPerUnit boş gecilmez").NotNull().WithMessage("CostPerUnit zorunlu alan");
+            RuleFor(x => x.DepoId).NotEmpty().WithMessage("LocationId boş gecilmez").NotNull().WithMessage("LocationId zorunlu alan");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId boş gecilmez").NotNull().WithMessage("ItemId zorunlu alan");
+            RuleFor(x => x.Miktar).NotEmpty().WithMessage("Adjusment boş gecilmez").NotNull().WithMessage("Adjusment zorunlu alan");
+            RuleFor(x => x.StokDuzenlemeId).NotEmpty().WithMessage("StockAdjusmentId boş gecilmez").NotNull().WithMessage("StockAdjusmentId zorunlu alan");
 
 
         }
@@ -34,9 +34,9 @@ namespace Validation.StockAdjusment
     {
         public StockAdjusmentInsertValidations()
         {
-            RuleFor(x => x.LocationId).NotEmpty().WithMessage("LocationId boş gecilmez").NotNull().WithMessage("LocationId zorunlu alan");
-            RuleFor(x => x.Date).NotEmpty().WithMessage("Date boş gecilmez").NotNull().WithMessage("Date zorunlu alan");
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Name boş gecilmez").NotNull().WithMessage("Name zorunlu alan");
+            RuleFor(x => x.DepoId).NotEmpty().WithMessage("LocationId boş gecilmez").NotNull().WithMessage("LocationId zorunlu alan");
+            RuleFor(x => x.Tarih).NotEmpty().WithMessage("Date boş gecilmez").NotNull().WithMessage("Date zorunlu alan");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("Name boş gecilmez").NotNull().WithMessage("Name zorunlu alan");
         }
     }
     public class StockAdjusmentUpdateValidations : AbstractValidator<StockAdjusmentUpdate>
@@ -44,20 +44,19 @@ namespace Validation.StockAdjusment
         public StockAdjusmentUpdateValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("StockAdjusmentId boş gecilmez").NotNull().WithMessage("StockAdjusmentId zorunlu alan");
-            RuleFor(x => x.Date).NotEmpty().WithMessage("id boş gecilmez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.Name).NotEmpty().WithMessage("ItemId boş gecilmez").NotNull().WithMessage("ItemId zorunlu alan");
-            RuleFor(x => x.LocationId).NotEmpty().WithMessage("LocationId boş gecilmez").NotNull().WithMessage("LocationId zorunlu alan");
+            RuleFor(x => x.Tarih).NotEmpty().WithMessage("id boş gecilmez").NotNull().WithMessage("id zorunlu alan");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("ItemId boş gecilmez").NotNull().WithMessage("ItemId zorunlu alan");
+            RuleFor(x => x.DepoId).NotEmpty().WithMessage("LocationId boş gecilmez").NotNull().WithMessage("LocationId zorunlu alan");
         }
     }
     public class StockAdjusmentValidations : AbstractValidator<StockAdjusmentUpdateItems>
     {
         public StockAdjusmentValidations()
         {
-            RuleFor(x => x.CostPerUnit).NotEmpty().WithMessage("CostPerUnit boş gecilmez").NotNull().WithMessage("CostPerUnit zorunlu alan");
-            RuleFor(x => x.StockAdjusmentId).NotEmpty().WithMessage("StockAdjusmentId boş gecilmez").NotNull().WithMessage("StockAdjusmentId zorunlu alan");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId boş gecilmez").NotNull().WithMessage("ItemId zorunlu alan");
-            RuleFor(x => x.Adjusment).NotEmpty().WithMessage("Adjusment boş gecilmez").NotNull().WithMessage("Adjusment zorunlu alan");
-            RuleFor(x => x.StockAdjusmentId).NotEmpty().WithMessage("StockAdjusmentId boş gecilmez").NotNull().WithMessage("StockAdjusmentId zorunlu alan");
+            RuleFor(x => x.BirimFiyat).NotEmpty().WithMessage("CostPerUnit boş gecilmez").NotNull().WithMessage("CostPerUnit zorunlu alan");
+            RuleFor(x => x.StokDuzenlemeId).NotEmpty().WithMessage("StockAdjusmentId boş gecilmez").NotNull().WithMessage("StockAdjusmentId zorunlu alan");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId boş gecilmez").NotNull().WithMessage("ItemId zorunlu alan");
+            RuleFor(x => x.Miktar).NotEmpty().WithMessage("Adjusment boş gecilmez").NotNull().WithMessage("Adjusment zorunlu alan");
 
 
         }

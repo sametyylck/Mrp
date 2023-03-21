@@ -47,15 +47,15 @@ namespace DAL.DTO
             public int id { get; set; }
             public int? Quotes { get; set; }
             public float? TotalAll { get; set; }
-            public int? ItemId { get; set; }
-            public string? ItemName { get; set; }
-            public int BillingLocationId { get; set; }
-            public int? ShippingLocationId { get; set; }
+            public int? StokId { get; set; }
+            public string? UrunIsmi { get; set; }
+            public int FaturaAdresId { get; set; }
+            public int? KargoAdresId { get; set; }
             public float? Miktar { get; set; }
-            public float? PricePerUnit { get; set; }
+            public float? BirimFiyat { get; set; }
             public float? TotalPrice { get; set; }
-            public int TaxId { get; set; }
-            public int Rate { get; set; }
+            public int VergiId { get; set; }
+            public int VergiDegeri { get; set; }
             public int SalesItem { get; set; }
             public int Conditions { get; set; }
         }
@@ -119,19 +119,19 @@ namespace DAL.DTO
         public class SalesOrderDetail
         {
             public int id { get; set; }
-            public int ContactId { get; set; }
-            public string? DisplayName { get; set; }
+            public int CariId { get; set; }
+            public string? CariAdSoyad { get; set; }
             public string? OrderName { get; set; }
-            public int BillingAddressId { get; set; }
-            public int? ShippingAddressId { get; set; }
+            public int FaturaAdresiId { get; set; }
+            public int? KargoAdresiId { get; set; }
             public DateTime DeliveryDeadline { get; set; }
-            public int DeliveryId { get; set; }
-            public DateTime CreateDate { get; set; }
-            public int LocationId { get; set; }
-            public string? LocationName { get; set; }
-            public string? Info { get; set; }
-            public float Total { get; set; }
-            public int Status { get; set; }
+            public int DurumBelirteci { get; set; }
+            public DateTime OlusturmaTarihi { get; set; }
+            public int DepoId { get; set; }
+            public string? DepoIsmi { get; set; }
+            public string? Bilgi { get; set; }
+            public float Toplam { get; set; }
+            public int Durum { get; set; }
             public int Conditions { get; set; }
             public IEnumerable<SatısDetail> detay { get; set; }
 
@@ -240,13 +240,13 @@ namespace DAL.DTO
         { 
             [Required]
             public int id { get; set; }
-            public int LocationId { get; set; }
-            public int SalesOrderItemId { get; set; }
+            public int DepoId { get; set; }
+            public int SatisDetayId { get; set; }
             [Required]
-            public int ProductId { get; set; }
-            public int MaterialId { get; set; }
-            public string? MaterialName { get; set; }
-            public int Missing { get; set; }
+            public int MamulId { get; set; }
+            public int MalzemeId { get; set; }
+            public string? MalzemeIsmi { get; set; }
+            public int Kayip { get; set; }
             public List<PurchaseOrdersItemDetails>? PurchaseOrderList { get; set; }
 
 

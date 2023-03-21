@@ -24,7 +24,7 @@ namespace BL.Services.StockTakes
             List<string> hatalar = new();
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@Status", T.Status);
+            prm.Add("@Status", T.Durum);
 
             string sqlquery = $@"select Count(id) from StokSayim where id={T.id}";
             var id = await _db.QueryFirstAsync<int>(sqlquery);
@@ -40,12 +40,12 @@ namespace BL.Services.StockTakes
 
             if (Status==1)
             {
-                if (T.Status==2 || T.Status==3)
+                if (T.Durum ==2 || T.Durum==3)
                 {
                     var degerler = await _db.QueryAsync<StockTakeItems>($@"select * from StokSayimDetay where  StokSayimId={T.id}");
                     foreach (var item in degerler)
                     {
-                        if (item.CountedQuantity==null)
+                        if (item.SayilanMiktar==null)
                         {
                             hatalar.Add("Sayılan Miktar girilmedi");
                         }
@@ -59,14 +59,14 @@ namespace BL.Services.StockTakes
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<StockTakeDelete>($@"select
-             (Select id  From StokSayimDetay where  StokId={T.ItemId} and id={T.id} )as ItemId,
+             (Select id  From StokSayimDetay where  StokId={T.StokId} and id={T.id} )as ItemId,
             (Select Count(*) as varmi From StokSayim where  and id = {T.id} and IsActive=1)as id
             "); 
             if (list.First().id == null)
             {
                 hatalar.Add("Boyle bir Itemid yok");
             }
-            if (list.First().ItemId == null)
+            if (list.First().StokId == null)
             {
                 hatalar.Add("Boyle bir location yok");
                 return hatalar;
@@ -82,7 +82,7 @@ namespace BL.Services.StockTakes
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select id as varmi From DepoVeAdresler where  id = {T.LocationId})as LocationId
+            (Select id as varmi From DepoVeAdresler where  id = {T.DepoId})as DepoId
             ");
             if (list.First().DepoId ==null)
             {
@@ -103,14 +103,14 @@ namespace BL.Services.StockTakes
             foreach (var item in T)
             {
                 var list = await _db.QueryAsync<StockTakeInsertItems>($@"select
-             (Select id  From Urunler where  id={item.ItemId})as ItemId,
-            (Select id as varmi From StokSayim where id = {item.StockTakesId} and Aktif=1)as StockTakesId
+             (Select id  From Urunler where  id={item.StokId})as StokId,
+            (Select id as varmi From StokSayim where id = {item.StokSayimId} and Aktif=1)as StokSayimId
             ");
-                if (list.First().ItemId == null)
+                if (list.First().StokId == null)
                 {
                     hatalar.Add("Boyle bir Itemid yok");
                 }
-                if (list.First().StockTakesId == null)
+                if (list.First().StokSayimId == null)
                 {
                     hatalar.Add("StockTakesId,Boyle bir id yok");
                 }  
@@ -124,13 +124,13 @@ namespace BL.Services.StockTakes
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<StockTakesUpdateItems>($@"select
-             (Select id  From StokSayimDetay where  id={T.StockTakesItemId} and StokSayimId={T.StockTakesId})as StockTakesItemId,
-            (Select id as varmi From StokSayim where id = {T.StockTakesId} and Aktif=1)as StockTakesId");
-            if (list.First().StockTakesId == null)
+             (Select id  From StokSayimDetay where  id={T.StokSayimDetayId} and StokSayimId={T.StokSayimId})as StokSayimDetayId,
+            (Select id as varmi From StokSayim where id = {T.StokSayimId} and Aktif=1)as StokSayimId");
+            if (list.First().StokSayimId == null)
             {
                 hatalar.Add("StockTakesId,Boyle bir id yok");
             }
-            if (list.First().StockTakesItemId==null)
+            if (list.First().StokSayimDetayId == null)
             {
                 hatalar.Add("Boyle bir eslesme mevcut degi.StockTakesItemId ve StockTakesId");
                 return hatalar;

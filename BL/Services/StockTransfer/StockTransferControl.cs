@@ -31,18 +31,18 @@ namespace BL.Services.StockTransfer
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<StockTransferAll>($@"select
-             (Select id  From Urunler where id={T.ItemId})as ItemId,
-            (Select id as varmi From DepoVeAdresler where id = {T.DestinationId})as DestinationId,
-            (Select id as varmi From DepoVeAdresler where id = {T.OriginId})as OriginId
+             (Select id  From Urunler where id={T.StokId})as StokId,
+            (Select id as varmi From DepoVeAdresler where id = {T.HedefDepo})as HedefDepo,
+            (Select id as varmi From DepoVeAdresler where id = {T.BaslangicDepo})as BaslangicDepo
 
             ");
-            if (T.DestinationId!=T.OriginId)
+            if (T.HedefDepo!=T.BaslangicDepo)
             {
-                if (list.First().DestinationId == null)
+                if (list.First().HedefDepo == null)
                 {
                     hatalar.Add("DestinationId,Boyle bir location yok");
                 }
-                if (list.First().OriginId == null)
+                if (list.First().BaslangicDepo == null)
                 {
                     hatalar.Add("OriginId,Boyle bir location yok");
 
@@ -53,7 +53,7 @@ namespace BL.Services.StockTransfer
                 hatalar.Add("Konumlar ayni olamaz");
 
             }
-            if (list.First().ItemId == null)
+            if (list.First().StokId == null)
             {
                 hatalar.Add("ItemId,Boyler bir item yok");
                 return hatalar;
@@ -73,15 +73,15 @@ namespace BL.Services.StockTransfer
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<StockTransferInsertItem>($@"select
-             (Select id  From Urunler where id={T.ItemId})as ItemId,
-            (Select id as varmi From StokAktarim where id = {T.StockTransferId} )as StockTransferId
+             (Select id  From Urunler where id={T.StokId})as ItemId,
+            (Select id as varmi From StokAktarim where id = {T.StokAktarimId} )as StockTransferId
             ");
-            if (list.First().ItemId == null)
+            if (list.First().StokId == null)
             {
                 hatalar.Add("ItemId,Boyler bir item yok");
 
             }
-            if (list.First().StockTransferId==null)
+            if (list.First().StokAktarimId ==null)
             {
                 hatalar.Add("StockTransferId,boyle bir id bulunamadı");
                 return hatalar;
@@ -117,14 +117,14 @@ namespace BL.Services.StockTransfer
             ,(Select StockCount from LocationStock where ItemId = @ItemId and LocationId = @@Destination and CompanyId =             @CompanyId) as DestinationStockCounts,
             (select st.Quantity  from StockTransferItems st  where st.id=@id and st.ItemId=@ItemId and st.CompanyId=@CompanyId)as Quantity";
                 var sorgu = await _db.QueryAsync<StockMergeSql>(sqlf, prm);
-                float? Quantity = sorgu.First().Quantity;
-                var CostPerUnit = sorgu.First().DefaultPrice;
+                float? Quantity = sorgu.First().Miktar;
+                var CostPerUnit = sorgu.First().VarsayilanFiyat;
                 var Tip = sorgu.First().Tip;
                 var value = Quantity * CostPerUnit; //transfer value hesaplama
                 prm.Add("@Total", value);
-                int Origin = sorgu.First().OriginId;
-                int Destination = sorgu.First().DestinationId;
-                int stockId = sorgu.First().StockId;
+                int Origin = sorgu.First().BaslangicDepo;
+                int Destination = sorgu.First().HedefDepo;
+                int stockId = sorgu.First().StokId;
                 prm.Add("@stockId", stockId);
                 prm.Add("@Destination", Destination);
                 prm.Add("@Origin", Origin);
@@ -156,11 +156,11 @@ namespace BL.Services.StockTransfer
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<StockTransferItems>($@"select
-             (Select id  From StokAktarimDetay where ItemId={ItemId} and id={id})as ItemId,
-            (Select id as varmi From StokAktarim where  id = {StockTransferId} and IsActive=1)as StockTransferId,
-            (Select id as varmi From StokAktarimDetay where  id = {id} and StockTransferId={StockTransferId})as id ");
+             (Select id  From StokAktarimDetay where StokId={ItemId} and id={id})as StokId,
+            (Select id as varmi From StokAktarim where  id = {StockTransferId} and Aktif=1)as StockTransferId,
+            (Select id as varmi From StokAktarimDetay where  id = {id} and StokAktarimId={StockTransferId})as id ");
            
-            if (list.First().StockTransferId == null)
+            if (list.First().StokAktarimId == null)
             {
                 hatalar.Add("StockTransferId,boyle bir id bulunamadı");
             }
@@ -168,7 +168,7 @@ namespace BL.Services.StockTransfer
             {
                 hatalar.Add("Boyle bir eslesme yok.Id ve StockTransferId");
             }
-            if (list.First().ItemId == null)
+            if (list.First().StokId == null)
             {
                 hatalar.Add("ItemId,Boyler bir item yok");
                 return hatalar;
@@ -186,11 +186,11 @@ namespace BL.Services.StockTransfer
             prm.Add("@id", Id);
 
             string sqlf = $@"select
-            (Select OriginId from StokAktarim where id = @StockTransferId ) as OriginId,
-            (Select DestinationId from StokAktarim where id = @StockTransferId ) as DestinationId";
+            (Select BaslangicDepo from StokAktarim where id = @StockTransferId ) as BaslangicDepo,
+            (Select HedefDepo from StokAktarim where id = @StockTransferId ) as HedefDepo";
             var sorgu = await _db.QueryAsync<StockMergeSql>(sqlf, prm);
-            int OriginId = sorgu.First().OriginId;
-            int DestinationId = sorgu.First().DestinationId;
+            int OriginId = sorgu.First().BaslangicDepo;
+            int DestinationId = sorgu.First().HedefDepo;
             var deger = await _db.QueryAsync<int>($"Select  StokAktarimDetay.Miktar from StokAktarimDetay where id=@id ", prm);
             List<string> hatalar = new();
             var origincount = await _control.Count(ItemId, OriginId);

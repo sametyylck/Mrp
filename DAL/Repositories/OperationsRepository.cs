@@ -24,7 +24,6 @@ namespace DAL.Repositories
 
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
-            prm.Add("@CompanyId", CompanyId);
             //Burada OperationBom eşleşme tablosundaki operasyon id si silinen operasyon olan kayıtları soft delete ediyoruz
            await _db.ExecuteAsync($"Update UrunKaynakRecetesi SET Aktif = 0 where OperasyonId = @id", prm);
             //Burada Normal Operasyon Kaydını Siliyoruz
@@ -43,7 +42,6 @@ namespace DAL.Repositories
         public async Task<IEnumerable<OperitaonsDTO>> List(int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
             var list =await _db.QueryAsync<OperitaonsDTO>($"Select id,Isim From Operasyonlar where  Aktif = 1", prm);
             return list.ToList();
         }
@@ -53,7 +51,6 @@ namespace DAL.Repositories
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
             prm.Add("@Name", T.Isim);
-            prm.Add("@CompanyId", CompanyId);
            await _db.ExecuteAsync($"Update Operasyonlar SET Isim = @Name where id = @id", prm);
         }
     }

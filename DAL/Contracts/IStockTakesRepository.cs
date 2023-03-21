@@ -12,7 +12,6 @@ namespace DAL.Contracts
     public interface IStockTakesRepository
     {
         Task<int> Insert(StockTakesInsert t,int CompanyId);
-        Task<int> StockTakesCount(StockTakeList T, int CompanyId);
         Task<int> InsertItem(List<StockTakeInsertItems> T, int CompanyId);
         Task Update(StockTakesUpdate T, int id, int CompanyId);
         Task UpdateItems(StockTakesUpdateItems T, int CompanyId);

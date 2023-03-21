@@ -13,30 +13,30 @@ namespace Validation.StockTransfer
     {
         public StockTransferInsertValidations()
         {
-            RuleFor(x=>x.OriginId).NotEmpty().WithMessage("Origin bos gecilmez").NotNull().WithMessage("Origin alanı zorunlu");
-            RuleFor(x => x.DestinationId).NotEmpty().WithMessage("DestinationId bos gecilmez").NotNull().WithMessage("DestinationId alanı zorunlu");
-            RuleFor(x => x.TransferDate).NotEmpty().WithMessage("TransferDate bos gecilmez").NotNull().WithMessage("TransferDate alanı zorunlu");
-            RuleFor(x => x.StockTransferName).NotEmpty().WithMessage("TransferDate bos gecilmez").NotNull().WithMessage("TransferDate alanı zorunlu");
-            RuleFor(x => x.Quantity).NotEmpty().WithMessage("Quantity bos gecilmez").NotNull().WithMessage("Quantity alanı zorunlu");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId bos gecilmez").NotNull().WithMessage("ItemId alanı zorunlu");
+            RuleFor(x=>x.BaslangicDepo).NotEmpty().WithMessage("Origin bos gecilmez").NotNull().WithMessage("Origin alanı zorunlu");
+            RuleFor(x => x.HedefDepo).NotEmpty().WithMessage("DestinationId bos gecilmez").NotNull().WithMessage("DestinationId alanı zorunlu");
+            RuleFor(x => x.AktarmaTarihi).NotEmpty().WithMessage("TransferDate bos gecilmez").NotNull().WithMessage("TransferDate alanı zorunlu");
+            RuleFor(x => x.AktarimIsmi).NotEmpty().WithMessage("TransferDate bos gecilmez").NotNull().WithMessage("TransferDate alanı zorunlu");
+            RuleFor(x => x.Miktar).NotEmpty().WithMessage("Quantity bos gecilmez").NotNull().WithMessage("Quantity alanı zorunlu");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId bos gecilmez").NotNull().WithMessage("ItemId alanı zorunlu");
         }
     }
     public class StockTransferInsertItemValidations : AbstractValidator<StockTransferInsertItem>
     {
         public StockTransferInsertItemValidations()
         {
-            RuleFor(x => x.StockTransferId).NotEmpty().WithMessage("StockTransferId bos gecilmez").NotNull().WithMessage("StockTransferId alanı zorunlu");
-            RuleFor(x => x.Quantity).NotEmpty().WithMessage("Quantity bos gecilmez").NotNull().WithMessage("Quantity alanı zorunlu");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId bos gecilmez").NotNull().WithMessage("ItemId alanı zorunlu");
+            RuleFor(x => x.StokAktarimId).NotEmpty().WithMessage("StockTransferId bos gecilmez").NotNull().WithMessage("StockTransferId alanı zorunlu");
+            RuleFor(x => x.Miktar).NotEmpty().WithMessage("Quantity bos gecilmez").NotNull().WithMessage("Quantity alanı zorunlu");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId bos gecilmez").NotNull().WithMessage("ItemId alanı zorunlu");
         }
     }
     public class StockTransferDeleteItemsValidations : AbstractValidator<StockTransferDeleteItems>
     {
         public StockTransferDeleteItemsValidations()
         {
-            RuleFor(x => x.StockTransferId).NotEmpty().WithMessage("StockTransferId bos gecilmez").NotNull().WithMessage("StockTransferId alanı zorunlu");
+            RuleFor(x => x.StokAktarimId).NotEmpty().WithMessage("StockTransferId bos gecilmez").NotNull().WithMessage("StockTransferId alanı zorunlu");
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilmez").NotNull().WithMessage("id alanı zorunlu");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId bos gecilmez").NotNull().WithMessage("ItemId alanı zorunlu");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId bos gecilmez").NotNull().WithMessage("ItemId alanı zorunlu");
         }
     }
    
@@ -44,19 +44,19 @@ namespace Validation.StockTransfer
     {
         public StockTransferUpdateValidations()
         {
-            RuleFor(x => x.StockTransferName).NotEmpty().WithMessage("StockTransferName bos gecilmez").NotNull().WithMessage("StockTransferName alanı zorunlu");
+            RuleFor(x => x.AktarimIsmi).NotEmpty().WithMessage("StockTransferName bos gecilmez").NotNull().WithMessage("StockTransferName alanı zorunlu");
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilmez").NotNull().WithMessage("id alanı zorunlu");
-            RuleFor(x => x.TransferDate).NotEmpty().WithMessage("TransferDate bos gecilmez").NotNull().WithMessage("TransferDate alanı zorunlu");
+            RuleFor(x => x.AktarmaTarihi).NotEmpty().WithMessage("TransferDate bos gecilmez").NotNull().WithMessage("TransferDate alanı zorunlu");
         }
     }
-    public class StockTransferUpdateItemsValidations : AbstractValidator<StockTransferItems>
+    public class StockTransferUpdateItemsValidations : AbstractValidator<StokAktarimDetay>
     {
         public StockTransferUpdateItemsValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id bos gecilmez").NotNull().WithMessage("id alanı zorunlu");
-            RuleFor(x => x.Quantity).NotEmpty().WithMessage("Quantity bos gecilmez").NotNull().WithMessage("Quantity alanı zorunlu");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId bos gecilmez").NotNull().WithMessage("ItemId alanı zorunlu");
-            RuleFor(x => x.StockTransferId).NotEmpty().WithMessage("StockTransferId bos gecilmez").NotNull().WithMessage("StockTransferId alanı zorunlu");
+            RuleFor(x => x.Miktar).NotEmpty().WithMessage("Quantity bos gecilmez").NotNull().WithMessage("Quantity alanı zorunlu");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId bos gecilmez").NotNull().WithMessage("ItemId alanı zorunlu");
+            RuleFor(x => x.StokAktarimId).NotEmpty().WithMessage("StockTransferId bos gecilmez").NotNull().WithMessage("StockTransferId alanı zorunlu");
         }
     }
 }

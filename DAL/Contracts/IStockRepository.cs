@@ -13,9 +13,5 @@ namespace DAL.Contracts
          Task<IEnumerable<StockList>> ProductList(StockList T, int CompanyId, int KAYITSAYISI, int SAYFA);
         Task<IEnumerable<StockList>> SemiProductList(StockList T, int CompanyId, int KAYITSAYISI, int SAYFA);
         Task<IEnumerable<StockListAll>> AllItemsList(StockListAll T, int CompanyId, int KAYITSAYISI, int SAYFA);
-        Task<int> ProductCount(StockList T, int CompanyId);
-        Task<int> SemiProductCount(StockList T, int CompanyId);
-        Task<int> MaterialCount(StockList T, int CompanyId);
-        Task<int> AllItemsCount(StockListAll T, int CompanyId);
     }
 }

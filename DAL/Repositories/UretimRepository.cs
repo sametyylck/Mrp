@@ -36,7 +36,6 @@ namespace DAL.Repositories
         public async Task<int> Insert(UretimDTO T, int CompanyId)
         {
             DynamicParameters param = new DynamicParameters();
-            param.Add("@CompanyId", CompanyId);
             param.Add("@Isim", T.Isim);
             param.Add("@StokId", T.StokId);
             if (T.PlananlananMiktar == 0)
@@ -87,7 +86,7 @@ namespace DAL.Repositories
             {
 
                 DynamicParameters param = new DynamicParameters();
-                param.Add("@Tip", "Ingredients");
+                param.Add("@Tip", "Malzemeler");
                 param.Add("@OrderId", id);
                 param.Add("@StokId", item.MalzemeId);
                 param.Add("@Bilgi", item.Bilgi);
@@ -294,7 +293,7 @@ namespace DAL.Repositories
 
                     A.UretimId = T.id;
                     A.id = item.id;
-                    if (item.Tip == "Ingredients")
+                    if (item.Tip == "Malzemeler")
                     {
                         A.StokId = (int)item.StokId;
                     }
@@ -359,13 +358,13 @@ namespace DAL.Repositories
             prm.Add("@id", id);
 
             //Eklenen Ordera ait ıtemin  Bomlarını buluyoruz
-            var BomList = await _db.QueryAsync<BOM>($"Select id,ISNULL(StokId,0) as MalzemeId,ISNULL(PlanlananMiktar,0) as PlanlananMiktar,ISNULL(Bilgi,'') as Bilgi from UretimDetay where  UretimDetay.UretimId={id} and Tip='Ingredients'");
+            var BomList = await _db.QueryAsync<BOM>($"Select id,ISNULL(StokId,0) as MalzemeId,ISNULL(PlanlananMiktar,0) as PlanlananMiktar,ISNULL(Bilgi,'') as Bilgi from UretimDetay where  UretimDetay.UretimId={id} and Tip='Malzemeler'");
 
             foreach (var item in BomList)
             {
 
                 DynamicParameters param = new DynamicParameters();
-                param.Add("@Tip", "Ingredients");
+                param.Add("@Tip", "Malzemeler");
                 param.Add("@UretimDetayId", item.id);
                 param.Add("@OrderId", id);
                 param.Add("@StokId", item.MalzemeId);
@@ -430,7 +429,7 @@ namespace DAL.Repositories
                     DynamicParameters prm2 = new DynamicParameters();
                     prm2.Add("@Durum", 1);
                     prm2.Add("@LocationStockCount", DepoStoklar);
-                    prm2.Add("@Tip", "Ingredients");
+                    prm2.Add("@Tip", "Malzemeler");
                     prm2.Add("@OrderId", id);
                     prm2.Add("@UretimDetayId", item.id);
                     prm2.Add("@RezerveCount", deger);
@@ -512,7 +511,7 @@ namespace DAL.Repositories
         public async Task<int> IngredientsInsert(UretimIngredientsInsert T)
         {
             DynamicParameters param = new DynamicParameters();
-            param.Add("@Tip", "Ingredients");
+            param.Add("@Tip", "Malzemeler");
             param.Add("@OrderId", T.UretimId);
             param.Add("@StokId", T.StokId);
             param.Add("@Bilgi", T.Bilgi);
@@ -609,7 +608,7 @@ namespace DAL.Repositories
             param.Add("@id", T.id);
             param.Add("@OrderId", T.UretimId);
             param.Add("@StokId", T.StokId);
-            param.Add("@Tip", " Ingredients");
+            param.Add("@Tip", " Malzemeler");
             param.Add("@DepoId", T.DepoId);
             param.Add("@PlanlananMiktar", T.Miktar);
             string sqlu = $@"Update UretimDetay SET  PlanlananMiktar = @PlanlananMiktar where  id = @id and UretimId = @OrderId";
@@ -751,29 +750,26 @@ namespace DAL.Repositories
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@id", T.id);
-            var BomList = await _db.QueryAsync<DoneStock>($@"Select moi.id,moi.StokId,moi.PlanlananMiktar,moi.Tip,Rezerve.id as RezerveId,Uretim.Durum,Uretim.DepoId,Uretim.SatisId,Uretim.SatisDetayId,Uretim.ParentId     from UretimDetay moi 
+            var BomList = await _db.QueryAsync<DoneStock>($@"Select moi.id,moi.StokId,moi.PlanlananMiktar,moi.Tip,Rezerve.id as RezerveId,Uretim.Durum,Uretim.DepoId,Uretim.SatisId,Uretim.SatisDetayId,Uretim.ParentId    from UretimDetay moi 
             left join Uretim on Uretim.id=moi.UretimId 
             left join Rezerve on Rezerve.UretimDetayId=moi.id 
-            where moi. and moi.UretimId=@id and Uretim.Aktif=1", param);
+            where moi.UretimId=@id and Uretim.Aktif=1", param);
             param.Add("@Durum", T.Durum);
             int eskiStatus = BomList.First().Durum;
             if (T.Durum == 3 && eskiStatus != 3)
             {
                 foreach (var item in BomList)
                 {
-                    if (item.Tip == "Ingredients")
+                    if (item.Tip == "Malzemeler")
                     {
                         param.Add("@StokId", item.StokId);
                         param.Add("@DepoId", item.DepoId);
 
                         string sqla = $@"select 
                          (Select ISNULL(StokAdeti,0) from DepoStoklar where StokId = @StokId
-                         and DepoId = (Select ISNULL(DepoId,0) From Uretim where id = @id)
-                         and )as StokAdeti,
-                         (Select ISNULL(id,0) from DepoStoklar where StokId=@StokId
-                         
-                         and DepoId = (Select ISNULL(DepoId,0) From Uretim where  id =@id)
-                         and )   as    DepoStokId";
+                         and DepoId = (Select ISNULL(DepoId,0) From Uretim where id = @id))as StokAdeti,
+                         (Select ISNULL(id,0) from DepoStoklar where StokId=@StokId and 
+                          DepoId = (Select ISNULL(DepoId,0) From Uretim where  id =@id))   as    DepoStokId";
                         param.Add("@OrderItemId", item.id);
                         var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, param);//
                         float? stockQuantity = sorgu.First().Miktar;
@@ -808,7 +804,7 @@ namespace DAL.Repositories
 
                 string sqlc = $@"select  
                  (Select ISNULL(StokAdeti,0) from DepoStoklar where StokId = (select Uretim.StokId from Uretim where  id=@id)
-                 and DepoId = (Select ISNULL(DepoId,0) From Uretim where id =  @id))as StokAdeti ,(Select Uretim.PlanlananMiktar from Uretim where  and id=@id)as PlanlananMiktar,
+                 and DepoId = (Select ISNULL(DepoId,0) From Uretim where id =  @id))as StokAdeti ,(Select Uretim.PlanlananMiktar from Uretim where id=@id)as PlanlananMiktar,
                  (Select ISNULL(id,0) from DepoStoklar where StokId = (select Uretim.StokId from Uretim
                  where id=@id)
                  and DepoId = (Select ISNULL(DepoId,0) From Uretim where id =  @id) ) as DepoStokId,
@@ -838,12 +834,12 @@ namespace DAL.Repositories
                     float missing;
                     string missingsorgu = $@"
                          Select 
-                         ((select Miktar from SatisDetay where id=@SatisDetayId and SatisId=@SatisId )-ISNULL((Rezerve.RezerveDeger),0))as Missing
+                         ((select Miktar from SatisDetay where id=@SatisDetayId and SatisId=@SatisId )-ISNULL((Rezerve.RezerveDeger),0))as Kayıp
                         
                          from SatinAlma
 				    	 LEFT join Rezerve on Rezerve.SatisId=@SatisId and Rezerve.SatisDetayId=@SatisDetayId  and Rezerve.StokId=@StokId
                          where SatinAlma.Aktif=1
-                         Group by Rezerve.RezerveCount";
+                         Group by Rezerve.RezerveDeger";
                     var missingcount = await _db.QueryAsync<LocaVarmı>(missingsorgu, prm);
                     if (missingcount.Count() == 0)
                     {
@@ -861,7 +857,7 @@ namespace DAL.Repositories
                         prm.Add("@Production", 4);
                         prm.Add("@Ingredients", 3);
 
-                        await _db.ExecuteAsync($"Update SatisDetay set MalzemeDurum=@Ingredients where SatisId=@SatisId and id=@SatisDetayId and StokId=@StokId ", prm);
+                        await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Ingredients where SatisId=@SatisId and id=@SatisDetayId and StokId=@StokId ", prm);
                     }
                    else if (missing<=ManufacturingQuantity+rezervecount)
                     {
@@ -903,11 +899,11 @@ namespace DAL.Repositories
                 param.Add("@StockCount", newlocationstock);
                 if (BomList.First().ParentId!=null)
                 {
-                    param.Add("@ParentId", BomList.First().ParentId);
+                     param.Add("@ParentId", BomList.First().ParentId);
 
-                    string sql4c = $@"select UretimDetay.id,UretimDetay.UretimId,UretimDetay.StokId,UretimDetay.PlanlananMiktar from UretimDetay 
+                    string sql4c = $@"select UretimDetay.id,UretimDetay.UretimId as OrderId,UretimDetay.StokId,UretimDetay.PlanlananMiktar from UretimDetay 
                     left join Uretim on Uretim.id=UretimDetay.UretimId
-                    where Uretim.id=@ParentId and UretimDetay.StokId=@StokId and";
+                    where Uretim.id=@ParentId and UretimDetay.StokId=@StokId";
                     var sorgu9 = await _db.QueryAsync<UretimMake>(sql4c, param);
                     foreach (var parent in sorgu9)
                     {
@@ -942,8 +938,8 @@ namespace DAL.Repositories
                             param.Add("@RezerveCount", rezervemiktar+stokmiktari+ManufacturingQuantity);
                             param.Add("@MalzemeDurum", 0);
                         }
-                        await _db.ExecuteAsync($"Update Rezerve set RezerveDeger=@RezerveCount where  and UretimId=@Manuid and UretimDetayId=@Manuitemid  and Durum=1 and StokId=@StokId ", param);
-                        await _db.ExecuteAsync($"Update UretimDetay set MalzemeDurum=@MalzemeDurum where OrderId=@Manuid and id=@Manuitemid and Itemıd=@StokId and ", param);
+                        await _db.ExecuteAsync($"Update Rezerve set RezerveDeger=@RezerveCount where  UretimId=@Manuid and UretimDetayId=@Manuitemid  and Durum=1 and StokId=@StokId ", param);
+                        await _db.ExecuteAsync($"Update UretimDetay set MalzemeDurum=@MalzemeDurum where UretimId=@Manuid and id=@Manuitemid and StokId=@StokId ", param);
 
                     }
 
@@ -963,7 +959,7 @@ namespace DAL.Repositories
             {
                 foreach (var item in BomList)
                 {
-                    if (item.Tip == "Ingredients")
+                    if (item.Tip == "Malzemeler")
                     {
                         param.Add("@StokId", item.StokId);
                         param.Add("@DepoId", item.DepoId);
@@ -1046,7 +1042,7 @@ namespace DAL.Repositories
         {
             int? DepoId = T.DepoId;
             DynamicParameters param = new DynamicParameters();
-            param.Add("@Tip", "Ingredients");
+            param.Add("@Tip", "Malzemeler");
             param.Add("@UretimDetayId", T.UretimDetayId);
             param.Add("@OrderId", T.UretimId);
             param.Add("@StokId", T.StokId);

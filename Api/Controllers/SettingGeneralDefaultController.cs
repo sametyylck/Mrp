@@ -47,7 +47,7 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
 
-            var list = await _general.List(CompanyId);
+            var list = await _general.List();
             return Ok(list);
         }
         [Route("Update")]
@@ -70,7 +70,7 @@ namespace Api.Controllers
                 var hata = await _control.Update(T);
                 if (hata.Count()==0)
                 {
-                    await _general.Update(T, CompanyId);
+                    await _general.Update(T);
                     return Ok("Güncelleme işlemi başarıyla gerçekleşti");
                 }
                 else

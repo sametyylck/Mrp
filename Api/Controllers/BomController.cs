@@ -60,7 +60,7 @@ namespace Api.Controllers
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
-            var list = await _bom.List(ProductId, CompanyId);
+            var list = await _bom.List(ProductId);
             return Ok(list);
         }
 
@@ -78,7 +78,7 @@ namespace Api.Controllers
                 var hata = await _bomcontrol.Insert(T);
                 if (hata.Count()==0)
                 {
-                    int id = await _bom.Insert(T, CompanyId);
+                    int id = await _bom.Insert(T);
                     var eklenen = await _db.QueryAsync<ListBOM>($@"Select ur.id,ur.Miktar Quantity,
                                                                 ISNULL(ur.Bilgi,'') as Bilgi,ur.Aktif,
                                                                 CAST((ur.Miktar * a.VarsayilanFiyat)as decimal(15,2)) as Tutar,
@@ -123,7 +123,7 @@ namespace Api.Controllers
                     param1.Add("@CompanyId", CompanyId);
                     param1.Add("@id", T.id);
 
-                    await _bom.Update(T, CompanyId);
+                    await _bom.Update(T);
                     var list = await _db.QueryAsync<ListBOM>($@"select ur.id,ur.MamulId ,a.[Isim] as MamulIsmi,ur.MalzemeId,b.[Isim] as MalzemeIsmi,ur.Miktar,ISNULL(ur.Bilgi,'')as Bilgi  from UrunRecetesi ur left join Urunler a on a.id=ur.MamulId  left join Urunler b on b.id=ur.MalzemeId where ur.id=@id", param1);
                     return Ok(list);
                 }
@@ -158,7 +158,7 @@ namespace Api.Controllers
                     return BadRequest(hata);
 
                 }
-                await _bom.Delete(T, CompanyId);
+                await _bom.Delete(T);
                 return Ok("Başarılı");
             }
             else

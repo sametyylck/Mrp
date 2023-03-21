@@ -37,10 +37,9 @@ namespace DAL.Repositories
             prm.Add("@StateRegion", T.Cadde);
             prm.Add("@ZipPostalCode", T.PostaKodu);
             prm.Add("@Country", T.Ulke);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("IsActive", true);
 
-            return await _db.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Adres1,Adres2,Tip,Sehir,Cadde,PostaKodu,Ulke,Aktif) OUTPUT INSERTED.[id] values (@AddressLine1,@AddressLine2,@Tip,@CityTown,@StateRegion,@ZipPostalCode,@Country,@CompanyId,@IsActive)", prm);
+            return await _db.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Adres1,Adres2,Tip,Sehir,Cadde,PostaKodu,Ulke,Aktif) OUTPUT INSERTED.[id] values (@AddressLine1,@AddressLine2,@Tip,@CityTown,@StateRegion,@ZipPostalCode,@Country,@IsActive)", prm);
         }
         public async Task<int> RoleInsert()
         {
@@ -68,7 +67,6 @@ namespace DAL.Repositories
             prm.Add("@ZipPostalCode", T.PostaKodu);
             prm.Add("@Country", T.Ulke);
             prm.Add("@id", T.id);
-            prm.Add("@CompanyId", CompanyId);
 
             //legal adresss
            await _db.ExecuteAsync($"Update DepoVeAdresler SET Adres1=@AddressLine1,Adres2=@AddressLine2,Sehir=@CityTown,Cadde=@StateRegion,PostaKodu=@ZipPostalCode,Ulke=@Country where id = @id ", prm);

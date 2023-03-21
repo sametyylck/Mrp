@@ -20,16 +20,15 @@ namespace DAL.Repositories
             _db = db;
         }
 
-        public async Task Delete(IdControl T, int CompanyId)
+        public async Task Delete(IdControl T)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@id", T.id);
-            param.Add("@CompanyId", CompanyId);
             string sql = $"Delete From UrunRecetesi where id = @id";
            await _db.ExecuteAsync(sql, param);
         }
 
-        public async Task<int> Insert(BomDTO.BOMInsert T, int CompanyId)
+        public async Task<int> Insert(BomDTO.BOMInsert T)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@ProductId", T.MamulId);
@@ -41,7 +40,7 @@ namespace DAL.Repositories
             return await _db.QuerySingleAsync<int>(sql, param);
         }
 
-        public async Task<IEnumerable<BomDTO.ListBOM>> List(int ProductId, int CompanyId)
+        public async Task<IEnumerable<BomDTO.ListBOM>> List(int ProductId)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@ProductId", ProductId);
@@ -50,7 +49,7 @@ namespace DAL.Repositories
             return list.ToList();
         }
 
-        public async Task Update(BomDTO.BOMUpdate T, int CompanyId)
+        public async Task Update(BomDTO.BOMUpdate T)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@id", T.id);
@@ -58,7 +57,6 @@ namespace DAL.Repositories
             param.Add("@Quantity", T.Miktar);
             param.Add("@Note", T.Bilgi);
 
-            param.Add("@CompanyId", CompanyId);
             string sql = $"Update UrunRecetesi SET  MalzemeId = @MaterialId , Miktar = @Quantity , Bilgi = @Note  where id = @id";
             await _db.ExecuteAsync(sql, param);
         }

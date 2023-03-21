@@ -169,7 +169,7 @@ builder.Services.AddScoped<IValidator<StockTransferInsert>, StockTransferInsertV
 builder.Services.AddScoped<IValidator<StockTransferInsertItem>, StockTransferInsertItemValidations>();
 builder.Services.AddScoped<IValidator<StockTransferDeleteItems>, StockTransferDeleteItemsValidations>();
 builder.Services.AddScoped<IValidator<StockUpdate>, StockTransferUpdateValidations>();
-builder.Services.AddScoped<IValidator<StockTransferItems>, StockTransferUpdateItemsValidations>();
+builder.Services.AddScoped<IValidator<StokAktarimDetay>, StockTransferUpdateItemsValidations>();
 builder.Services.AddScoped<IValidator<StockTakeDelete>, StockTakesDeleteItemsValidations>();
 builder.Services.AddScoped<IValidator<StockTakesInsert>, StockTakesInsertValidations>();
 builder.Services.AddScoped<IValidator<StockTakeInsertItems>, StockTakesInsertItemValidations>();

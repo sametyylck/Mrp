@@ -48,7 +48,7 @@ namespace Api.Controllers
             }
             int id = await _teklif.Insert(T, CompanyId);
             await _salescontrol.Adress(id, T.CariId);
-            var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from SalesOrder where Tip = 'Quotes' and id={id}");
+            var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from Satis where Tip = 'Teklif' and id={id}");
             return Ok(list);
         }
         [Route("InsertItem")]
@@ -67,7 +67,7 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
             int id = await _teklif.InsertPurchaseItem(T, CompanyId);
-            var list = await _db.QueryAsync<TeklifUpdateItems>($"Select * from SalesOrderItem where id={id}");
+            var list = await _db.QueryAsync<TeklifUpdateItems>($"Select * from SatisDetay where id={id}");
 
             return Ok(list);
         }
@@ -87,7 +87,7 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
             await _teklif.Update(T, CompanyId);
-            var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from SalesOrder where Tip = 'Quotes' and id={T.id}");
+            var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from Satis where Tip = 'Teklif' and id={T.id}");
 
             return Ok(list);
         }
@@ -107,7 +107,7 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
             await _teklif.UpdateItems(T, CompanyId);
-            var list = await _db.QueryAsync<TeklifUpdateItems>($"Select * from SalesOrderItem where id={T.id}");
+            var list = await _db.QueryAsync<TeklifUpdateItems>($"Select * from SatisDetay where id={T.id}");
 
             return Ok(list);
         }
@@ -144,7 +144,7 @@ namespace Api.Controllers
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
-            var list = await _teklif.SalesOrderList(T, CompanyId,KAYITSAYISI,SAYFA);
+            var list = await _teklif.SatisList(T, CompanyId,KAYITSAYISI,SAYFA);
             return Ok(list);
         }
         [Route("DeleteItems")]

@@ -32,13 +32,13 @@ namespace BL.Services.SalesOrder
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", id);
             prm.Add("@ContactId", ContactId);
-            string sqlh = $@"select BillingLocationId,ShippingLocationId from Contacts where CompanyId=@CompanyId and id=@ContactId";
+            string sqlh = $@"select FaturaAdresId,KargoAdresId from Cari where  CariKod=@ContactId";
             var locationS = await _db.QueryAsync<SalesOrderItemResponse>(sqlh, prm);
-            prm.Add("@BillingId", locationS.First().BillingLocationId);
-            prm.Add("@ShippingId", locationS.First().ShippingLocationId);
-            string sqla = $@"select * from Locations where CompanyId=@CompanyId and id=@BillingId";
+            prm.Add("@BillingId", locationS.First().FaturaAdresId);
+            prm.Add("@ShippingId", locationS.First().KargoAdresId);
+            string sqla = $@"select * from DepoVeAdresler where  id=@BillingId";
             var billingveri = await _db.QueryAsync<SalesOrderCloneAddress>(sqla, prm);
-            string sqlb = $@"select * from Locations where CompanyId=@CompanyId and id=@ShippingId";
+            string sqlb = $@"select * from DepoVeAdresler where id=@ShippingId";
             var shippingveri = await _db.QueryAsync<SalesOrderCloneAddress>(sqlb, prm);
             SalesOrderCloneAddress A = new SalesOrderCloneAddress();
             foreach (var item in billingveri)
@@ -75,7 +75,7 @@ namespace BL.Services.SalesOrder
             int shipping = await _salesOrder.InsertAddress(A, A.ContactsId);
             prm.Add("@BillingId", billingid);
             prm.Add("@ShippingId", shipping);
-            await _db.ExecuteAsync($"Update SalesOrder Set BillingAddressId=@BillingId ,ShippingAddressId=@ShippingId where CompanyId=@CompanyId and id=@id ", prm);
+            await _db.ExecuteAsync($"Update Satis Set FaturaAdresiId=@BillingId ,KargoAdresiId=@ShippingId where id=@id ", prm);
             return hatalar;
         }
 
@@ -114,10 +114,10 @@ namespace BL.Services.SalesOrder
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select Count(*) as varmi From Locations where  id = {T.DepoId})as DepoId
+            (Select Count(*) as varmi From DepoVeAdresler where  id = {T.DepoId})as DepoId
             ");
 
-            if (T.Tip!="SalesOrder")
+            if (T.Tip!="Satis")
             {
                 hatalar.Add("Tip değişkeni,tip hatasi");
             }
@@ -147,7 +147,7 @@ namespace BL.Services.SalesOrder
             List<string> hatalar = new();
 
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select Tip  From Items where id={T.StokId})as Tip,
+            (Select Tip  From Urunler where id={T.StokId})as Tip,
             (Select id  From Vergi where  id = {T.VergiId})as VergiId,
             (Select id  From Satis where  id = {T.SatisId} and Aktif=1)as SatisId,
             (Select id  From DepoVeAdresler where  id = {T.DepoId})as DepoId,
@@ -172,7 +172,7 @@ namespace BL.Services.SalesOrder
                 hatalar.Add("Boyle bir Location bulunamadı");
 
             }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from Locations where id={T.DepoId} ")).ToList();
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from DepoVeAdresler where id={T.DepoId} ")).ToList();
             bool? sell = Locaiton.First().Satis;
              if (sell != true)
             {
@@ -195,11 +195,11 @@ namespace BL.Services.SalesOrder
         {
             List<string> hatalar = new();
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-             (Select Tip  From Items where  id={T.StokId})as Tip,
-            (Select id  From SalesOrder where  id = {T.SatisId} and IsActive=1 and DeliveryId=0)as SatisId,
-            (Select id  From SalesOrderItem where  id = {T.SatisDetayId} and SalesOrderId={T.SatisId})as id,
-            (Select id  From Locations where id = {T.DepoId})as LocationId,
-            (Select id  From Contacts where id = {T.CariId})as ContactId
+             (Select Tip  From Urunler where  id={T.StokId})as Tip,
+            (Select id  From Satis where  id = {T.SatisId} and Aktif=1 and DurumBelirteci=0)as SatisId,
+            (Select id  From SatisDetay where  id = {T.SatisDetayId} and SatisId={T.SatisId})as id,
+            (Select id  From DepoVeAdresler where id = {T.DepoId})as DepoId,
+            (Select CariKod  From Cari where CariKod = {T.CariId})as CariId
             ");
             if (list.First().CariId == null)
             {
@@ -217,7 +217,7 @@ namespace BL.Services.SalesOrder
             {
                 hatalar.Add("Boyle bir Location bulunamadı");
             }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from Locations where id={T.DepoId} ")).ToList();
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from DepoVeAdresler where id={T.DepoId} ")).ToList();
             bool? sell = Locaiton.First().Satis;
             if (sell != true)
             {
@@ -243,8 +243,8 @@ namespace BL.Services.SalesOrder
 
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
             (Select Count(*) as varmi From Satis where  id = {T.id} and IsActive=1)as id,
-            (Select Count(*) as varmi From DepoVeAdresler where id = {T.LocationId})as DepoId,
-            (Select CariKod  From Cari where  CariKod = {T.ContactId})as ContactId
+            (Select Count(*) as varmi From DepoVeAdresler where id = {T.DepoId})as DepoId,
+            (Select CariKod  From Cari where  CariKod = {T.CariId})as CariId
             ");
             if (list.First().CariId == null)
             {
@@ -260,7 +260,7 @@ namespace BL.Services.SalesOrder
                 hatalar.Add("Boyle bir Location bulunamadı");
 
             }
-            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from DepoVeAdresler where id={T.LocationId} ")).ToList();
+            List<LocationsDTO> Locaiton = (await _db.QueryAsync<LocationsDTO>($"select Satis,Uretim,SatinAlma from DepoVeAdresler where id={T.DepoId} ")).ToList();
             bool? sell = Locaiton.First().Satis;
             if (sell != true)
             {
@@ -278,7 +278,7 @@ namespace BL.Services.SalesOrder
         {
             List<string> hatalar= new();
             var list = await _db.QueryAsync<PurchaseItemControl>($@"select
-            (Select Count(*) as varmi From Satis where id = {T.id} and Aktif=1)as OrdersId,
+            (Select Count(*) as varmi From Satis where id = {T.id} and Aktif=1)as SatisId,
             (Select Count(*) as varmi From DepoVeAdresler where  id = {T.DepoId})as DepoId,
             (Select CariKod  From Cari where  CariKod = {T.CariId})as CariId
             ");

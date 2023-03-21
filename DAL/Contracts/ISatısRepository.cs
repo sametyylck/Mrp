@@ -11,7 +11,8 @@ namespace DAL.Contracts
 {
     public interface ISatısRepository
     {
-        Task<int> Insert(SatısDTO T, int CompanyId);
+        Task<int> Insert(SatısDTO T);
+
         Task<int> InsertPurchaseItem(SatısInsertItem T, int CompanyId);
         Task Update(SalesOrderUpdate T,int CompanyId);
         Task UpdateItems(SatısUpdateItems T,int CompanyId);

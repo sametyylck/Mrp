@@ -10,7 +10,7 @@ namespace DAL.Contracts
     public interface IGeneralDefaultRepository
     {
         Task Register(int id, int taxid, int locationid);
-        Task Update(GeneralDefaultSettings T, int CompanyId);
-        Task<IEnumerable<DefaultSettingList>> List(int CompanyId);
+        Task Update(GeneralDefaultSettings T);
+        Task<IEnumerable<DefaultSettingList>> List();
     }
 }

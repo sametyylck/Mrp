@@ -12,119 +12,113 @@ namespace DAL.DTO
         {
             public int id { get; set; }
             public string StockTake { get; set; } = string.Empty;
-            public DateTime CreadtedDate { get; set; }
-            public string Reason { get; set; } = string.Empty;
-            public string Info { get; set; } = string.Empty;
-            public int LocationId { get; set; }
-            public int CompanyId { get; set; }
-            public string Notes { get; set; } = string.Empty;
-            public int ItemId { get; set; }
-            public float? CountedQuantity { get; set; }
-            public float? Discrepancy { get; set; }
+            public DateTime OlusturmaTarihi { get; set; }
+            public string Sebeb { get; set; } = string.Empty;
+            public string Bilgi { get; set; } = string.Empty;
+            public int DepoId { get; set; }
+            public int StokId { get; set; }
+            public float? SayilanMiktar { get; set; }
+            public float? EksikMiktar { get; set; }
 
         }
         public class StockTakesUpdate
         {
             public int id { get; set; }
-            public string StockTake { get; set; } = string.Empty;
-            public DateTime CreadtedDate { get; set; }
-            public DateTime StartedDate { get; set; }
-            public DateTime CompletedDate { get; set; }
+            public string Isim { get; set; } = string.Empty;
+            public DateTime OlusturmaTarihi { get; set; }
+            public DateTime BaslangıcTarihi { get; set; }
+            public DateTime BitisTarihi { get; set; }
 
-            public string Reason { get; set; } = string.Empty;
-            public string Info { get; set; } = string.Empty;
+            public string Sebeb { get; set; } = string.Empty;
+            public string Bilgi { get; set; } = string.Empty;
 
         }
         public class StockTakesUpdateItems
         {
-            public int? StockTakesId { get; set; }
-            public int? StockTakesItemId { get; set; }
-            public float? CountedQuantity { get; set; }
-            public string? Note { get; set; }
+            public int? StokSayimId { get; set; }
+            public int? StokSayimDetayId { get; set; }
+            public float? SayilanMiktar { get; set; }
+            public string? Bilgi { get; set; }
 
         }
 
         public class StockTakesInsert
         {
-            public string StockTake { get; set; } = string.Empty;
-            public DateTime CreadtedDate { get; set; }
-            public string Reason { get; set; } = string.Empty;
-            public string Info { get; set; } = string.Empty;
-            public int LocationId { get; set; }
-            public string Notes { get; set; } = string.Empty;
+            public string Isim { get; set; } = string.Empty;
+            public DateTime OlusturmaTarihi { get; set; }
+            public string Sebeb { get; set; } = string.Empty;
+            public string Bilgi { get; set; } = string.Empty;
+            public int DepoId { get; set; }
 
         }
         public class StockTakeList
         {
             public int? id { get; set; }
             public string StockTake { get; set; } = string.Empty;
-            public DateTime? CreadtedDate { get; set; }
-            public string Reason { get; set; } = string.Empty;
-            public string Info { get; set; } = string.Empty;
-            public int? LocationId { get; set; }
-            public string LocationName { get; set; } = string.Empty;
-            public int? StockAdjusmentId { get; set; }
-            public string Name { get; set; } = string.Empty;
-            public int? CompanyId { get; set; }
-            public int? Status { get; set; }
-            public DateTime? CompletedDate { get; set; }
+            public DateTime? OlusturmaTarihi { get; set; }
+            public string Sebeb { get; set; } = string.Empty;
+            public string Bilgi { get; set; } = string.Empty;
+            public int? DepoId { get; set; }
+            public string DepoIsmi { get; set; } = string.Empty;
+            public int? StokDuzenlemeId { get; set; }
+            public string Isim { get; set; } = string.Empty;
+            public int? Durum { get; set; }
+            public DateTime? BitisTarihi { get; set; }
 
         }
 
         public class StockTakeItems
         {
             public int id { get; set; }
-            public int StockTakesId { get; set; }
-            public int ItemId { get; set; }
-            public int CategoryId { get; set; }
-            public string? Notes { get; set; }
+            public int StokSayimId { get; set; }
+            public int StokId { get; set; }
+            public int KategoriId { get; set; }
+            public string? Bilgi { get; set; }
             public int InStock { get; set; }
-            public float? CountedQuantity { get; set; }
-            public float? Discrepancy { get; set; }
-            public int CompanyId { get; set; }
+            public float? SayilanMiktar { get; set; }
+            public float? EksikMiktar { get; set; }
 
         }
         public class StockTakeInsertItems
         {
-            public int? StockTakesId { get; set; }
-            public int? ItemId { get; set; }
-            public string? Notes { get; set; }
+            public int? StokSayimId { get; set; }
+            public int? StokId { get; set; }
+            public string? Bilgi { get; set; }
 
         }
         public class StockTakeInsertItemsResponse
         {
             public int id { get; set; }
-            public int? StockTakesId { get; set; }
-            public string? Name { get; set; }
+            public int? StokSayimId { get; set; }
+            public string? Isim { get; set; }
             public float InStock { get; set; }
-            public int? ItemId { get; set; }
-            public string? Note { get; set; }
+            public int? StokId { get; set; }
+            public string? Bilgi { get; set; }
 
         }
         public class StockTakeDelete
         {
             public int? id { get; set; }
-            public int? ItemId { get; set; }
+            public int? StokId { get; set; }
         }
         public class StockTakesDetail
         {
             public int id { get; set; }
             public string? StockTake { get; set; }
-            public DateTime CreadtedDate { get; set; }
-            public string? Reason { get; set; }
-            public string? Info { get; set; }
-            public int LocationId { get; set; }
-            public int CompanyId { get; set; }
-            public int? StockAdjusmentId { get; set; }
+            public DateTime OlusturmaTarihi { get; set; }
+            public string? Sebeb { get; set; }
+            public string? Bilgi { get; set; }
+            public int DepoId { get; set; }
+            public int? StokDuzenlemeId { get; set; }
             public DateTime CompletedDate { get; set; }
-            public int Status { get; set; }
-            public int IsActive { get; set; }
+            public int Durum { get; set; }
+            public int Aktif { get; set; }
 
         }
         public class StockTakesDone
         {
             public int id { get; set; }
-            public int Status { get; set; }
+            public int Durum { get; set; }
         }
     }
 }

@@ -16,7 +16,7 @@ namespace DAL.Contracts
         Task Update(SalesOrderUpdate T, int CompanyId);
         Task UpdateItems(TeklifUpdateItems T, int CompanyId);
         Task<IEnumerable<SalesOrderDetail>> Detail(int CompanyId, int id);
-        Task<IEnumerable<SatısList>> SalesOrderList(SatısListFiltre T, int CompanyId, int? KAYITSAYISI, int? SAYFA);
+        Task<IEnumerable<SatısList>> SatisList(SatısListFiltre T, int CompanyId, int? KAYITSAYISI, int? SAYFA);
         Task DeleteItems(SatısDeleteItems T, int CompanyId);
         Task DeleteStockControl(List<SatısDelete> A, int CompanyId, int User);
         Task QuotesDone(QuotesDone T, int CompanyId);

@@ -84,7 +84,7 @@ namespace Api.Controllers
             int CompanyId = user[0];
             DynamicParameters prm = new DynamicParameters();
             var list = await _takes.StockTakesList(T, CompanyId, KAYITSAYISI, SAYFA);
-            var count = await _takes.StockTakesCount(T, CompanyId);
+            var count = list.Count();
             return Ok(new { list, count });
 
         }
@@ -136,7 +136,7 @@ namespace Api.Controllers
                     int id = await _takes.Insert(T, UserId);
                     param.Add("@id", id);
 
-                    string sql = $"Select * from StockTakes where CompanyId=@CompanyId and id=@id";
+                    string sql = $"Select * from StokSayim where id=@id";
                     var response = await _db.QueryAsync<Items>(sql, param);
                     return Ok(response);
                 }
@@ -186,12 +186,12 @@ namespace Api.Controllers
 
             }
             DynamicParameters param = new DynamicParameters();
-            param.Add("@id", T.First().StockTakesId);
+            param.Add("@id", T.First().StokSayimId);
             param.Add("@CompanyId", CompanyId);
-            string sql = @$"select sti.id,ItemId,Categories.Name,Note,InStock,StockTakesId from StockTakesItem  sti
-                        left join Items on Items.id=ItemId
-                        left join Categories on Categories.id=Items.CategoryId
-                        where sti.StockTakesId=@id and sti.CompanyId=@CompanyId";
+            string sql = @$"select sti.id,StokId,Kategoriler.Isim,Bilgi,InStock,StokSayimId from StokSayimDetay  sti
+                        left join Urunler on Urunler.id=ItemId
+                        left join Kategoriler on Kategoriler.id=Urunler.KategoriId
+                        where sti.StokSayimId=@id ";
             var response = await _db.QueryAsync<StockTakeInsertItemsResponse>(sql, param);
             return Ok(response);
 
@@ -209,7 +209,7 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                 List<int> user = _user.CompanyId();
-                var hata = await _idcontrol.GetControl("StockTakes", T.id);
+                var hata = await _idcontrol.GetControl("StokSayim", T.id);
                 if (hata.Count() == 0)
                 {
                     DynamicParameters param = new DynamicParameters();
@@ -217,7 +217,7 @@ namespace Api.Controllers
 
                     await _takes.Update(T, T.id,CompanyId);
                     param.Add("@id", T.id);
-                    string sql = @$"select id,StockTake,CreatedDate,StartedDate,CompletedDate,Reason,Info from StockTakes where id=@id";
+                    string sql = @$"select id,Isim,OlusturmaTarihi,BaslangıcTarihi,BitisTarihi,Sebeb,Bilgi from StokSayim where id=@id";
                     var response = await _db.QueryAsync<StockTakesUpdate>(sql, param);
                     return Ok(response);
                  
@@ -254,9 +254,9 @@ namespace Api.Controllers
                     param.Add("@CompanyId", CompanyId);
                     await _takes.UpdateItems(T, CompanyId);
                     param.Add("@CompanyId", CompanyId);
-                    param.Add("@StockTakesId", T.StockTakesId);
-                    param.Add("@id", T.StockTakesItemId);
-                    string sql = @$"select id as StockTakesItemId,StockTakesId,CountedQuantity,Note from StockTakesItem where id=@id and StockTakesId=StockTakesId";
+                    param.Add("@StockTakesId", T.StokSayimId);
+                    param.Add("@id", T.StokSayimDetayId);
+                    string sql = @$"select id as StokSayimDetayId,StokSayimId,SayilanMiktar,Bilgi from StokSayimDetay where id=@id and StokSayimId=@StockTakesId";
                     var response = await _db.QueryAsync<StockTakesUpdateItems>(sql, param);
                     return Ok(response);
                 }
@@ -285,7 +285,7 @@ namespace Api.Controllers
                 List<int> user = _user.CompanyId();
                 int CompanyId = user[0];
                 int User = user[1];
-                var hata = await _idcontrol.GetControl("StockTakes", T.id);
+                var hata = await _idcontrol.GetControl("StokSayim", T.id);
                 if (hata.Count() == 0)
                 {
                     DynamicParameters param = new DynamicParameters();

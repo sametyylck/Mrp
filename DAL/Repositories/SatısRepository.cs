@@ -32,7 +32,7 @@ namespace DAL.Repositories
             _manufacturingOrderItem = manufacturingOrderItem;
         }
 
-        public async Task<int> Insert(SatısDTO T, int CompanyId)
+        public async Task<int> Insert(SatısDTO T)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@Tip", T.Tip);
@@ -42,7 +42,6 @@ namespace DAL.Repositories
             prm.Add("@DurumBelirteci", 0);
             prm.Add("@SatisIsmi", T.SatisIsmi);
             prm.Add("@Bilgi", T.Bilgi);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@DepoId", T.DepoId);
             prm.Add("@Aktif", true);
 
@@ -51,13 +50,12 @@ namespace DAL.Repositories
         public async Task<int> InsertPurchaseItem(SatısInsertItem T, int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@StokId", T.StokId);
             var liste = await _db.QueryAsync<LocaVarmı>($@"select 
             (select VergiDegeri from Vergi where id=(select VarsayilanSatinAlimVergi from GenelAyarlar))as VergiDegeri,
             (select VarsayilanFiyat from Urunler where id =@StokId)as VarsayilanFiyat", prm);
             prm.Add("@VergiId", T.VergiId);
-            float rate = await _db.QueryFirstAsync<int>($"select  Rate from Tax where id =@VergiId", prm);
+            float rate = await _db.QueryFirstAsync<int>($"select  VergiDegeri from Vergi where id =@VergiId", prm);
 
 
             var PriceUnit = liste.First().VarsayilanFiyat;
@@ -114,7 +112,7 @@ namespace DAL.Repositories
                 prm.Add("@SatisDetayId", itemid);
                 prm.Add("@RezerveId", rezervid);
 
-                await _db.ExecuteAsync($"Update Rezerve set SatisDetayId=@SatisDetayId where  CariId=@CariId and SatisId=@OrdersId and DepoId=@location and id=@RezerveId  ", prm);
+                await _db.ExecuteAsync($"Update Rezerve set SatisDetayId=@SatisDetayId where  SatisId=@OrdersId and DepoId=@location and id=@RezerveId  ", prm);
                 return itemid;
             }
             if (tip != "Material")
@@ -134,7 +132,7 @@ namespace DAL.Repositories
                 prm.Add("@Ingredient", 0);
 
             }
-            string sqlquery = $@"select * from Uretim where CariId is null and SatisId is null and SatisDetayId is null and Durum!=3 and Private='false' and Aktif=1 and StokId=@StokId and DepoId=@location Order by id DESC";
+            string sqlquery = $@"select * from Uretim where CariId is null and SatisId is null and SatisDetayId is null and Durum!=3 and Ozel='false' and Aktif=1 and StokId=@StokId and DepoId=@location Order by id DESC";
             var EmptyManufacturing = await _db.QueryAsync<SalesOrderUpdateMakeBatchItems>(sqlquery, prm);
 
 
@@ -179,7 +177,6 @@ namespace DAL.Repositories
                                 if (toplamuretimadeti >= aranandeger)
                                 {
                                     prm.Add("@SatisId", T.SatisId);
-                                    prm.Add("@CompanyId", CompanyId);
                                     prm.Add("@SatisDetayId", id);
                                     prm.Add("@StokId", T.StokId);
                                     prm.Add("@UretimId", item.id);
@@ -202,7 +199,6 @@ namespace DAL.Repositories
                                 {
 
                                     prm.Add("@SatisId", T.SatisId);
-                                    prm.Add("@CompanyId", CompanyId);
                                     prm.Add("@SatisDetayId", id);
                                     prm.Add("@StokId", T.StokId);
                                     prm.Add("@UretimId", item.id);
@@ -232,7 +228,7 @@ namespace DAL.Repositories
                 }
             }
 
-            await _db.ExecuteAsync($"Update Rezerve set SatisDetayId=@SatisDetayId where  CariId=@CariId and SatisId=@OrdersId and DepoId=@location and SatisDetayId is null ", prm);
+            await _db.ExecuteAsync($"Update Rezerve set SatisDetayId=@SatisDetayId where   SatisId=@OrdersId and DepoId=@location and SatisDetayId is null ", prm);
             return id;
 
 
@@ -242,7 +238,6 @@ namespace DAL.Repositories
 
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@SatisId", OrdersId);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@StokId", T.StokId);
             prm.Add("@CariId", T.CariId);
             prm.Add("@location", T.DepoId);
@@ -276,13 +271,12 @@ namespace DAL.Repositories
 
             }
 
-            return await _db.QuerySingleAsync<int>($"Insert into Rezerve (SatisId,Tip,StokId,RezerveDegeri,DepoId,Durum) OUTPUT INSERTED.[id]  values (@SatisId,@Tip,@StokId,@RezerveCount,@location,@Durum)", prm);
+            return await _db.QuerySingleAsync<int>($"Insert into Rezerve (SatisId,Tip,StokId,RezerveDeger,DepoId,Durum) OUTPUT INSERTED.[id]  values (@SatisId,@Tip,@StokId,@RezerveCount,@location,@Durum)", prm);
         }
         public async Task IngredientsControl(SatısInsertItem T, int OrdersId, int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@SatisId", OrdersId);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@StokId", T.StokId);
             prm.Add("@CariId", T.CariId);
             prm.Add("@location", T.DepoId);
@@ -352,7 +346,6 @@ namespace DAL.Repositories
             prm.Add("@TeslimSuresi", T.TeslimSuresi);
             prm.Add("@OlusturmaTarihi", T.OlusturmaTarihi);
             prm.Add("@SatisIsmi", T.SatisIsmi);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@DepoId", T.DepoId);
             prm.Add("@Total", T.Toplam);
             prm.Add("@Bilgi", T.Bilgi);
@@ -382,7 +375,6 @@ namespace DAL.Repositories
                 {
                     DynamicParameters param = new DynamicParameters();
                     param.Add("@StokId", item.StokId);
-                    param.Add("@CompanyId", CompanyId);
                     param.Add("@location", T.DepoId);
                     param.Add("@id", T.id);
                     param.Add("@OrderItemId", item.id);
@@ -453,7 +445,7 @@ namespace DAL.Repositories
                         }
                         param.Add("@Uretme", 0);
 
-                        await _db.ExecuteAsync($"Update Rezerve set SatisDetayId=@OrderItemId where CariId=@CariId and SatisId=@id and DepoId=@location and SatisDetayId is null ", param);
+                        await _db.ExecuteAsync($"Update Rezerve set SatisDetayId=@OrderItemId where  SatisId=@id and DepoId=@location and SatisDetayId is null ", param);
 
                         await _db.ExecuteAsync($"Update SatisDetay set SatisOgesi=@SatisOgesi,Uretme=@Uretme,Malzemeler=@Ingredient where id=@OrderItemId", param);
 
@@ -472,7 +464,7 @@ namespace DAL.Repositories
             prm.Add("@StokId", T.StokId);
             prm.Add("@Miktar", T.Miktar);
             prm.Add("@BirimFiyat", T.BirimFiyat);
-            prm.Add("@CompanyId", CompanyId);
+
             prm.Add("@VergiId", T.VergiId);
             prm.Add("@CariId", T.CariId);
             var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id from Uretim mo where SatisId=@id and SatisDetayId=@OrderItemId and Aktif=1 and Durum!=3", prm);
@@ -525,7 +517,7 @@ namespace DAL.Repositories
             if (makeorderId == 0 && T.Tip != "Material")
             {
                 int degerler;
-                string sqlp = $" select ISNULL(RezerveDegeri,0) from Rezerve where SatisId=@id and SatisDetayId=@OrderItemId and DepoId=@location and StokId=@StokId and Durum=1";
+                string sqlp = $" select ISNULL(RezerveDeger,0) from Rezerve where SatisId=@id and SatisDetayId=@OrderItemId and DepoId=@location and StokId=@StokId and Durum=1";
                 var deger = await _db.QueryAsync<int>(sqlp, prm);
                 if (deger.Count() == 0)
                 {
@@ -535,7 +527,6 @@ namespace DAL.Repositories
                 {
                     degerler = deger.First();
                 }
-                prm.Add("@CompanyId", CompanyId);
                 prm.Add("@StokId", T.StokId);
                 prm.Add("@Null", null);
                 await _db.ExecuteAsync($"Update SatisDetay set Tip=@Null where id=@OrderItemId and SatisId=@id", prm);
@@ -558,7 +549,7 @@ namespace DAL.Repositories
                 prm.Add("@TumToplam", total);
                 prm.Add("@ContactsId", T.CariId);
                 string sqla = $@"select
-                  (Select ISNULL(Tip,'') from Urunler where id = @StokId and )as Tip,
+                  (Select ISNULL(Tip,'') from Urunler where id = @StokId ) as Tip,
                   (Select ISNULL(id,0) from DepoStoklar where StokId = @StokId  and DepoId = @location )   as    DepoStokId ";
                 var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, prm);
                 var RezerveCount = await _control.Count(T.StokId, T.DepoId);
@@ -575,7 +566,7 @@ namespace DAL.Repositories
                     prm.Add("@LocationStockCount", RezerveCount);
                     prm.Add("@SatisOgesi", 3);
                     status = 3;
-                    await _db.ExecuteAsync($"Update Rezerve set RezerveDegeri=@RezerveCount where SatisId=@id and StokId=@StokId and SatisDetayId=@OrderItemId and Durum=1", prm);
+                    await _db.ExecuteAsync($"Update Rezerve set RezerveDeger=@RezerveCount where SatisId=@id and StokId=@StokId and SatisDetayId=@OrderItemId and Durum=1", prm);
                 }
 
                 else if (RezerveCount >= T.Miktar - degerler && RezerveCount > 0)
@@ -591,7 +582,7 @@ namespace DAL.Repositories
                     prm.Add("@RezerveCount", degerler + RezerveCount);
                     prm.Add("@LocationStockCount", RezerveCount);
                     prm.Add("@SatisOgesi", 1);
-                    await _db.ExecuteAsync($"Update Rezerve set RezerveDegeri=@RezerveCount where SatisId=@id and StokId=@StokId and SatisDetayId=@OrderItemId and Durum=1", prm);
+                    await _db.ExecuteAsync($"Update Rezerve set RezerveDeger=@RezerveCount where SatisId=@id and StokId=@StokId and SatisDetayId=@OrderItemId and Durum=1", prm);
                 }
 
 
@@ -628,9 +619,8 @@ namespace DAL.Repositories
             }
             else
             {
-                prm.Add("@CompanyId", CompanyId);
                 prm.Add("@StokId", T.StokId);
-                var Rate = await _db.QueryFirstAsync<float>($"(select VergiDegeri from Vergi where id =@VergiId and )", prm);
+                var Rate = await _db.QueryFirstAsync<float>($"(select VergiDegeri from Vergi where id =@VergiId)", prm);
                 float TaxRate = Rate;
                 var PriceUnit = T.BirimFiyat;
                 float totalprice = (T.Miktar * PriceUnit); //adet*fiyat
@@ -663,7 +653,7 @@ namespace DAL.Repositories
                     StokMiktari = StokMiktari >= 0 ? StokMiktari : 0;
                     //stocktaki adet
 
-                    string sqlp = $" select id,ISNULL(RezerveCount,0) as RezerveDegeri from Rezerve where SatisId=@OrdersId and SatisDetayId=@OrderItemId and DepoId=@location and StokId=@StokId and Durum=3";
+                    string sqlp = $" select id,ISNULL(RezerveCount,0) as RezerveDeger from Rezerve where SatisId=@OrdersId and SatisDetayId=@OrderItemId and DepoId=@location and StokId=@StokId and Durum=3";
                     var deger = await _db.QueryAsync<LocaVarmı>(sqlp, prm);
                     int rezerveid = deger.First().id;
                     prm.Add("@rezerveid", rezerveid);
@@ -729,7 +719,6 @@ namespace DAL.Repositories
             prm.Add("StateRegion", A.StateRegion);
             prm.Add("ZipPostal", A.ZipPostal);
             prm.Add("Country", A.Country);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@Aktif", true);
             if (A.Tip == "ShippingAddress")
             {
@@ -761,11 +750,11 @@ namespace DAL.Repositories
             int adressid = 0;
             if (A.Tip == "BillingAddress")
             {
-                adressid = await _db.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Tip,Ad,Soyisim,SirketIsmi,Telefon, Adres1,Adres2,Sehir,Cadde,PostaKodu,Ulke,Aktif)  OUTPUT INSERTED.[id]  values (@Tip,@FirstName,@LastName,@CompanyName,@Phone,@AddressLine1,@AddressLine2,@CityTown,@StateRegion,@ZipPostal,@Country,@CompanyId,@Aktif)", prm);
+                adressid = await _db.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Tip,Ad,Soyisim,SirketIsmi,Telefon, Adres1,Adres2,Sehir,Cadde,PostaKodu,Ulke,Aktif)  OUTPUT INSERTED.[id]  values (@Tip,@FirstName,@LastName,@CompanyName,@Phone,@AddressLine1,@AddressLine2,@CityTown,@StateRegion,@ZipPostal,@Country,@Aktif)", prm);
             }
             else if (A.Tip == "ShippingAddress")
             {
-                adressid = await _db.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Tip,Ad,Soyisim,SirketIsmi,Telefon, Adres1,Adres2,Sehir,Cadde,PostaKodu,Ulke,Aktif)  OUTPUT INSERTED.[id]  values (@Tip,@FirstName,@LastName,@CompanyName,@Phone,@AddressLine1,@AddressLine2,@CityTown,@StateRegion,@ZipPostal,@Country,@CompanyId,@Aktif)", prm);
+                adressid = await _db.QuerySingleAsync<int>($"Insert into DepoVeAdresler (Tip,Ad,Soyisim,SirketIsmi,Telefon, Adres1,Adres2,Sehir,Cadde,PostaKodu,Ulke,Aktif)  OUTPUT INSERTED.[id]  values (@Tip,@FirstName,@LastName,@CompanyName,@Phone,@AddressLine1,@AddressLine2,@CityTown,@StateRegion,@ZipPostal,@Country,@Aktif)", prm);
             }
             return adressid;
 
@@ -776,7 +765,6 @@ namespace DAL.Repositories
             prm.Add("@id", T.id);
             prm.Add("@OrdersId", T.OrdersId);
             prm.Add("@StokId", T.StokId);
-            prm.Add("@CompanyId", CompanyId);
             if (T.StokId != 0)
             {
 
@@ -825,13 +813,11 @@ namespace DAL.Repositories
 
             }
         }
-
         public async Task DeleteStockControl(List<SatısDelete> A, int CompanyId, int User)
         {
             foreach (var T in A)
             {
                 DynamicParameters param = new DynamicParameters();
-                param.Add("@CompanyId", CompanyId);
                 param.Add("@id", T.id);
                 param.Add("@Aktif", false);
                 param.Add("@User", User);
@@ -859,8 +845,8 @@ namespace DAL.Repositories
 
                     }
 
-                    List<Manufacturing> ItemsCount = (await _db.QueryAsync<Manufacturing>($"select StokId,RezerveDegeri from Rezerve where SatisId=@id and  Durum=1", param)).ToList();
-                    await _db.ExecuteAsync($"Update Satis Set Aktif=@Aktif,SilinmeTarihi=@Date,SilenKullanıcı=@User where id = @id ", param);
+                    List<Manufacturing> ItemsCount = (await _db.QueryAsync<Manufacturing>($"select StokId,RezerveDeger from Rezerve where SatisId=@id and  Durum=1", param)).ToList();
+                    await _db.ExecuteAsync($"Update Satis Set Aktif=@Aktif,SilinmeTarihi=@Date,SilenKullanici=@User where id = @id ", param);
                     foreach (var item in ItemsCount)
                     {
                         param.Add("@StokId", item.StokId);
@@ -871,14 +857,12 @@ namespace DAL.Repositories
             }
 
         }
-
         public async Task UpdateMakeItems(SatısUpdateItems T, float eski, int CompanyId)
         {
 
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.SatisId);
             prm.Add("@UretimId", T.UretimId);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@OrderItemId", T.id);
             prm.Add("@ItemsId", T.StokId);
 
@@ -904,7 +888,6 @@ namespace DAL.Repositories
                 param.Add("@UretimDetayId", item.id);
                 param.Add("@UretimId", T.UretimId);
                 param.Add("@id", T.SatisId);
-                param.Add("@CompanyId", CompanyId);
                 param.Add("@OrderItemId", T.id);
                 param.Add("@StokId", item.MalzemeId);
                 param.Add("@Notes", item.Bilgi);
@@ -929,27 +912,26 @@ namespace DAL.Repositories
                 }
 
 
-                param.Add("@CompanyId", CompanyId);
                 param.Add("@DepoId", DepoId);
                 string sql = $@"Update UretimDetay Set PlanlananMiktar=@PlanlananMiktar where   UretimId=@UretimId and id=@UretimDetayId and StokId=@StokId ";
                 await _db.ExecuteAsync(sql, param);
                 // materyalin VarsayilanFiyat
                 // Bul
                 string sqlb = $@"select ISNULL(SUM(Miktar),0) from SatinAlma 
-                left join SatinAlmaDetay on SatinAlmaDetay.SatisId = SatinAlma.id and SatinAlma.DepoId=@DepoId
+                left join SatinAlmaDetay on SatinAlmaDetay.SatinAlmaId = SatinAlma.id and SatinAlma.DepoId=@DepoId
                 and SatinAlmaDetay.StokId = @StokId where  DurumBelirteci = 1 and SatinAlma.UretimId=@UretimId and SatinAlma.Aktif=1 and SatinAlma.Tip='PurchaseOrder' ";
                 var expectedsorgu = await _db.QueryAsync<float>(sqlb, param);
                 float expected = expectedsorgu.First();
 
 
 
-                List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(id, 0) from DepoStoklar where StokId=@StokId and DepoId = @DepoId )   as DepoStokId, (select ISNULL(VarsayilanFiyat, 0) From Urunler where  and id = @StokId)as  VarsayilanFiyat", param)).ToList();
+                List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(id, 0) from DepoStoklar where StokId=@StokId and DepoId = @DepoId ) as DepoStokId, (select ISNULL(VarsayilanFiyat, 0) From Urunler where id = @StokId)as  VarsayilanFiyat", param)).ToList();
                 float VarsayilanFiyat = sorgu.First().VarsayilanFiyat;
                 param.Add("@Tutar", VarsayilanFiyat * item.Miktar);
                 param.Add("@LocationStockId", sorgu.First().DepoStokId);
 
                 string sqlTY = $@"select
-           (moi.PlanlananMiktar-SUM(ISNULL(SatinAlmaDetay.Miktar,0))-ISNULL((Rezerve.RezerveDegeri),0))as Missing
+           (moi.PlanlananMiktar-SUM(ISNULL(SatinAlmaDetay.Miktar,0))-ISNULL((Rezerve.RezerveDeger),0))as Missing
             
             from UretimDetay moi
             left join Urunler on Urunler.id=moi.StokId
@@ -958,10 +940,9 @@ namespace DAL.Repositories
             left join DepoStoklar on DepoStoklar.StokId=Urunler.id and DepoStoklar.DepoId=@DepoId
             left join SatinAlma on SatinAlma.UretimId=Uretim.id and  SatinAlma.SatisId is null  and moi.id=SatinAlma.UretimDetayId
             left join SatinAlmaDetay on SatinAlmaDetay.SatinAlmaId=SatinAlma.id  and DurumBelirteci = 1 and SatinAlmaDetay.StokId=moi.StokId
-            where  moi. and moi.UretimId = @UretimId and moi.Tip='Malzemeler'  and Uretim.id=@UretimId and moi.id=@UretimDetayId and 
+            where  moi.UretimId = @UretimId and moi.Tip='Malzemeler'  and Uretim.id=@UretimId and moi.id=@UretimDetayId and 
 			 Uretim.Durum!=3
-            Group by moi.id,moi.Tip,moi.StokId,Urunler.Name,Bilgi,moi.Tutar,moi.MalzemeDurum
-            ,DepoStoklar.StokAdeti,moi.PlanlananMiktar,Rezerve.RezerveDegeri";
+            Group by moi.PlanlananMiktar,Rezerve.RezerveDeger";
                 var missingdeger = await _db.QueryAsync<float>(sqlTY, param);
                 float missingcount;
                 if (missingdeger.Count() == 0)
@@ -976,7 +957,7 @@ namespace DAL.Repositories
 
                 float RezerveStockCount = await _control.Count(item.MalzemeId, DepoId);
                 RezerveStockCount = RezerveStockCount >= 0 ? RezerveStockCount : 0;
-                List<int> Count = (await _db.QueryAsync<int>($"Select ISNULL(Rezerve.RezerveDegeri,0)as Count from Rezerve where StokId=@StokId and UretimId=@UretimId and UretimDetayId=@UretimDetayId and StokId=@StokId and SatisId=@id and SatisDetayId=@OrderItemId and Rezerve.Durum=1", param)).ToList();
+                List<int> Count = (await _db.QueryAsync<int>($"Select ISNULL(Rezerve.RezerveDeger,0)as Count from Rezerve where StokId=@StokId and UretimId=@UretimId and UretimDetayId=@UretimDetayId and StokId=@StokId and SatisId=@id and SatisDetayId=@OrderItemId and Rezerve.Durum=1", param)).ToList();
                 float Counts;
                 if (Count.Count() == 0)
                 {
@@ -1027,7 +1008,7 @@ namespace DAL.Repositories
 
                 param.Add("@Durum", 1);
 
-                await _db.ExecuteAsync($"Update Rezerve set  Tip=@Tip,StokId=@StokId,RezerveDegeri=@RezerveCount,DepoId=@DepoId,Durum=@Durum where  UretimId=@UretimId and StokId=@StokId and UretimDetayId=@UretimDetayId and SatisId=@id and SatisDetayId=@OrderItemId ", param);
+                await _db.ExecuteAsync($"Update Rezerve set  Tip=@Tip,StokId=@StokId,RezerveDeger=@RezerveCount,DepoId=@DepoId,Durum=@Durum where  UretimId=@UretimId and StokId=@StokId and UretimDetayId=@UretimDetayId and SatisId=@id and SatisDetayId=@OrderItemId ", param);
 
 
 
@@ -1039,7 +1020,6 @@ namespace DAL.Repositories
                 if (T.SatisId != 0 || T.SatisId != null)
                 {
                     prm.Add("@OrderId", T.SatisId);
-                    prm.Add("@CompanyId", CompanyId);
                     prm.Add("@StokId", T.StokId);
                     prm.Add("@SatisId", T.id);
                     prm.Add("@SatisDetayId", T.id);
@@ -1063,12 +1043,12 @@ namespace DAL.Repositories
 
 
             //Eklenen Ordera ait ıtemin Operation Bomlarını buluyoruz
-            var OperationList = await _db.QueryAsync<ProductOperationsBOM>($"Select ISNULL(id,0)As id,ISNULL(OperasyonId,0) as OperasyonId,ISNULL(KaynakId,0)as KaynakId,ISNULL(SaatlikUcret,0)as SaatlikUcret,ISNULL(PlanlananZaman,0)as OperationTime  from UretimDetay where  UretimDetay.UretimId = {T.SatisId} and Tip = 'Operations'");
+            var OperationList = await _db.QueryAsync<ProductOperationsBOM>($"Select ISNULL(id,0)As id,ISNULL(OperasyonId,0) as OperasyonId,ISNULL(KaynakId,0)as KaynakId,ISNULL(SaatlikUcret,0)as SaatlikUcret,ISNULL(PlanlananZaman,0)as OperationTime  from UretimDetay where  UretimDetay.UretimId = {T.SatisId} and Tip = 'Operasyonlar'");
 
             foreach (var item in OperationList)
             {
                 DynamicParameters param = new DynamicParameters();
-                param.Add("@Tip", "Operations");
+                param.Add("@Tip", "Operasyonlar");
                 param.Add("@OrderId", T.SatisId);
                 param.Add("@OperasyonId", item.OperasyonId);
                 param.Add("@KaynakId", item.KaynakId);
@@ -1094,7 +1074,6 @@ namespace DAL.Repositories
                 param.Add("@PlanlananZaman ", item.OperasyonZamani);
                 param.Add("@Durum", 0);
                 param.Add("@Tutar", (item.SaatlikUcret / 60 / 60) * item.OperasyonZamani);
-                param.Add("@CompanyId", CompanyId);
 
                 string sql = $@"Update UretimDetay Set Tip=@Tip,OrderId=@OrderId,OperasyonId=@OperasyonId,KaynakId=@KaynakId,PlanlananZaman=@PlanlananZaman,Durum=@Durum,Tutar=@Tutar where UretimId=@OrderId and OperasyonId=@OperasyonId and KaynakId=KaynakId  ";
                 await _db.ExecuteAsync(sql, param);
@@ -1104,7 +1083,6 @@ namespace DAL.Repositories
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.SatisId);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@OrderItemId", T.id);
             prm.Add("@StokId", T.StokId);
             var LocationIdAl = await _db.QueryFirstAsync<int>($"Select DepoId From Satis where id =@id", prm);
@@ -1119,13 +1097,13 @@ namespace DAL.Repositories
 
             //Adet azaltılırken hangi üretimin olacağı belirlenecek
             string sqlsorgu = $@"select Uretim.id,Uretim.PlanlananMiktar from Uretim 
-            where Uretim. and Uretim.SatisId=@id  
-            and Uretim.SatisDetayId=@OrderItemId and Uretim.Durum!=3 and Uretim.Aktif=1 and Uretim.Private='false' and Uretim.StokId=@StokId  Order by id DESC ";
+            where Uretim.SatisId=@id  
+            and Uretim.SatisDetayId=@OrderItemId and Uretim.Durum!=3 and Uretim.Aktif=1 and Uretim.Ozel='false' and Uretim.StokId=@StokId  Order by id DESC ";
             var Manufacturing = await _db.QueryAsync<SalesOrderUpdateMakeBatchItems>(sqlsorgu, prm);
 
 
             string sqlquerys = $@"select SUM(ISNULL(Uretim.PlanlananMiktar,0)) from Uretim 
-            where Uretim. and Uretim.SatisId=@id  
+            where Uretim.SatisId=@id  
             and Uretim.SatisDetayId=@OrderItemId and Uretim.Durum!=3 and Uretim.Aktif=1 and Uretim.Ozel='false' and Uretim.StokId=@StokId";
             var expected = await _db.QueryFirstAsync<int>(sqlquerys, prm);
 
@@ -1137,7 +1115,7 @@ namespace DAL.Repositories
             var locationstockid = await _db.QueryFirstAsync<int>(sqlb, prm);
             prm.Add("@LocationStockId", locationstockid);
             float degerler;
-            string sqlp = $" select ISNULL(RezerveDegeri,0) from Rezerve where SatisId=@id and SatisDetayId=@OrderItemId and DepoId=@DepoId and StokId=@StokId";
+            string sqlp = $" select ISNULL(RezerveDeger,0) from Rezerve where SatisId=@id and SatisDetayId=@OrderItemId and DepoId=@DepoId and StokId=@StokId";
             var deger = await _db.QueryAsync<int>(sqlp, prm);
             if (deger.Count() == 0)
             {
@@ -1181,7 +1159,7 @@ namespace DAL.Repositories
                 prm.Add("@RezerveCount", T.Miktar);
                 prm.Add("@LocationStockCount", RezerveCount);
                 await _db.ExecuteAsync($@"Update SatisDetay set SatisOgesi=@SatisOgesi,Uretme=@ProductionId,Malzemeler=@Ingredient where id=@OrderItemId and SatisId=@id", prm);
-                await _db.ExecuteAsync($"Update Rezerve set  RezerveCount=@RezerveCount where  and UretimId=@UretimId and StokId=@StokId and UretimDetayId=@UretimDetayId and SatisId=@id and SatisDetayId=@OrderItemId ", prm);
+                await _db.ExecuteAsync($"Update Rezerve set  RezerveCount=@RezerveCount where UretimId=@UretimId and StokId=@StokId and UretimDetayId=@UretimDetayId and SatisId=@id and SatisDetayId=@OrderItemId ", prm);
                 if (statusId == 2)
                 {
 
@@ -1244,7 +1222,6 @@ namespace DAL.Repositories
                             await _db.ExecuteAsync($@"Update SatisDetay set SatisOgesi=@SatisOgesi where id=@OrderItemId and SatisId=@id", prm);
 
                             prm.Add("@SatisId", T.SatisId);
-                            prm.Add("@CompanyId", CompanyId);
                             prm.Add("@SatisDetayId", T.id);
                             prm.Add("@StokId", T.StokId);
                             prm.Add("@UretimId", item.id);
@@ -1266,7 +1243,6 @@ namespace DAL.Repositories
                             prm.Add("@SatisOgesi", 1);
                             await _db.ExecuteAsync($@"Update SatisDetay set SatisOgesi=@SatisOgesi where id=@OrderItemId and SatisId=@id", prm);
                             prm.Add("@SatisId", T.SatisId);
-                            prm.Add("@CompanyId", CompanyId);
                             prm.Add("@SatisDetayId", T.id);
                             prm.Add("@StokId", T.StokId);
                             prm.Add("@UretimId", item.id);
@@ -1316,7 +1292,6 @@ namespace DAL.Repositories
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@SatisId", OrdersId);
             prm.Add("@OrderItemId", T.id);
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@StokId", T.StokId);
             prm.Add("@CariId", T.CariId);
             prm.Add("@location", T.DepoId);
@@ -1336,7 +1311,7 @@ namespace DAL.Repositories
                 prm2.Add("@location", T.DepoId);
                 string sqlb = $@"select
                 (Select ISNULL(Tip,'') from Urunler where id = @StokId)as Tip,
-                 (Select ISNULL(id,0) from DepoStoklar where StokId =  @StokId and DepoId = @location and ) as     DepoStokId";
+                 (Select ISNULL(id,0) from DepoStoklar where StokId =  @StokId and DepoId = @location ) as     DepoStokId";
                 var sorgu1 = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqlb, prm2);
                 int degerler;
                 string sqlp = $" select ISNULL(RezerveDeger,0) from Rezerve where SatisId=@SatisId and SatisDetayId=@OrderItemId and DepoId=@location and StokId=@StokId and  Durum=1";
@@ -1454,7 +1429,6 @@ namespace DAL.Repositories
             if (T.id != 0)
             {
                 prm.Add("@OrderId", OrdersId);
-                prm.Add("@CompanyId", CompanyId);
                 prm.Add("@StokId", T.StokId);
                 prm.Add("@SatisId", T.SatisId);
                 prm.Add("@SatisDetayId", T.id);
@@ -1475,7 +1449,6 @@ namespace DAL.Repositories
         public async Task<int> Make(SalesOrderMake T, int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@StokId", T.StokId);
             prm.Add("@SatisId", T.SatisId);
             prm.Add("@SatisDetayId", T.SatisDetayId);
@@ -1511,7 +1484,7 @@ namespace DAL.Repositories
                 {
                     await _db.ExecuteAsync($"Update SatisDetay set Tip=@Tip where id=@SatisDetayId and SatisId=@SatisId ", prm);
                 }
-                List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(id, 0) from DepoStoklar where StokId =  @StokId  and DepoId = @location )   as DepoStokId, (select ISNULL(VarsayilanFiyat, 0) From Urunler where id = @StokId)as  VarsayilanFiyat,(select Rezerve.RezerveDeger from Rezerve where StokId=@StokId and CariId=@CariId and DepoId=@location and SatisId=@SatisId and SatisDetayId=@SatisDetayId)as RezerveDeger", prm)).ToList();
+                List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select (Select ISNULL(id, 0) from DepoStoklar where StokId =  @StokId  and DepoId = @location )   as DepoStokId, (select ISNULL(VarsayilanFiyat, 0) From Urunler where id = @StokId)as  VarsayilanFiyat,(select Rezerve.RezerveDeger from Rezerve where StokId=@StokId and DepoId=@location and SatisId=@SatisId and SatisDetayId=@SatisDetayId)as RezerveDeger", prm)).ToList();
                 float? rezervecount = sorgu.First().RezerveDeger;
                 float LocationStockId = sorgu.First().DepoStokId;
                 prm.Add("@LocationStockId", LocationStockId);
@@ -1535,7 +1508,7 @@ namespace DAL.Repositories
                     id = await _manufacturingOrderItem.Insert(A, CompanyId);
                     prm.Add("@Manufacid", id);
 
-                    await _db.ExecuteAsync($"Update Uretim set SatisId=@SatisId , SatisDetayId=@SatisDetayId , CariId=@CariId where id=@Manufacid and  ", prm);
+                    await _db.ExecuteAsync($"Update Uretim set SatisId=@SatisId , SatisDetayId=@SatisDetayId , CariId=@CariId where id=@Manufacid ", prm);
                     await _manufacturingOrderItem.InsertOrderItems(id, T.StokId, T.DepoId, T.PlanlananMiktar, T.SatisId, T.SatisDetayId);
                 }
                 else
@@ -1576,14 +1549,12 @@ namespace DAL.Repositories
 
 
         }
-
         public async Task DoneSellOrder(SalesDone T, int CompanyId, int UserId)
         {
             DynamicParameters param = new DynamicParameters();
             param.Add("@id", T.id);
-            param.Add("@CompanyId", CompanyId);
             param.Add("@DurumBelirteci", T.DurumBelirteci);
-            string sql = $@"select DurumBelirteci from Satis where  and id=@id ";
+            string sql = $@"select DurumBelirteci from Satis where id=@id ";
             var st = await _db.QueryAsync<int>(sql, param);
             int eskiStatus = st.First();
 
@@ -1592,9 +1563,9 @@ namespace DAL.Repositories
 
                 if (T.DurumBelirteci == 2)
                 {
-                    var List = await _db.QueryAsync<SatisDetay>($@"select SatisDetay.StokId,SatisDetay.id,SatisDetay.SatisId as SatisId,SatisDetay.Miktar,DepoId from Satis 
+                    var List = await _db.QueryAsync<SatisDetay>($@"select SatisDetay.StokId,SatisDetay.id,SatisDetay.SatisId,SatisDetay.Miktar,DepoId from Satis 
                      left join SatisDetay on SatisDetay.SatisId=Satis.id
-                     where Satis.id=@id and SatisDetay.Durus=0", param);
+                     where Satis.id=@id ", param);
                     param.Add("@DepoId", List.First().DepoId);
                     foreach (var item in List)
                     {
@@ -1665,14 +1636,14 @@ namespace DAL.Repositories
 
 
                     param.Add("@DurumBelirteci", 2);
-                    await _db.ExecuteAsync($"Update Satis set DurumBelirteci=@DurumBelirteci where  and id=@id", param);
+                    await _db.ExecuteAsync($"Update Satis set DurumBelirteci=@DurumBelirteci where id=@id", param);
                 }
                 else if (T.DurumBelirteci == 4)
                 {
 
                     var List = await _db.QueryAsync<SatisDetay>($@"select SatisDetay.StokId,SatisDetay.id,SatisDetay.SatisId as SatisId,SatisDetay.Miktar,DepoId from Satis 
                 left join SatisDetay on SatisDetay.SatisId=Satis.id
-                where Satis.id=@id and SatisDetay.Durus=0", param);
+                where Satis.id=@id ", param);
                     param.Add("@DepoId", List.First().DepoId);
                     foreach (var item in List)
                     {
@@ -1706,7 +1677,7 @@ namespace DAL.Repositories
                             param.Add("@Durum", 4);
                             await _db.ExecuteAsync($"Update Rezerve set Durum=@Durum where SatisId=@id and SatisDetayId=@SatisDetayId", param);
 
-                            List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"  (Select ISNULL(StokAdeti, 0) from DepoStoklar where StokId = @StokId  and DepoId = @DepoId) as StokMiktar, (Select ISNULL(id, 0) from DepoStoklar where StokId = @StokId and DepoId = @DepoId )   as DepoStokId,(select RezerveDeger from Rezerve where SatisId=@id and StokId=@StokId and Durum!=4) as RezerveDeger ", param)).ToList();
+                            List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($" select (Select ISNULL(StokAdeti, 0) from DepoStoklar where StokId = @StokId  and DepoId = @DepoId) as StokMiktar, (Select ISNULL(id, 0) from DepoStoklar where StokId = @StokId and DepoId = @DepoId ) as DepoStokId,(select RezerveDeger from Rezerve where SatisId=@id and StokId=@StokId and Durum!=4) as RezerveDeger ", param)).ToList();
                             var stockall = sorgu.First().Miktari;
 
 
@@ -1727,10 +1698,10 @@ namespace DAL.Repositories
                             param.Add("@Malzemeler", 3);
                             param.Add("@SatisOgesi", 4);
                             param.Add("@Uretme", 4);
-                            await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler,Durus=@Durus,SatisOgesi=@SatisOgesi,Uretme=@Uretme where  and SatisId=@id and id=@SatisDetayId and StokId=@StokId ", param);
+                            await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Malzemeler,Durus=@Durus,SatisOgesi=@SatisOgesi,Uretme=@Uretme where SatisId=@id and id=@SatisDetayId and StokId=@StokId ", param);
 
                             param.Add("@Durum", 4);
-                            await _db.ExecuteAsync($"Update Rezerve set Durum=@Durum where  and SatisId=@id and SatisDetayId=@SatisDetayId", param);
+                            await _db.ExecuteAsync($"Update Rezerve set Durum=@Durum where SatisId=@id and SatisDetayId=@SatisDetayId", param);
 
                         }
 
@@ -1738,7 +1709,7 @@ namespace DAL.Repositories
 
 
                         param.Add("@DurumBelirteci", 4);
-                        await _db.ExecuteAsync($"Update Satis set DurumBelirteci=@DurumBelirteci where  and id=@id", param);
+                        await _db.ExecuteAsync($"Update Satis set DurumBelirteci=@DurumBelirteci where id=@id", param);
 
 
 

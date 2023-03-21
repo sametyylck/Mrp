@@ -127,14 +127,14 @@ namespace DAL.DTO
             public int SatisDetayId { get; set; }
             public string Isim { get; set; } = string.Empty;
             public int? StokId { get; set; }
-            public string ItemName { get; set; } = string.Empty;
+            public string UrunIsmi { get; set; } = string.Empty;
             public DateTime? UretimTarihi { get; set; }
             public DateTime? OlusturmaTarihi { get; set; }
             public DateTime BeklenenTarih { get; set; }
-            public float? PlannedQuantity { get; set; }
+            public float? PlanlananMiktar { get; set; }
             public int DepoId { get; set; }
-            public string LocationName { get; set; } = string.Empty;
-            public int? Status { get; set; }
+            public string DepoIsmi { get; set; } = string.Empty;
+            public int? Durum { get; set; }
             public string Bilgi { get; set; } = string.Empty;
             public IEnumerable<ManufacturingOrderItemsIngredientsDetail> IngredientDetail { get; set; }
             public IEnumerable<ManufacturingOrderItemsOperationDetail> OperationDetail { get; set; }
@@ -248,20 +248,20 @@ namespace DAL.DTO
         public class ManufacturingTask
         {
             public int id { get; set; }
-            public int? ManufacturingOrderId { get; set; }
-            public string OrderName { get; set; } = string.Empty;
-            public int? ResourceId { get; set; }
-            public string ResourcesName { get; set; } = string.Empty;
-            public int? OperationId { get; set; }
-            public string OperationName { get; set; } = string.Empty;
+            public int? UretimId { get; set; }
+            public string UretimIsim { get; set; } = string.Empty;
+            public int? KaynakId { get; set; }
+            public string KaynakIsmi { get; set; } = string.Empty;
+            public int? OperasyonId { get; set; }
+            public string OperasyonIsmi { get; set; } = string.Empty;
             public int? StokId { get; set; }
-            public string ItemName { get; set; } = string.Empty;
+            public string UrunIsim { get; set; } = string.Empty;
             public DateTime UretimTarihi { get; set; }
-            public float? PlannedQuantity { get; set; }
-            public float? PlannedTime { get; set; }
+            public float? PlanlananMiktar { get; set; }
+            public float? PlanlananZaman { get; set; }
             public int? DepoId { get; set; }
-            public DateTime CompletedDate { get; set; }
-            public int? Status { get; set; }
+            public DateTime TamamlamaTarihi { get; set; }
+            public int? Durum { get; set; }
         }
         public class ManufacturingTaskArama
         {

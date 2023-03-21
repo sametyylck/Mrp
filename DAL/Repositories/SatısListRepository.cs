@@ -25,62 +25,61 @@ namespace DAL.Repositories
         public async Task<IEnumerable<SatısList>> SalesOrderList(SatısListFiltre T, int CompanyId, int? KAYITSAYISI, int? SAYFA)
         {
             DynamicParameters param = new DynamicParameters();
-            param.Add("@CompanyId", CompanyId);
-            param.Add("@LocationId", T.LocationId);
+            param.Add("@DepoId", T.DepoId);
             string sql = string.Empty;
 
             if (T.BaslangıcTarih==null || T.BaslangıcTarih=="" || T.SonTarih==null || T.SonTarih=="" )
             {
-                if (T.LocationId == null)
+                if (T.DepoId == null)
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (
-        select sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName as CustomerName,SUM(sa.TotalAll)AS TotalAll,
-        sa.DeliveryDeadline,MIN(SalesOrderItem.SalesItem)as SalesItem,Min(SalesOrderItem.Ingredients)as Ingredients,Min(SalesOrderItem.Production)as Production,sa.LocationId,Locations.LocationName,sa.DeliveryId
-		FROM SalesOrder sa
-        left join Contacts on Contacts.id=sa.ContactId
-        left join SalesOrderItem on SalesOrderItem.SalesOrderId=sa.id
-		left join Locations on Locations.id=sa.LocationId
-       where sa.CompanyId=@CompanyId and sa.Tip='SalesOrder'  and sa.IsActive=1 and sa.DeliveryId!=4 and 
-        ISNULL(OrderName,0) like '%{T.OrderName}%'  and ISNULL(Contacts.DisplayName,'') Like '%{T.CustomerName}%' AND    ISNULL(sa.TotalAll,'') like '%{T.TotalAll}%' and
-        ISNULL(SalesItem,'') like '%{T.SalesItem}%' and ISNULL(Ingredients,'') like '%{T.Ingredients}%' and ISNULL(Production,'') like '%{T.Production}%' and ISNULL(sa.DeliveryId,'') like '%{T.DeliveryId}%' 
-        group by sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName,sa.DeliveryDeadline,sa.DeliveryId,sa.LocationId,Locations.LocationName)x
+        select sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad as CariAdSoyad,SUM(sa.TumToplam)AS TumToplam,
+        sa.TeslimSuresi,MIN(SatisDetay.SatisOgesi)as SatisOgesi,Min(SatisDetay.Malzemeler)as Malzemeler,Min(SatisDetay.Uretme)as Uretme,sa.DepoId,DepoVeAdresler.Isim,sa.DurumBelirteci
+		FROM Satis sa
+        left join Cari on Cari.CariKod=sa.CariId
+        left join SatisDetay on SatisDetay.SatisId=sa.id
+		left join DepoVeAdresler on DepoVeAdresler.id=sa.DepoId
+       where sa.Tip='Satis'  and sa.Aktif=1 and sa.DurumBelirteci!=4 and 
+        ISNULL(SatisIsmi,0) like '%{T.SatisIsmi}%'  and ISNULL(Cari.AdSoyad,'') Like '%{T.CariAdSoyad}%' AND    ISNULL(sa.TumToplam,'') like '%{T.TumToplam}%' and
+        ISNULL(SatisOgesi,'') like '%{T.SatisOgesi}%' and ISNULL(Malzemeler,'') like '%{T.Malzemeler}%' and ISNULL(Uretme,'') like '%{T.Uretme}%' and ISNULL(sa.DurumBelirteci,'') like '%{T.DurumBelirteci}%' 
+        group by sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad,sa.TeslimSuresi,sa.DurumBelirteci,sa.DepoId,DepoVeAdresler.Isim)x
         ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ;";
                 }
                 else
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (
-        select sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName as CustomerName,SUM(sa.TotalAll)AS TotalAll,
-        sa.DeliveryDeadline,MIN(SalesOrderItem.SalesItem)as SalesItem,Min(SalesOrderItem.Ingredients)as Ingredients,Min(SalesOrderItem.Production)as Production,sa.LocationId,Locations.LocationName,sa.DeliveryId
-		FROM SalesOrder sa
-        left join Contacts on Contacts.id=sa.ContactId
-        left join SalesOrderItem on SalesOrderItem.SalesOrderId=sa.id
-		left join Locations on Locations.id=sa.LocationId
-       where sa.CompanyId=@CompanyId and sa.Tip='SalesOrder'  and sa.LocationId=@LocationId and sa.IsActive=1 and sa.DeliveryId!=4 and 
-        ISNULL(OrderName,0) like '%{T.OrderName}%'  and ISNULL(Contacts.DisplayName,'') Like '%{T.CustomerName}%' AND    ISNULL(sa.TotalAll,'') like '%{T.TotalAll}%' and
-        ISNULL(SalesItem,'') like '%{T.SalesItem}%' and ISNULL(Ingredients,'') like '%{T.Ingredients}%' and ISNULL(Production,'') like '%{T.Production}%' and ISNULL(sa.DeliveryId,'') like '%{T.DeliveryId}%' 
-        group by sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName,sa.DeliveryDeadline,sa.DeliveryId,sa.LocationId,Locations.LocationName)x
+        select sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad as CariAdSoyad,SUM(sa.TumToplam)AS TumToplam,
+        sa.TeslimSuresi,MIN(SatisDetay.SatisOgesi)as SatisOgesi,Min(SatisDetay.Malzemeler)as Malzemeler,Min(SatisDetay.Uretme)as Uretme,sa.DepoId,DepoVeAdresler.Isim,sa.DurumBelirteci
+		FROM Satis sa
+        left join Cari on Cari.CariKod=sa.CariId
+        left join SatisDetay on SatisDetay.SatisId=sa.id
+		left join DepoVeAdresler on DepoVeAdresler.id=sa.DepoId
+       where sa.Tip='Satis'  and sa.DepoId=@DepoId and sa.Aktif=1 and sa.DurumBelirteci!=4 and 
+        ISNULL(SatisIsmi,0) like '%{T.SatisIsmi}%'  and ISNULL(Cari.AdSoyad,'') Like '%{T.CariAdSoyad}%' AND    ISNULL(sa.TumToplam,'') like '%{T.TumToplam}%' and
+        ISNULL(SatisOgesi,'') like '%{T.SatisOgesi}%' and ISNULL(Malzemeler,'') like '%{T.Malzemeler}%' and ISNULL(Uretme,'') like '%{T.Uretme}%' and ISNULL(sa.DurumBelirteci,'') like '%{T.DurumBelirteci}%' 
+        group by sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad,sa.TeslimSuresi,sa.DurumBelirteci,sa.DepoId,DepoVeAdresler.Isim)x
         ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ;";
                 }
             }
             else
             {
 
-                if (T.LocationId == null)
+                if (T.DepoId == null)
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (
-        select sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName as CustomerName,SUM(sa.TotalAll)AS TotalAll,
-        sa.DeliveryDeadline,MIN(SalesOrderItem.SalesItem)as SalesItem,Min(SalesOrderItem.Ingredients)as Ingredients,Min(SalesOrderItem.Production)as Production,sa.LocationId,Locations.LocationName,sa.DeliveryId
-		FROM SalesOrder sa
-        left join Contacts on Contacts.id=sa.ContactId
-        left join SalesOrderItem on SalesOrderItem.SalesOrderId=sa.id
-		left join Locations on Locations.id=sa.LocationId
-       where sa.CompanyId=@CompanyId and sa.Tip='SalesOrder'  and sa.IsActive=1 and sa.DeliveryId!=4 and 
-        ISNULL(OrderName,0) like '%{T.OrderName}%'  and ISNULL(Contacts.DisplayName,'') Like '%{T.CustomerName}%' AND    ISNULL(sa.TotalAll,'') like '%{T.TotalAll}%' and
-        ISNULL(SalesItem,'') like '%{T.SalesItem}%' and ISNULL(Ingredients,'') like '%{T.Ingredients}%' and ISNULL(Production,'') like '%{T.Production}%' and ISNULL(sa.DeliveryId,'') like '%{T.DeliveryId}%'  and sa.DeliveryDeadline BETWEEN '{T.BaslangıcTarih}' and '{T.SonTarih}'
-        group by sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName,sa.DeliveryDeadline,sa.DeliveryId,sa.LocationId,Locations.LocationName)x
+        select sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad as CariAdSoyad,SUM(sa.TumToplam)AS TumToplam,
+        sa.TeslimSuresi,MIN(SatisDetay.SatisOgesi)as SatisOgesi,Min(SatisDetay.Malzemeler)as Malzemeler,Min(SatisDetay.Uretme)as Uretme,sa.DepoId,DepoVeAdresler.Isim,sa.DurumBelirteci
+		FROM Satis sa
+        left join Cari on Cari.CariKod=sa.CariId
+        left join SatisDetay on SatisDetay.SatisId=sa.id
+		left join DepoVeAdresler on DepoVeAdresler.id=sa.DepoId
+       where  sa.Tip='Satis'  and sa.Aktif=1 and sa.DurumBelirteci!=4 and 
+        ISNULL(SatisIsmi,0) like '%{T.SatisIsmi}%'  and ISNULL(Cari.AdSoyad,'') Like '%{T.CariAdSoyad}%' AND    ISNULL(sa.TumToplam,'') like '%{T.TumToplam}%' and
+        ISNULL(SatisOgesi,'') like '%{T.SatisOgesi}%' and ISNULL(Malzemeler,'') like '%{T.Malzemeler}%' and ISNULL(Uretme,'') like '%{T.Uretme}%' and ISNULL(sa.DurumBelirteci,'') like '%{T.DurumBelirteci}%'  and sa.TeslimSuresi BETWEEN '{T.BaslangıcTarih}' and '{T.SonTarih}'
+        group by sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad,sa.TeslimSuresi,sa.DurumBelirteci,sa.DepoId,DepoVeAdresler.Isim)x
         ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ;";
 
                 }
@@ -88,16 +87,16 @@ namespace DAL.Repositories
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (
-        select sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName as CustomerName,SUM(sa.TotalAll)AS TotalAll,
-        sa.DeliveryDeadline,MIN(SalesOrderItem.SalesItem)as SalesItem,Min(SalesOrderItem.Ingredients)as Ingredients,Min(SalesOrderItem.Production)as Production,sa.LocationId,Locations.LocationName,sa.DeliveryId
-		FROM SalesOrder sa
-        left join Contacts on Contacts.id=sa.ContactId
-        left join SalesOrderItem on SalesOrderItem.SalesOrderId=sa.id
-		left join Locations on Locations.id=sa.LocationId
-       where sa.CompanyId=@CompanyId and sa.Tip='SalesOrder'  and sa.LocationId=@LocationId and sa.IsActive=1 and sa.DeliveryId!=4 and 
-        ISNULL(OrderName,0) like '%{T.OrderName}%'  and ISNULL(Contacts.DisplayName,'') Like '%{T.CustomerName}%' AND    ISNULL(sa.TotalAll,'') like '%{T.TotalAll}%' and
-        ISNULL(SalesItem,'') like '%{T.SalesItem}%' and ISNULL(Ingredients,'') like '%{T.Ingredients}%' and ISNULL(Production,'') like '%{T.Production}%' and ISNULL(sa.DeliveryId,'') like '%{T.DeliveryId}%' and sa.DeliveryDeadline BETWEEN '{T.BaslangıcTarih}' and '{T.SonTarih}'
-        group by sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName,sa.DeliveryDeadline,sa.DeliveryId,sa.LocationId,Locations.LocationName)x
+        select sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad as CariAdSoyad,SUM(sa.TumToplam)AS TumToplam,
+        sa.TeslimSuresi,MIN(SatisDetay.SatisOgesi)as SatisOgesi,Min(SatisDetay.Malzemeler)as Malzemeler,Min(SatisDetay.Uretme)as Uretme,sa.DepoId,DepoVeAdresler.Isim,sa.DurumBelirteci
+		FROM Satis sa
+        left join Cari on Cari.CariKod=sa.CariId
+        left join SatisDetay on SatisDetay.SatisId=sa.id
+		left join DepoVeAdresler on DepoVeAdresler.id=sa.DepoId
+       where  sa.Tip='Satis'  and sa.DepoId=@DepoId and sa.Aktif=1 and sa.DurumBelirteci!=4 and 
+        ISNULL(SatisIsmi,0) like '%{T.SatisIsmi}%'  and ISNULL(Cari.AdSoyad,'') Like '%{T.CariAdSoyad}%' AND    ISNULL(sa.TumToplam,'') like '%{T.TumToplam}%' and
+        ISNULL(SatisOgesi,'') like '%{T.SatisOgesi}%' and ISNULL(Malzemeler,'') like '%{T.Malzemeler}%' and ISNULL(Uretme,'') like '%{T.Uretme}%' and ISNULL(sa.DurumBelirteci,'') like '%{T.DurumBelirteci}%' and sa.TeslimSuresi BETWEEN '{T.BaslangıcTarih}' and '{T.SonTarih}'
+        group by sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad,sa.TeslimSuresi,sa.DurumBelirteci,sa.DepoId,DepoVeAdresler.Isim)x
         ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ;";
 
                 }
@@ -112,10 +111,10 @@ namespace DAL.Repositories
             {
               
                 param.Add("@Listid", item.id);
-                param.Add("@SalesOrderId", item.id);
-                string sqlsorgu = $@"SELECT ma.id,ma.Name,ma.ItemId,Items.Name as ItemName,ma.ExpectedDate,ma.PlannedQuantity,ma.TotalCost,ma.[Status] FROM ManufacturingOrder ma  
-left join Items on Items.id=ma.ItemId
-Where ma.SalesOrderId=@SalesOrderId and ma.CompanyId=@CompanyId and ma.IsActive=1 and ma.Status!=3";
+                param.Add("@SatisId", item.id);
+                string sqlsorgu = $@"SELECT ma.id,ma.Isim,ma.StokId,Urunler.Isim,ma.BeklenenTarih,ma.UretimTarihi,ma.OlusturmaTarihi,ma.DepoId,ma.PlanlananMiktar,ma.ToplamMaliyet,ma.[Durum] FROM Uretim ma  
+left join Urunler on Urunler.id=ma.StokId
+Where ma.SatisId=@SatisId and  ma.Aktif=1 and ma.Durum!=3";
                 var Manufacturing = await _db.QueryAsync<ManufacturingOrderDetail>(sqlsorgu, param);
                 item.MOList = Manufacturing;
 
@@ -126,62 +125,61 @@ Where ma.SalesOrderId=@SalesOrderId and ma.CompanyId=@CompanyId and ma.IsActive=
         public async Task<IEnumerable<SatısList>> SalesOrderDoneList(SatısListFiltre T, int CompanyId, int? KAYITSAYISI, int? SAYFA)
         {
             DynamicParameters param = new DynamicParameters();
-            param.Add("@CompanyId", CompanyId);
-            param.Add("@LocationId", T.LocationId);
+            param.Add("@DepoId", T.DepoId);
             string sql = string.Empty;
 
             if (T.BaslangıcTarih == null || T.BaslangıcTarih == "" || T.SonTarih == null || T.SonTarih == "")
             {
-                if (T.LocationId == null)
+                if (T.DepoId == null)
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (
-        select sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName as CustomerName,SUM(sa.TotalAll)AS TotalAll,
-        sa.DeliveryDeadline,MIN(SalesOrderItem.SalesItem)as SalesItem,Min(SalesOrderItem.Ingredients)as Ingredients,Min(SalesOrderItem.Production)as Production,sa.LocationId,Locations.LocationName,sa.DeliveryId
-		FROM SalesOrder sa
-        left join Contacts on Contacts.id=sa.ContactId
-        left join SalesOrderItem on SalesOrderItem.SalesOrderId=sa.id
-		left join Locations on Locations.id=sa.LocationId
-       where sa.CompanyId=@CompanyId and sa.Tip='SalesOrder'  and sa.IsActive=1 and sa.DeliveryId=4 and 
-        ISNULL(OrderName,0) like '%{T.OrderName}%'  and ISNULL(Contacts.DisplayName,'') Like '%{T.CustomerName}%' AND    ISNULL(sa.TotalAll,'') like '%{T.TotalAll}%' and
-        ISNULL(SalesItem,'') like '%{T.SalesItem}%' and ISNULL(Ingredients,'') like '%{T.Ingredients}%' and ISNULL(Production,'') like '%{T.Production}%' and ISNULL(sa.DeliveryId,'') like '%{T.DeliveryId}%' 
-        group by sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName,sa.DeliveryDeadline,sa.DeliveryId,sa.LocationId,Locations.LocationName)x
+        select sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad as CariAdSoyad,SUM(sa.TumToplam)AS TumToplam,
+        sa.TeslimSuresi,MIN(SatisDetay.SatisOgesi)as SatisOgesi,Min(SatisDetay.Malzemeler)as Malzemeler,Min(SatisDetay.Uretme)as Uretme,sa.DepoId,DepoVeAdresler.Isim,sa.DurumBelirteci
+		FROM Satis sa
+        left join Cari on Cari.CariKod=sa.CariId
+        left join SatisDetay on SatisDetay.SatisId=sa.id
+		left join DepoVeAdresler on DepoVeAdresler.id=sa.DepoId
+       where  sa.Tip='Satis'  and sa.Aktif=1 and sa.DurumBelirteci=4 and 
+        ISNULL(SatisIsmi,0) like '%{T.SatisIsmi}%'  and ISNULL(Cari.AdSoyad,'') Like '%{T.CariAdSoyad}%' AND    ISNULL(sa.TumToplam,'') like '%{T.TumToplam}%' and
+        ISNULL(SatisOgesi,'') like '%{T.SatisOgesi}%' and ISNULL(Malzemeler,'') like '%{T.Malzemeler}%' and ISNULL(Uretme,'') like '%{T.Uretme}%' and ISNULL(sa.DurumBelirteci,'') like '%{T.DurumBelirteci}%' 
+        group by sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad,sa.TeslimSuresi,sa.DurumBelirteci,sa.DepoId,DepoVeAdresler.Isim)x
         ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ;";
                 }
                 else
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (
-        select sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName as CustomerName,SUM(sa.TotalAll)AS TotalAll,
-        sa.DeliveryDeadline,MIN(SalesOrderItem.SalesItem)as SalesItem,Min(SalesOrderItem.Ingredients)as Ingredients,Min(SalesOrderItem.Production)as Production,sa.LocationId,Locations.LocationName,sa.DeliveryId
-		FROM SalesOrder sa
-        left join Contacts on Contacts.id=sa.ContactId
-        left join SalesOrderItem on SalesOrderItem.SalesOrderId=sa.id
-		left join Locations on Locations.id=sa.LocationId
-       where sa.CompanyId=@CompanyId and sa.Tip='SalesOrder'  and sa.LocationId=@LocationId and sa.IsActive=1 and sa.DeliveryId=4 and 
-        ISNULL(OrderName,0) like '%{T.OrderName}%'  and ISNULL(Contacts.DisplayName,'') Like '%{T.CustomerName}%' AND    ISNULL(sa.TotalAll,'') like '%{T.TotalAll}%' and
-        ISNULL(SalesItem,'') like '%{T.SalesItem}%' and ISNULL(Ingredients,'') like '%{T.Ingredients}%' and ISNULL(Production,'') like '%{T.Production}%' and ISNULL(sa.DeliveryId,'') like '%{T.DeliveryId}%' 
-        group by sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName,sa.DeliveryDeadline,sa.DeliveryId,sa.LocationId,Locations.LocationName)x
+        select sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad as CariAdSoyad,SUM(sa.TumToplam)AS TumToplam,
+        sa.TeslimSuresi,MIN(SatisDetay.SatisOgesi)as SatisOgesi,Min(SatisDetay.Malzemeler)as Malzemeler,Min(SatisDetay.Uretme)as Uretme,sa.DepoId,DepoVeAdresler.Isim,sa.DurumBelirteci
+		FROM Satis sa
+        left join Cari on Cari.CariKod=sa.CariId
+        left join SatisDetay on SatisDetay.SatisId=sa.id
+		left join DepoVeAdresler on DepoVeAdresler.id=sa.DepoId
+       where sa.Tip='Satis'  and sa.DepoId=@DepoId and sa.Aktif=1 and sa.DurumBelirteci=4 and 
+        ISNULL(SatisIsmi,0) like '%{T.SatisIsmi}%'  and ISNULL(Cari.AdSoyad,'') Like '%{T.CariAdSoyad}%' AND    ISNULL(sa.TumToplam,'') like '%{T.TumToplam}%' and
+        ISNULL(SatisOgesi,'') like '%{T.SatisOgesi}%' and ISNULL(Malzemeler,'') like '%{T.Malzemeler}%' and ISNULL(Uretme,'') like '%{T.Uretme}%' and ISNULL(sa.DurumBelirteci,'') like '%{T.DurumBelirteci}%' 
+        group by sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad,sa.TeslimSuresi,sa.DurumBelirteci,sa.DepoId,DepoVeAdresler.Isim)x
         ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ;";
                 }
             }
             else
             {
 
-                if (T.LocationId == null)
+                if (T.DepoId == null)
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (
-        select sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName as CustomerName,SUM(sa.TotalAll)AS TotalAll,
-        sa.DeliveryDeadline,MIN(SalesOrderItem.SalesItem)as SalesItem,Min(SalesOrderItem.Ingredients)as Ingredients,Min(SalesOrderItem.Production)as Production,sa.LocationId,Locations.LocationName,sa.DeliveryId
-		FROM SalesOrder sa
-        left join Contacts on Contacts.id=sa.ContactId
-        left join SalesOrderItem on SalesOrderItem.SalesOrderId=sa.id
-		left join Locations on Locations.id=sa.LocationId
-       where sa.CompanyId=@CompanyId and sa.Tip='SalesOrder'  and sa.IsActive=1 and sa.DeliveryId=4 and 
-        ISNULL(OrderName,0) like '%{T.OrderName}%'  and ISNULL(Contacts.DisplayName,'') Like '%{T.CustomerName}%' AND    ISNULL(sa.TotalAll,'') like '%{T.TotalAll}%' and
-        ISNULL(SalesItem,'') like '%{T.SalesItem}%' and ISNULL(Ingredients,'') like '%{T.Ingredients}%' and ISNULL(Production,'') like '%{T.Production}%' and ISNULL(sa.DeliveryId,'') like '%{T.DeliveryId}%'  and sa.DeliveryDeadline BETWEEN '{T.BaslangıcTarih}' and '{T.SonTarih}'
-        group by sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName,sa.DeliveryDeadline,sa.DeliveryId,sa.LocationId,Locations.LocationName)x
+        select sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad as CariAdSoyad,SUM(sa.TumToplam)AS TumToplam,
+        sa.TeslimSuresi,MIN(SatisDetay.SatisOgesi)as SatisOgesi,Min(SatisDetay.Malzemeler)as Malzemeler,Min(SatisDetay.Uretme)as Uretme,sa.DepoId,DepoVeAdresler.Isim,sa.DurumBelirteci
+		FROM Satis sa
+        left join Cari on Cari.CariKod=sa.CariId
+        left join SatisDetay on SatisDetay.SatisId=sa.id
+		left join DepoVeAdresler on DepoVeAdresler.id=sa.DepoId
+       where sa.Tip='Satis'  and sa.Aktif=1 and sa.DurumBelirteci=4 and 
+        ISNULL(SatisIsmi,0) like '%{T.SatisIsmi}%'  and ISNULL(Cari.AdSoyad,'') Like '%{T.CariAdSoyad}%' AND    ISNULL(sa.TumToplam,'') like '%{T.TumToplam}%' and
+        ISNULL(SatisOgesi,'') like '%{T.SatisOgesi}%' and ISNULL(Malzemeler,'') like '%{T.Malzemeler}%' and ISNULL(Uretme,'') like '%{T.Uretme}%' and ISNULL(sa.DurumBelirteci,'') like '%{T.DurumBelirteci}%'  and sa.TeslimSuresi BETWEEN '{T.BaslangıcTarih}' and '{T.SonTarih}'
+        group by sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad,sa.TeslimSuresi,sa.DurumBelirteci,sa.DepoId,DepoVeAdresler.Isim)x
         ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ;";
 
                 }
@@ -189,16 +187,16 @@ Where ma.SalesOrderId=@SalesOrderId and ma.CompanyId=@CompanyId and ma.IsActive=
                 {
                     sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI}  SET @SAYFA = {SAYFA}
             select x.* from (
-        select sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName as CustomerName,SUM(sa.TotalAll)AS TotalAll,
-        sa.DeliveryDeadline,MIN(SalesOrderItem.SalesItem)as SalesItem,Min(SalesOrderItem.Ingredients)as Ingredients,Min(SalesOrderItem.Production)as Production,sa.LocationId,Locations.LocationName,sa.DeliveryId
-		FROM SalesOrder sa
-        left join Contacts on Contacts.id=sa.ContactId
-        left join SalesOrderItem on SalesOrderItem.SalesOrderId=sa.id
-		left join Locations on Locations.id=sa.LocationId
-       where sa.CompanyId=@CompanyId and sa.Tip='SalesOrder'  and sa.LocationId=@LocationId and sa.IsActive=1 and sa.DeliveryId=4 and 
-        ISNULL(OrderName,0) like '%{T.OrderName}%'  and ISNULL(Contacts.DisplayName,'') Like '%{T.CustomerName}%' AND    ISNULL(sa.TotalAll,'') like '%{T.TotalAll}%' and
-        ISNULL(SalesItem,'') like '%{T.SalesItem}%' and ISNULL(Ingredients,'') like '%{T.Ingredients}%' and ISNULL(Production,'') like '%{T.Production}%' and ISNULL(sa.DeliveryId,'') like '%{T.DeliveryId}%' and sa.DeliveryDeadline BETWEEN '{T.BaslangıcTarih}' and '{T.SonTarih}'
-        group by sa.id,sa.OrderName,sa.ContactId,Contacts.DisplayName,sa.DeliveryDeadline,sa.DeliveryId,sa.LocationId,Locations.LocationName)x
+        select sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad as CariAdSoyad,SUM(sa.TumToplam)AS TumToplam,
+        sa.TeslimSuresi,MIN(SatisDetay.SatisOgesi)as SatisOgesi,Min(SatisDetay.Malzemeler)as Malzemeler,Min(SatisDetay.Uretme)as Uretme,sa.DepoId,DepoVeAdresler.Isim,sa.DurumBelirteci
+		FROM Satis sa
+        left join Cari on Cari.CariKod=sa.CariId
+        left join SatisDetay on SatisDetay.SatisId=sa.id
+		left join DepoVeAdresler on DepoVeAdresler.id=sa.DepoId
+       where sa.Tip='Satis'  and sa.DepoId=@DepoId and sa.Aktif=1 and sa.DurumBelirteci=4 and 
+        ISNULL(SatisIsmi,0) like '%{T.SatisIsmi}%'  and ISNULL(Cari.AdSoyad,'') Like '%{T.CariAdSoyad}%' AND    ISNULL(sa.TumToplam,'') like '%{T.TumToplam}%' and
+        ISNULL(SatisOgesi,'') like '%{T.SatisOgesi}%' and ISNULL(Malzemeler,'') like '%{T.Malzemeler}%' and ISNULL(Uretme,'') like '%{T.Uretme}%' and ISNULL(sa.DurumBelirteci,'') like '%{T.DurumBelirteci}%' and sa.TeslimSuresi BETWEEN '{T.BaslangıcTarih}' and '{T.SonTarih}'
+        group by sa.id,sa.SatisIsmi,sa.CariId,Cari.AdSoyad,sa.TeslimSuresi,sa.DurumBelirteci,sa.DepoId,DepoVeAdresler.Isim)x
         ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ;";
 
                 }
@@ -213,10 +211,10 @@ Where ma.SalesOrderId=@SalesOrderId and ma.CompanyId=@CompanyId and ma.IsActive=
             {
 
                 param.Add("@Listid", item.id);
-                param.Add("@SalesOrderId", item.id);
-                string sqlsorgu = $@"SELECT ma.id,ma.Name,ma.ItemId,Items.Name as ItemName,ma.ExpectedDate,ma.PlannedQuantity,ma.TotalCost,ma.[Status] FROM ManufacturingOrder ma  
-left join Items on Items.id=ma.ItemId
-Where ma.SalesOrderId=@SalesOrderId and ma.CompanyId=@CompanyId and ma.IsActive=1 and ma.Status=3";
+                param.Add("@SatisId", item.id);
+                string sqlsorgu = $@"SELECT ma.id,ma.Isim,ma.StokId,Urunler.Isim as UrunIsmi,ma.BeklenenTarih,ma.OlusturmaTarihi,ma.PlanlananMiktar,ma.ToplamMaliyet,ma.[Durum] FROM Uretim ma  
+left join Urunler on Urunler.id=ma.StokId
+Where ma.SatisId=@SatisId and ma.Aktif=1 and ma.Durum=3";
                 var Manufacturing = await _db.QueryAsync<ManufacturingOrderDetail>(sqlsorgu, param);
                 item.MOList = Manufacturing;
 
@@ -228,41 +226,40 @@ Where ma.SalesOrderId=@SalesOrderId and ma.CompanyId=@CompanyId and ma.IsActive=
         public async Task<IEnumerable<SalesOrderDetail>> Detail(int CompanyId, int id)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
             prm.Add("@id", id);
-            string sql = $@"select o.id,o.ContactId,Contacts.DisplayName,o.LocationId,Locations.LocationName,o.DeliveryDeadline,o.CreateDate,o.OrderName,o.BillingAddressId,o.ShippingAddressId,
-                o.Info,o.DeliveryId
-                from SalesOrder o
-                left join OrdersItem oi on oi.OrdersId=o.id
-                left join Contacts on Contacts.id=o.ContactId
-	            LEFT join Locations on Locations.id=o.LocationId
-                where o.CompanyId=@CompanyId and o.id=@id
-                group by o.id,o.ContactId,Contacts.DisplayName,o.DeliveryDeadline,o.CreateDate,o.OrderName,o.BillingAddressId,o.ShippingAddressId,o.Info,o.LocationId,Locations.LocationName,o.DeliveryId";
+            string sql = $@"select o.id,o.CariId,Cari.AdSoyad,o.DepoId,DepoVeAdresler.Isim as DepoIsmi,o.TeslimSuresi,o.OlusturmaTarihi,o.SatisIsmi,o.FaturaAdresiId,o.KargoAdresiId,
+                o.Bilgi,o.DurumBelirteci
+                from Satis o
+                left join SatinAlmaDetay oi on oi.SatisId=o.id
+                left join Cari on Cari.CariKod=o.CariId
+	            LEFT join DepoVeAdresler on DepoVeAdresler.id=o.DepoId
+                where o.id=@id
+                group by o.id,o.CariId,Cari.AdSoyad,o.DepoId,DepoVeAdresler.Isim as DepoIsmi,o.TeslimSuresi,o.OlusturmaTarihi,o.SatisIsmi,o.FaturaAdresiId,o.KargoAdresiId,
+                o.Bilgi,o.DurumBelirteci";
             var details = await _db.QueryAsync<SalesOrderDetail>(sql, prm);
             foreach (var item in details)
             {
                 DynamicParameters prm1 = new DynamicParameters();
-                prm1.Add("@CompanyId", CompanyId);
                 prm1.Add("@id", id);
-                string sqla = $@"Select LocationId from SalesOrder where CompanyId=@CompanyId and id=@id";
+                string sqla = $@"Select DepoId from Satis where id=@id";
                 var sorgu = await _db.QueryAsync<int>(sqla, prm);
-                prm1.Add("@LocationId", sorgu.First());
+                prm1.Add("@DepoId", sorgu.First());
 
                 string sql1 = $@"
-           Select SalesOrderItem.id as id,SalesOrderItem.ItemId,Items.Name as ItemName,SalesOrderItem.Quantity,Items.Tip,
-           SalesOrderItem.PricePerUnit, SalesOrderItem.TotalAll, SalesOrderItem.TaxId, Tax.TaxName,SalesOrderItem.TaxValue as Rate,SalesOrderItem.SalesItem,SalesOrderItem.Ingredients,SalesOrderItem.Production,
-		     (SUM(ISNULL(rez.RezerveCount,0)))- ISNULL(SalesOrderItem.Quantity,0)+(SUM(ISNULL(ManufacturingOrder.PlannedQuantity,0)))as missing
-		   from SalesOrder 
-        inner join SalesOrderItem on SalesOrderItem.SalesOrderId = SalesOrder.id 
-		left join Items on Items.id = SalesOrderItem.ItemId
-		left join Tax on Tax.id = SalesOrderItem.TaxId
-		LEFT join ManufacturingOrder on ManufacturingOrder.SalesOrderItemId=SalesOrderItem.id and ManufacturingOrder.SalesOrderId=SalesOrder.id and ManufacturingOrder.Status!=3 and ManufacturingOrder.IsActive=1
-        LEFT join Rezerve on Rezerve.SalesOrderItemId=SalesOrderItem.id and Rezerve.SalesOrderId=SalesOrder.id and Rezerve.ItemId=Items.id
-        LEFT join Rezerve rez on rez.ItemId=Items.id and rez.Status=1
-        where SalesOrder.CompanyId = @CompanyId and SalesOrder.id = @id  
-		Group by SalesOrderItem.id,SalesOrderItem.ItemId,Items.Name,SalesOrderItem.Quantity,Items.Tip,
-           SalesOrderItem.PricePerUnit, SalesOrderItem.TotalAll, SalesOrderItem.TaxId, Tax.TaxName,SalesOrderItem.TaxValue,
-		         SalesOrderItem.SalesItem,SalesOrderItem.Ingredients,SalesOrderItem.Production,Rezerve.RezerveCount";
+           Select SatisDetay.id as id,SatisDetay.StokId,Urunler.Isim as UrunIsmi,SatisDetay.Miktar,Urunler.Tip,
+           SatisDetay.BirimFiyat, SatisDetay.TumTolam, SatisDetay.VergiId, Vergi.VergiIsmi,SatisDetay.VergiDegeri as Rate,SatisDetay.SatisOgesi,SatisDetay.Malzemeler,SatisDetay.Uretme,
+		     (SUM(ISNULL(rez.RezerveDeger,0)))- ISNULL(SatisDetay.Miktar,0)+(SUM(ISNULL(Uretim.PlanlananMiktar,0)))as missing
+		   from Satis 
+        inner join SatisDetay on SatisDetay.SatisId = Satis.id 
+		left join Urunler on Urunler.id = SatisDetay.StokId
+		left join Tax on Tax.id = SatisDetay.TaxId
+		LEFT join Uretim on Uretim.SatisDetayId=SatisDetay.id and Uretim.SatisId=Satis.id and Uretim.Durum!=3 and Uretim.Aktif=1
+        LEFT join Rezerve on Rezerve.SatisDetayId=SatisDetay.id and Rezerve.SatisId=Satis.id and Rezerve.StokId=Urunler.id
+        LEFT join Rezerve rez on rez.StokId=Urunler.id and rez.Durum=1
+        where Satis.id = @id  
+		Group by SatisDetay.id,SatisDetay.StokId,Urunler.Name,SatisDetay.Miktar,Urunler.Tip,
+           SatisDetay.BirimFiyat, SatisDetay.TumToplam, SatisDetay.TaxId, Tax.TaxName,SatisDetay.TaxValue,
+		         SatisDetay.SatisOgesi,SatisDetay.Malzemeler,SatisDetay.Uretme,Rezerve.RezerveDeger";
                 var ItemsDetail = await _db.QueryAsync<SatısDetail>(sql1, prm1);
                 item.detay = ItemsDetail;
             }
@@ -272,28 +269,27 @@ Where ma.SalesOrderId=@SalesOrderId and ma.CompanyId=@CompanyId and ma.IsActive=
         {
 
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
-            prm.Add("@ProductId", T.ProductId);
+            prm.Add("@MamulId", T.MamulId);
             prm.Add("@id", T.id);
-            prm.Add("@OrderItemId", T.SalesOrderItemId);
-            prm.Add("@LocationId", T.LocationId);
-            var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id from ManufacturingOrder mo where SalesOrderId=@id and SalesOrderItemId=@OrderItemId and CompanyId=@CompanyId and IsActive=1 and Status!=3", prm);
+            prm.Add("@OrderItemId", T.SatisDetayId);
+            prm.Add("@DepoId", T.DepoId);
+            var make = await _db.QueryAsync<SalesOrderRezerve>($"select mo.id from Uretim mo where SatisId=@id and SatisDetayId=@OrderItemId and  Aktif=1 and Durum!=3", prm);
             IEnumerable<MissingCount> materialid;
             IEnumerable<MissingCount> list = new List<MissingCount>();
             if (make.Count() == 0)
             {
-                string sql = $"select Bom.MaterialId from Bom where  Bom.ProductId = @ProductId";
+                string sql = $"select UrunRecetesi.MalzemeId from UrunRecetesi where  UrunRecetesi.MamulId = @MamulId";
                 materialid = await _db.QueryAsync<MissingCount>(sql, prm);
 
                 foreach (var item in materialid)
                 {
-                    prm.Add("@MaterialId", item.MaterialId);
-                    string sqlb = $@"select Bom.MaterialId,Items.Name as MaterialName,
-        (Select Rezerve.RezerveCount from Rezerve where Rezerve.SalesOrderId = @id and Rezerve.ItemId= @MaterialId and SalesOrderItemId=@OrderItemId) -
-        ((Select SalesOrderItem.Quantity from SalesOrder sa left join SalesOrderItem on SalesOrderItem.SalesOrderId = sa.id where sa.id = @id and SalesOrderItem.id=@OrderItemId) *
-        (select Bom.Quantity from Bom where Bom.MaterialId = @MaterialId and Bom.ProductId = @ProductId))
-         AS Missing
-        FROM Bom left join Items on Items.id = Bom.MaterialId where Bom.CompanyId = @CompanyId and Bom.ProductId = @ProductId and Bom.MaterialId = @MaterialId";
+                    prm.Add("@MalzemeId", item.MalzemeId);
+                    string sqlb = $@"select UrunRecetesi.MalzemeId,Urunler.Name as MaterialName,
+        (Select Rezerve.RezerveDeger from Rezerve where Rezerve.SatisId = @id and Rezerve.StokId= @MalzemeId and SatisDetayId=@OrderItemId) -
+        ((Select SatisDetay.Miktar from Satis sa left join SatisDetay on SatisDetay.SatisId = sa.id where sa.id = @id and SatisDetay.id=@OrderItemId) *
+        (select UrunRecetesi.Miktar from UrunRecetesi where UrunRecetesi.MalzemeId = @MalzemeId and UrunRecetesi.MamulId = @MamulId))
+         AS Kayip
+        FROM UrunRecetesi left join Urunler on Urunler.id = UrunRecetesi.MalzemeId where  UrunRecetesi.MamulId = @MamulId and UrunRecetesi.MalzemeId = @MalzemeId";
                     var a = await _db.QueryAsync<MissingCount>(sqlb, prm);
                     list.Append(a.First());
 
@@ -301,26 +297,25 @@ Where ma.SalesOrderId=@SalesOrderId and ma.CompanyId=@CompanyId and ma.IsActive=
             }
             else
             {
-                materialid = await _db.QueryAsync<MissingCount>($@"SELECT ManufacturingOrderItems.ItemId as MaterialId from ManufacturingOrderItems 
-            left join ManufacturingOrder on ManufacturingOrder.id=ManufacturingOrderItems.OrderId
-            where ManufacturingOrder.SalesOrderId=@id and ManufacturingOrder.SalesOrderItemId=@OrderItemId and ManufacturingOrderItems.Tip='Ingredients' and ManufacturingOrder.IsActive=1 and ManufacturingOrder.Status!=3 and ManufacturingOrderItems.Availability=0
-            Group By ManufacturingOrderItems.ItemId", prm);
+                materialid = await _db.QueryAsync<MissingCount>($@"SELECT UretimDetayId.StokId as MalzemeId from UretimDetayId 
+            left join Uretim on Uretim.id=UretimDetayId.UretimId
+            where Uretim.SatisId=@id and Uretim.SatisDetayId=@OrderItemId and UretimDetayId.Tip='Malzemeler' and Uretim.Aktif=1 and Uretim.Durum!=3 and UretimDetayId.MalzemeDurum=0
+            Group By UretimDetayId.StokId", prm);
                 foreach (var liste in materialid)
                 {
-                    prm.Add("@MaterialId", liste.MaterialId);
-                    string sqlb = $@"select Bom.MaterialId,Items.Name as MaterialName,
-             (Select SUM(Rezerve.RezerveCount) from Rezerve where Rezerve.SalesOrderId = @id and Rezerve.ItemId= @MaterialId and SalesOrderItemId=@OrderItemId) -
-             (Select SUM(ManufacturingOrderItems.PlannedQuantity) from ManufacturingOrderItems 
-		        LEFT join ManufacturingOrder on ManufacturingOrderItems.OrderId=ManufacturingOrder.id
-		    where ManufacturingOrder.CompanyId =@CompanyId and ManufacturingOrder.SalesOrderId=@id and ManufacturingOrder.SalesOrderItemId=@OrderItemId 
-			and ManufacturingOrderItems.Tip='Ingredients' and ManufacturingOrderItems.ItemId=@MaterialId and ManufacturingOrder.IsActive=1 
-			and ManufacturingOrder.Status!=3)+
-				(select ISNULL(SUM(Quantity),0) from Orders 
-                left join OrdersItem on OrdersItem.OrdersId = Orders.id and Orders.LocationId=@LocationId
-                and OrdersItem.ItemId = @MaterialId where Orders.CompanyId = @CompanyId
-                and DeliveryId = 1 and Orders.SalesOrderId=@id and Orders.SalesOrderItemId=@OrderItemId and Orders.IsActive=1)
+                    prm.Add("@MalzemeId", liste.MalzemeId);
+                    string sqlb = $@"select UrunRecetesi.MalzemeId,Urunler.Name as MaterialName,
+             (Select SUM(Rezerve.RezerveDeger) from Rezerve where Rezerve.SatisId = @id and Rezerve.StokId= @MalzemeId and SatisDetayId=@OrderItemId) -
+             (Select SUM(UretimDetayId.PlanlananMiktar) from UretimDetayId 
+		        LEFT join Uretim on UretimDetayId.UretimId=Uretim.id
+		    where Uretim.SatisId=@id and Uretim.SatisDetayId=@OrderItemId 
+			and UretimDetayId.Tip='Malzemeler' and UretimDetayId.StokId=@MalzemeId and Uretim.Aktif=1 
+			and Uretim.Durum!=3)+
+				(select ISNULL(SUM(Miktar),0) from SatinAlma 
+                left join SatinAlmaDetay on SatinAlmaDetay.SatinAlmaId = SatinAlma.id and SatinAlma.DepoId=@DepoId
+                and SatinAlmaDetay.StokId = @MalzemeId where  DurumBelirteci = 1 and SatinAlma.SatisId=@id and SatinAlma.SatisDetayId=@OrderItemId and SatinAlma.Aktif=1)
                  AS Missing
-                 FROM Bom left join Items on Items.id = Bom.MaterialId where Bom.CompanyId = @CompanyId and Bom.ProductId = @ProductId and Bom.MaterialId = @MaterialId";
+                 FROM UrunRecetesi left join Urunler on Urunler.id = UrunRecetesi.MalzemeId where UrunRecetesi.MamulId = @MamulId and UrunRecetesi.MalzemeId = @MalzemeId";
                     var a = await _db.QueryAsync<MissingCount>(sqlb, prm);
 
                     list.Append(a.First());
@@ -333,13 +328,12 @@ Where ma.SalesOrderId=@SalesOrderId and ma.CompanyId=@CompanyId and ma.IsActive=
 
             return (IEnumerable<SalesOrderDTO.MissingCount>)list;
         }
-        public async Task<IEnumerable<SalesOrderSellSomeList>> SalesManufacturingList(int SalesOrderId,int SalesOrderItemId, int CompanyId)
+        public async Task<IEnumerable<SalesOrderSellSomeList>> SalesManufacturingList(int SatisId,int SatisDetayId, int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
-            prm.Add("@SalesOrderId", SalesOrderId);
-            prm.Add("@SalesOrderItemId", SalesOrderItemId);
-            string sql = $@"select id,ItemId,PlannedQuantity,LocationId,[Status],[Name],ProductionDeadline from ManufacturingOrder ma where ma.SalesOrderId=@SalesOrderId and ma.SalesOrderItemId=@SalesOrderItemId and ma.IsActive=1 and ma.CompanyId=@CompanyId and ma.Status!=3";
+            prm.Add("@SatisId", SatisId);
+            prm.Add("@SatisDetayId", SatisDetayId);
+            string sql = $@"select id,StokId,PlanlananMiktar,DepoId,[Durum],[Name],TeslimSuresi from Uretim ma where ma.SatisId=@SatisId and ma.SatisDetayId=@SatisDetayId and ma.Aktif=1 and  ma.Durum!=3";
             var details = await _db.QueryAsync<SalesOrderSellSomeList>(sql, prm);
             return details;
         }

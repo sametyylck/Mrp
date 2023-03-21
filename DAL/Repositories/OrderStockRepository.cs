@@ -266,9 +266,9 @@ namespace DAL.Repositories
                                     prm.Add("@SalesOrderId", sorgu3.First().SatisId);
                                     prm.Add("@SalesOrderItemId", sorgu3.First().SatisDetayId);
 
-                                    string sqlr = $@"select MIN(ManufacturingOrderItems.Availability)as Ingredients from ManufacturingOrderItems
-                    left join ManufacturingOrder ma on ma.id=ManufacturingOrderItems.OrderId
-                    where ma.SalesOrderId=SalesOrderId and ma.SalesOrderItemId=SalesOrderItemId and ma.CompanyId=CompanyId";
+                                    string sqlr = $@"select MIN(UretimDetay.MalzemeDurum)as Ingredients from UretimDetay
+                    left join Uretim ma on ma.id=UretimDetay.UretimId
+                    where ma.SatisId=@SalesOrderId and ma.SatisDetayId=@SalesOrderItemId";
                                     var availability = await _db.QueryAsync(sqlr, prm);
                                     prm.Add("@Ingredients", availability.First());
                                     await _db.ExecuteAsync($"Update SatisDetay set Malzemeler=@Ingredients where  SatisId=@SalesOrderId and id=@SalesOrderItemId and StokId=@ItemId ", prm);
@@ -312,7 +312,7 @@ namespace DAL.Repositories
                         }
                         else
                         {
-                            missing = missingdeger.First();
+                            missing = missingdeger.First()*(-1);
                         }
                         prm.Add("@LocationId", sorgu3.First().DepoId);
                         prm.Add("@Status", 1);
@@ -348,7 +348,7 @@ namespace DAL.Repositories
                         }
                         await _db.ExecuteAsync($"Update Rezerve set RezerveDeger=@RezerveCount where UretimId=@ManufacturingOrderId and UretimDetayId=@ManufacturingOrderItemId and Durum=1", prm);
                         prm.Add("@Availability", 2);
-                        await _db.ExecuteAsync($"Update UretimDetay set MalzemeDurum=@Availability where UretimId=@ManufacturingOrderId and id=@ManufacturingOrderItemId and StokId=@ItemId and CompanyId=@CompanyId", prm);
+                        await _db.ExecuteAsync($"Update UretimDetay set MalzemeDurum=@Availability where UretimId=@ManufacturingOrderId and id=@ManufacturingOrderItemId and StokId=@ItemId", prm);
 
 
 

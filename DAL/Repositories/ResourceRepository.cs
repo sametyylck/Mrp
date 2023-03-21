@@ -24,7 +24,6 @@ namespace DAL.Repositories
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
             prm.Add("@IsActive", false);
-            prm.Add("@CompanyId", CompanyId);
            await _db.ExecuteAsync($"Update  Kaynaklar Set Aktif=@IsActive where id = @id", prm);
         }
 
@@ -41,7 +40,6 @@ namespace DAL.Repositories
         public async Task<IEnumerable<ResourcesDTO>> List(int CompanyId)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@CompanyId", CompanyId);
             var list =await _db.QueryAsync<ResourcesDTO>($"Select id,Isim ,VarsayilanSaatlikUcret  From Kaynaklar where Aktif=1", prm);
             return list.ToList();
         }

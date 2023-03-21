@@ -58,7 +58,6 @@ namespace DAL.Repositories
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
             prm.Add("@Name", T.Isim);
-            prm.Add("@CompanyId");
           await _connection.ExecuteAsync($"Update Olcu SET Isim = @Name where id = @id", prm);
         }
     }

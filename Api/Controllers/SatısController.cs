@@ -76,9 +76,9 @@ namespace Api.Controllers
                 {
                     return BadRequest(hata);
                 }
-                int id = await _satıs.Insert(T, CompanyId);
+                int id = await _satıs.Insert(T);
                 await _salescontrol.Adress(id, T.CariId);
-                var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from SalesOrder where id={id} ");
+                var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from Satis where id={id} ");
                 return Ok(list);
             }
             else
@@ -112,7 +112,7 @@ namespace Api.Controllers
                     return BadRequest(hata);
                 }
                 int id = await _satıs.InsertPurchaseItem(T, CompanyId);
-                var list = await _db.QueryAsync<SatısInsertItem>($"Select * from SalesOrderItem where id={id} ");
+                var list = await _db.QueryAsync<SatısInsertItem>($"Select * from SatisDetay where id={id} ");
                 return Ok(list);
             }
             else
@@ -148,7 +148,7 @@ namespace Api.Controllers
                     return BadRequest(hata);
                 }
                 await _satıs.Update(T, CompanyId);
-                var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from SalesOrder where id={T.id}");
+                var list = await _db.QueryAsync<SalesOrderUpdate>($"Select * from Satis where id={T.id}");
                 return Ok(list);
             }
             else
@@ -184,7 +184,7 @@ namespace Api.Controllers
                     return BadRequest(hata);
                 }
                 await _satıs.UpdateItems(T, CompanyId);
-                var list = await _db.QueryAsync<SatısInsertItem>($"Select * from SalesOrderItem where id={T.id}");
+                var list = await _db.QueryAsync<SatısInsertItem>($"Select * from SatisDetay where id={T.id}");
                 return Ok(list);
             }
             else
@@ -246,23 +246,17 @@ namespace Api.Controllers
                 izinhatasi.Add("Yetkiniz yetersiz");
                 return BadRequest(izinhatasi);
             }
-            ValidationResult result = await _SalesOrderDeleteItems.ValidateAsync(T);
-            if (result.IsValid)
-            {
 
-                var hata = await _salescontrol.DeleteItems(T);
-                if (hata.Count() != 0)
-                {
-                    return BadRequest(hata);
-                }
-                await _satıs.DeleteItems(T, CompanyId);
-                return Ok();
-            }
-            else
+
+            var hata = await _salescontrol.DeleteItems(T);
+            if (hata.Count() != 0)
             {
-                result.AddToModelState(this.ModelState);
-                return BadRequest(result.ToString());
+                return BadRequest(hata);
             }
+            await _satıs.DeleteItems(T, CompanyId);
+            return Ok();
+
+
 
         }
         [Route("Make")]

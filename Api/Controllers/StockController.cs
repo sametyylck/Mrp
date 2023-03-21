@@ -84,7 +84,7 @@ namespace Api.Controllers
             }
             DynamicParameters prm = new DynamicParameters();
             var list = await _stock.AllItemsList(T, CompanyId, KAYITSAYISI, SAYFA);
-            var count = await _stock.AllItemsCount(T, CompanyId);
+            var count = await _stock.AllItemsCount(T);
             return Ok(new { list, count });
 
         }

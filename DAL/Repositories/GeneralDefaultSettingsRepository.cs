@@ -38,7 +38,7 @@ namespace DAL.Repositories
                 prm);
         }
 
-        public async Task Update(GeneralSettingsDTO.GeneralDefaultSettings T, int CompanyId)
+        public async Task Update(GeneralSettingsDTO.GeneralDefaultSettings T)
         {
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@id", T.id);
@@ -54,7 +54,7 @@ namespace DAL.Repositories
         }
 
 
-      public async Task<IEnumerable<GeneralSettingsDTO.DefaultSettingList>> List(int CompanyId)
+      public async Task<IEnumerable<GeneralSettingsDTO.DefaultSettingList>> List()
         {
             DynamicParameters prm = new DynamicParameters();
          

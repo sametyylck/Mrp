@@ -75,12 +75,12 @@ namespace Api.Controllers
                 var hata = await _stockadjusmentcontrol.Insert(T);
                 if (hata.Count()==0)
                 {
-                    int id = await _adjusment.Insert(T, CompanyId);
+                    int id = await _adjusment.Insert(T);
                     DynamicParameters param2 = new DynamicParameters();
                     param2.Add("@CompanyId", CompanyId);
                     param2.Add("@id", id);
-                    var list = await _db.QueryAsync<StockAdjusmentInsertResponse>(@$"Select StockAdjusment.id as StockAdjusmentId, StockAdjusment.Name, StockAdjusment.Reason, StockAdjusment.Date, StockAdjusment.LocationId,Locations.LocationName, StockAdjusment.Info,StockAdjusment.Total from StockAdjusment                               left   join Locations on Locations.id = StockAdjusment.LocationId
-                    where StockAdjusment.CompanyId = @CompanyId and StockAdjusment.IsActive = 1 and StockAdjusment.id = @id  ", param2);
+                    var list = await _db.QueryAsync<StockAdjusmentInsertResponse>(@$"Select StokDuzenleme.id as StokDuzenlemeDetayId, StokDuzenleme.Isim, StokDuzenleme.Sebeb, StokDuzenleme.Tarih, StokDuzenleme.DepoId,DepoVeAdresler.Isim, StokDuzenleme.Bilgi,StokDuzenleme.Toplam from StokDuzenleme                               left   join DepoVeAdresler on DepoVeAdresler.id = StokDuzenleme.DepoId
+                    where StokDuzenleme.Aktif = 1 and StokDuzenleme.id = @id  ", param2);
 
                     return Ok(list);
                 }
@@ -104,7 +104,6 @@ namespace Api.Controllers
         public async Task<ActionResult<StockAdjusmentAll>> InsertStockAdjusmentItems(StockAdjusmentInsertItem T)
         {
             List<int> user = _user.CompanyId();
-            int CompanyId = user[0];
             int UserId = user[1];
             var izin = await _izinkontrol.Kontrol(Permison.StokDuzenlemeEkleyebilirVeGuncelleyebilir, Permison.StokDuzenlemeHepsi, UserId);
             if (izin == false)
@@ -121,12 +120,11 @@ namespace Api.Controllers
                 var hata = await _stockadjusmentcontrol.InsertItem(T);
                 if (hata.Count() == 0)
                 {
-                    int id = await _adjusment.InsertItem(T, T.StockAdjusmentId, CompanyId, UserId);
+                    int id = await _adjusment.InsertItem(T, T.StokDuzenlemeId,UserId);
 
                     DynamicParameters param2 = new DynamicParameters();
-                    param2.Add("@CompanyId", CompanyId);
                     param2.Add("@id", id);
-                    var list = await _db.QueryAsync<StockAdjusmentItems>($"Select StockAdjusmentItems.id,ItemId,Items.Name as ItemName,Adjusment,CostPerUnit,StockAdjusmentId,AdjusmentValue From StockAdjusmentItems left join Items on Items.id = StockAdjusmentItems.ItemId where StockAdjusmentItems.CompanyId = @CompanyId and StockAdjusmentItems.id = @id ", param2);
+                    var list = await _db.QueryAsync<StockAdjusmentItems>($"Select StokDuzenlemeDetay.id,StokId,Urunler.Isim as UrunIsmi,Miktar,BirimFiyat,StokDuzenlemeId,Toplam From StokDuzenlemeDetay left join Urunler on Urunler.id = StokDuzenlemeDetay.StokId where StokDuzenlemeDetay.id = @id ", param2);
 
                     return Ok(list);
                 }
@@ -168,11 +166,11 @@ namespace Api.Controllers
                 {
                     DynamicParameters param1 = new DynamicParameters();
                     param1.Add("@CompanyId", CompanyId);
-                    param1.Add("@LocationId", T.LocationId);
+                    param1.Add("@DepoId", T.DepoId);
                     param1.Add("@id", T.id);
 
-                    await _adjusment.Update(T, CompanyId);
-                    var list = await _db.QueryAsync<StockAdjusmentInsertResponse>($"Select StockAdjusment.id as StockAdjusmentId, StockAdjusment.Name, StockAdjusment.Reason, StockAdjusment.Date,StockAdjusment.LocationId, Locations.LocationName, StockAdjusment.Info from StockAdjusment left  join Locations on Locations.id = StockAdjusment.LocationId where StockAdjusment.CompanyId = @CompanyId and StockAdjusment.IsActive = 1  AND StockAdjusment.id = @id  ", param1);
+                    await _adjusment.Update(T);
+                    var list = await _db.QueryAsync<StockAdjusmentInsertResponse>($"Select StokDuzenleme.id, StokDuzenleme.Isim, StokDuzenleme.Sebeb, StokDuzenleme.Tarih,StokDuzenleme.DepoId, DepoVeAdresler.Isim, StokDuzenleme.Bilgi from StokDuzenleme left  join DepoVeAdresler on DepoVeAdresler.id = StokDuzenleme.DepoId where  StokDuzenleme.Aktif = 1  AND StokDuzenleme.id = @id  ", param1);
 
                     return Ok(list);
                 }
@@ -193,7 +191,7 @@ namespace Api.Controllers
 
         [Route("UpdateStockAdjusmentItem")]
         [HttpPut, Authorize]
-        public async Task<ActionResult<StockAdjusmentItems>> UpdateStockAdjusmentItem(StockAdjusmentUpdateItems T)
+        public async Task<ActionResult<StockAdjusmentUpdateItems>> UpdateStockAdjusmentItem(StockAdjusmentUpdateItems T)
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
@@ -214,9 +212,8 @@ namespace Api.Controllers
                 {
                     DynamicParameters param2 = new DynamicParameters();
                     param2.Add("@id", T.id);
-                    param2.Add("@CompanyId", CompanyId);
-                    await _adjusment.UpdateStockAdjusmentItem(T, CompanyId, UserId);
-                    var list = await _db.QueryAsync<StockAdjusmentItems>($"Select StockAdjusmentItems.id,ItemId,Items.Name as ItemName,Adjusment,CostPerUnit,StockAdjusmentId,AdjusmentValue From StockAdjusmentItems left join Items on Items.id = StockAdjusmentItems.ItemId where StockAdjusmentItems.CompanyId = @CompanyId and StockAdjusmentItems.id = @id ", param2);
+                    await _adjusment.UpdateStockAdjusmentItem(T, UserId);
+                    var list = await _db.QueryAsync<StockAdjusmentUpdateItems>($"Select StokDuzenlemeDetay.id,StokId,Urunler.Isim as UrunIsmi,Miktar,BirimFiyat,StokDuzenlemeId,Toplam From StokDuzenlemeDetay left join Urunler on Urunler.id = StokDuzenlemeDetay.StokId where  StokDuzenlemeDetay.id = @id ", param2);
 
                     return Ok(list);
                 }
@@ -255,7 +252,7 @@ namespace Api.Controllers
                 var hata = await _stockadjusmentcontrol.DeleteItems(T);
                 if (hata.Count() == 0)
                 {
-                    await _adjusment.DeleteItems(T, CompanyId, UserId);
+                    await _adjusment.DeleteItems(T,UserId);
                     return Ok("Silme İşlemi Başarıyla Gerçekleşti");
                 }
                 else
@@ -292,10 +289,10 @@ namespace Api.Controllers
             if (result.IsValid)
             {
                
-                var hata = await _control.GetControl("StockAdjusment", T.id);
+                var hata = await _control.GetControl("StokDuzenleme", T.id);
                 if (hata.Count() == 0)
                 {
-                    await _adjusment.Delete(T, CompanyId, UserId);
+                    await _adjusment.Delete(T, UserId);
                     return Ok("Silme İşlemi Başarıyla Gerçekleşti");
                 }
                 else
@@ -329,14 +326,14 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
             DynamicParameters prm = new DynamicParameters();
-            var list = await _adjusment.Detail(CompanyId, id);
+            var list = await _adjusment.Detail(id);
             return Ok(list);
 
         }
 
         [Route("List")]
         [HttpPost, Authorize]
-        public async Task<ActionResult<StockAdjusmentItems>> List(StockAdjusmentList T, int KAYITSAYISI, int SAYFA)
+        public async Task<ActionResult<StockAdjusmentList>> List(StockAdjusmentList T, int KAYITSAYISI, int SAYFA)
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
@@ -349,8 +346,8 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
             DynamicParameters prm = new DynamicParameters();
-            var list = await _adjusment.List(T, CompanyId, KAYITSAYISI, SAYFA);
-            var count = await _adjusment.Count(T, CompanyId);
+            var list = await _adjusment.List(T, KAYITSAYISI, SAYFA);
+            var count = list.Count();
             return Ok(new { list, count });
 
         }

@@ -25,7 +25,6 @@ namespace DAL.DTO
             public string AddressCountry { get; set; } = string.Empty;
             public int BillingLocationId { get; set; }
             public int ShippingLocationId { get; set; }
-            public int? CompanyId { get; set; }
 
         }
         public class ContactsUpdateAddress

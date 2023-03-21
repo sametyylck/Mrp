@@ -13,16 +13,16 @@ namespace Validation.StockTakes
         public StockTakesDeleteItemsValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id boş gecilemez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("id boş gecilemez").NotNull().WithMessage("id zorunlu alan");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("id boş gecilemez").NotNull().WithMessage("id zorunlu alan");
         }
     }
     public class StockTakesInsertValidations : AbstractValidator<StockTakesInsert>
     {
         public StockTakesInsertValidations()
         {
-            RuleFor(x => x.StockTake).NotEmpty().WithMessage("StockTake boş gecilemez").NotNull().WithMessage("StockTake zorunlu alan");
-            RuleFor(x => x.CreadtedDate).NotEmpty().WithMessage("CreadtedDate boş gecilemez").NotNull().WithMessage("CreadtedDate zorunlu alan");
-            RuleFor(x => x.LocationId).NotEmpty().WithMessage("LocationId boş gecilemez").NotNull().WithMessage("LocationId zorunlu alan");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("StockTake boş gecilemez").NotNull().WithMessage("StockTake zorunlu alan");
+            RuleFor(x => x.OlusturmaTarihi).NotEmpty().WithMessage("CreadtedDate boş gecilemez").NotNull().WithMessage("CreadtedDate zorunlu alan");
+            RuleFor(x => x.DepoId).NotEmpty().WithMessage("LocationId boş gecilemez").NotNull().WithMessage("LocationId zorunlu alan");
 
         }
     }
@@ -30,8 +30,8 @@ namespace Validation.StockTakes
     {
         public StockTakesInsertItemValidations()
         {
-            RuleFor(x => x.StockTakesId).NotEmpty().WithMessage("StockTakesId boş gecilemez").NotNull().WithMessage("StockTakesId zorunlu alan");
-            RuleFor(x => x.ItemId).NotEmpty().WithMessage("ItemId boş gecilemez").NotNull().WithMessage("ItemId zorunlu alan");
+            RuleFor(x => x.StokSayimId).NotEmpty().WithMessage("StockTakesId boş gecilemez").NotNull().WithMessage("StockTakesId zorunlu alan");
+            RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId boş gecilemez").NotNull().WithMessage("ItemId zorunlu alan");
         }
     }
     public class StockTakesUpdateValidations : AbstractValidator<StockTakesUpdate>
@@ -39,7 +39,7 @@ namespace Validation.StockTakes
         public StockTakesUpdateValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id boş gecilemez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.StockTake).NotEmpty().WithMessage("StockTake boş gecilemez").NotNull().WithMessage("StockTake zorunlu alan");
+            RuleFor(x => x.Isim).NotEmpty().WithMessage("StockTake boş gecilemez").NotNull().WithMessage("StockTake zorunlu alan");
         }
     }
     public class StockTakesTaskDoneValidations : AbstractValidator<StockTakesDone>
@@ -47,15 +47,15 @@ namespace Validation.StockTakes
         public StockTakesTaskDoneValidations()
         {
             RuleFor(x => x.id).NotEmpty().WithMessage("id boş gecilemez").NotNull().WithMessage("id zorunlu alan");
-            RuleFor(x => x.Status).NotEmpty().WithMessage("Status boş gecilemez").NotNull().WithMessage("Status zorunlu alan");
+            RuleFor(x => x.Durum).NotEmpty().WithMessage("Status boş gecilemez").NotNull().WithMessage("Status zorunlu alan");
         }
     }
     public class StockTakesUpdateItemsValidations : AbstractValidator<StockTakesUpdateItems>
     {
         public StockTakesUpdateItemsValidations()
         {
-            RuleFor(x => x.StockTakesId).NotEmpty().WithMessage("StockTakesId boş gecilemez").NotNull().WithMessage("StockTakesId zorunlu alan");
-            RuleFor(x => x.StockTakesItemId).NotEmpty().WithMessage("StockTakesItemId boş gecilemez").NotNull().WithMessage("StockTakesItemId zorunlu alan");
+            RuleFor(x => x.StokSayimId).NotEmpty().WithMessage("StockTakesId boş gecilemez").NotNull().WithMessage("StockTakesId zorunlu alan");
+            RuleFor(x => x.StokSayimDetayId).NotEmpty().WithMessage("StockTakesItemId boş gecilemez").NotNull().WithMessage("StockTakesItemId zorunlu alan");
         }
     }
 }
