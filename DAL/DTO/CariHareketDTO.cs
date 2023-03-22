@@ -17,10 +17,10 @@ namespace DAL.DTO
         public int EvrakTipi { get; set; }
         public float KDVTutari { get; set; }
         public float AraToplam { get; set; }
-        public DateTime Tarih { get; set; }
-        public DateTime VadeTarihi { get; set; }
+        public DateTime? Tarih { get; set; }
+        public DateTime? VadeTarihi { get; set; }
         public int CariKod { get; set; }
-        public string CariAd { get; set; }
+        public string CariAdSoyad { get; set; }
     }
     public class FaturaDTO
     {
@@ -31,7 +31,7 @@ namespace DAL.DTO
         public int EvrakTipi { get; set; }
 
         public int CariKod { get; set; }
-        public string CariAd { get; set; }
+        public string CariAdSoyad { get; set; }
         public float GenelToplam { get; set; }
         public float AraToplam { get; set; }
         public float KDVTutari { get; set; }

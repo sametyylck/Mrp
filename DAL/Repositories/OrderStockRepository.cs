@@ -97,13 +97,13 @@ namespace DAL.Repositories
 
             prm.Add("@DeliveryId", T.DurumBelirteci);
 
-            if (T.DurumBelirteci == 1 || T.DurumBelirteci == 2)
-            {
-                await _db.ExecuteAsync($"Update SatinAlma SET DurumBelirteci = @DeliveryId where id = @id ", prm);
-            }
+            //if (T.DurumBelirteci == 1 || T.DurumBelirteci == 2)
+            //{
+            //    await _db.ExecuteAsync($"Update SatinAlma SET DurumBelirteci = @DeliveryId where id = @id ", prm);
+            //}
 
 
-            string sql = @$"select SatinAlmaDetay.id,StokId,Miktar,BirimFiyat,VergiId,VergiDegeri,ToplamTutar as AraToplam,VergiMiktari,TumToplam,Urunler.StokKodu,Urunler.Isim as StokAd from SatinAlmaDetay
+            string sql = @$"select SatinAlmaDetay.id,StokId,SatinAlmaDetay.OlcuId,Miktar,BirimFiyat,VergiId,VergiDegeri,ToplamTutar as AraToplam,VergiMiktari,TumToplam,Urunler.StokKodu,Urunler.Isim as StokAd from SatinAlmaDetay
                left join Urunler on Urunler.id=SatinAlmaDetay.StokId where SatinAlmaId=@id";
             var stokdegerler = await _db.QueryAsync<SatinAlmaDetays>(sql, prm); //gelen ordersId'nin OrdersItem tablosundaki itemId ve Quantity e erişerek hangi itemin kaç tane artacağına bakılacak.
 
@@ -385,6 +385,7 @@ namespace DAL.Repositories
                     harekettablo.EvrakNo = evrakno;
                     harekettablo.DepoId = locaitonId;
                     harekettablo.SubeId = SubeId;
+                    harekettablo.StokId = item.StokId;
                     harekettablo.StokAd = item.StokAd;
                     harekettablo.StokKodu = item.StokKodu;
                     harekettablo.OlcuId = item.OlcuId;
@@ -394,6 +395,8 @@ namespace DAL.Repositories
                     harekettablo.Giris = true;
                     harekettablo.EvrakTipi = 1;
                     harekettablo.KDVOrani = item.VergiDegeri;
+                    harekettablo.KDVTutari = item.VergiMiktari;
+                    harekettablo.OlcuId = item.OlcuId;
                     await _stokhareket.StokHareketInsert(harekettablo,user);
    
 
@@ -401,7 +404,7 @@ namespace DAL.Repositories
                 }
                 string sqlsorgu4 = @$"select 
                 sa.DepoId,sa.SubeId,Sum(sad.TumToplam) as Tutar,Sum(sad.ToplamTutar)as AraToplam,Sum(sad.VergiMiktari)as KDVTutari,
-				sa.TedarikciId as CariKod,Cari.AdSoyad,Cari.VergiDairesi,Cari.VergiNumarası,Cari.FaturaAdresId
+				sa.TedarikciId as CariKod,Cari.AdSoyad as CariAdSoyad,Cari.VergiDairesi,Cari.VergiNumarası,Cari.FaturaAdresId
                 from SatinAlmaDetay sad
                 left join SatinAlma sa  on sa.id=sad.SatinAlmaId
                 left join Cari on Cari.CariKod=sa.TedarikciId where sa.id=@id
@@ -411,14 +414,15 @@ namespace DAL.Repositories
                 foreach (var carihareket in caridetay)
                 {
                     cari.AraToplam = carihareket.AraToplam;
-                    cari.CariAd = carihareket.CariAd;
+                    cari.CariAdSoyad = carihareket.CariAdSoyad;
                     cari.CariKod = carihareket.CariKod;
                     cari.EvrakNo = evrakno;
                     cari.EvrakTipi = 1;
                     cari.KDVTutari = carihareket.KDVTutari;
                     cari.SubeId = carihareket.SubeId;
                     cari.DepoId = carihareket.DepoId;
-                    cari.Tarih = DateTime.Now;
+                    cari.Tutar = carihareket.Tutar;
+                 
                    
                 }
                 await _carihareket.CariHareketInsert(cari, user);

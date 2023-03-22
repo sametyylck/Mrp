@@ -124,11 +124,13 @@ namespace DAL.Repositories
             prm.Add("@Info", T.Bilgi);
             prm.Add("@DeliveryId", 1);
             prm.Add("@DepoId", T.DepoId);
+            prm.Add("@SubeId", T.SubeId);
+
             prm.Add("@IsActive", true);
             prm.Add("@KullaniciId", UserId);
 
 
-            return await _db.QuerySingleAsync<int>($"Insert into SatinAlma (Tip,SatisId,SatisDetayId,UretimId,UretimDetayId,TedarikciId,BeklenenTarih,OlusturmaTarihi,SatinAlmaIsmi,DepoId,DurumBelirteci,Bilgi,Aktif,KullaniciId) OUTPUT INSERTED.[id] values (@Tip,@SatisId,@SatisDetayId,@UretimId,@UretimDetayId,@ContactId,@ExpectedDate,@CreateDate,@OrderName,@DepoId,@DeliveryId,@Info,@IsActive,@KullaniciId)", prm);
+            return await _db.QuerySingleAsync<int>($"Insert into SatinAlma (SubeId,Tip,SatisId,SatisDetayId,UretimId,UretimDetayId,TedarikciId,BeklenenTarih,OlusturmaTarihi,SatinAlmaIsmi,DepoId,DurumBelirteci,Bilgi,Aktif,KullaniciId) OUTPUT INSERTED.[id] values (@SubeId,@Tip,@SatisId,@SatisDetayId,@UretimId,@UretimDetayId,@ContactId,@ExpectedDate,@CreateDate,@OrderName,@DepoId,@DeliveryId,@Info,@IsActive,@KullaniciId)", prm);
         }
 
         public async Task<int> InsertPurchaseItem(PurchaseOrderInsertItem T, int OrdersId)
@@ -153,8 +155,10 @@ namespace DAL.Repositories
             prm.Add("@VergiMiktari", PlusTax);
             prm.Add("@ToplamTutar", TotalPrice);
             prm.Add("@TumToplam", TotalAll);
+            prm.Add("@OlcuId", T.OlcuId);
 
-            return await _db.QuerySingleAsync<int>($"Insert into SatinAlmaDetay (StokId,Miktar,BirimFiyat,VergiId,VergiDegeri,SatinAlmaId,ToplamTutar,VergiMiktari,TumToplam) OUTPUT INSERTED.[id] values (@StokId,@Miktar,@BirimFiyat,@VergiId,@VergiDegeri,@SatinAlmaId,@ToplamTutar,@VergiMiktari,@TumToplam)", prm);
+
+            return await _db.QuerySingleAsync<int>($"Insert into SatinAlmaDetay (OlcuId,StokId,Miktar,BirimFiyat,VergiId,VergiDegeri,SatinAlmaId,ToplamTutar,VergiMiktari,TumToplam) OUTPUT INSERTED.[id] values (@OlcuId,@StokId,@Miktar,@BirimFiyat,@VergiId,@VergiDegeri,@SatinAlmaId,@ToplamTutar,@VergiMiktari,@TumToplam)", prm);
 
         }
 
@@ -169,8 +173,10 @@ namespace DAL.Repositories
             prm.Add("@Info", T.Bilgi);
             prm.Add("@DepoId", T.DepoId);
             prm.Add("@TotalAll", T.TumTutar);
+            prm.Add("@SubeId", T.SubeId);
 
-            await _db.ExecuteAsync($"Update SatinAlma SET TedarikciId = @ContactId,TumTutar=@TotalAll,BeklenenTarih=@ExpectedDate,SatinAlmaIsmi=@OrderName,DepoId=@DepoId,Bilgi=@Info where id=@id", prm);
+
+            await _db.ExecuteAsync($"Update SubeId=@SubeId,SatinAlma SET TedarikciId = @ContactId,TumTutar=@TotalAll,BeklenenTarih=@ExpectedDate,SatinAlmaIsmi=@OrderName,DepoId=@DepoId,Bilgi=@Info where id=@id", prm);
         }
 
         public async Task UpdatePurchaseItem(PurchaseItem T)

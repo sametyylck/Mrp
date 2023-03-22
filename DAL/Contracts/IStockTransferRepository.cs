@@ -12,7 +12,7 @@ namespace DAL.Contracts
     public interface IStockTransferRepository
     {
         Task<int> Insert(StockTransferInsert T);
-        Task<int> InsertStockTransferItem(StockTransferInsertItem T, int? id, int UserId);
+        Task<int> InsertStockTransferItem(StockTransferInsertItem T, int id, int UserId);
         Task Update(StockUpdate T);
         Task<int> UpdateStockTransferItem(StokAktarimDetay T, int UserId);
         Task<IEnumerable<StockTransferList>> List(StockTransferList T, int KAYITSAYISI, int sayfa);

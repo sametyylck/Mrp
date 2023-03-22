@@ -28,7 +28,7 @@ namespace Api.Controllers
         }
         [Route("MaterialList")]
         [HttpPost, Authorize]
-        public async Task<ActionResult<StockList>> MaterialList(StockList T,int KAYITSAYISI,int SAYFA)
+        public async Task<ActionResult<StokList>> MaterialList(StokList T,int KAYITSAYISI,int SAYFA)
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
@@ -41,15 +41,15 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
             DynamicParameters prm = new DynamicParameters();
-            var list = await _stock.MaterialList(T, CompanyId,KAYITSAYISI,SAYFA);
-            var count = await _stock.MaterialCount(T, CompanyId);
+            var list = await _stock.MaterialList(T,KAYITSAYISI,SAYFA);
+            var count = list.Count();
             return Ok(new { list, count });
 
         }
 
         [Route("ProductList")]
         [HttpPost, Authorize]
-        public async Task<ActionResult<StockList>> ProductList(StockList T, int KAYITSAYISI, int SAYFA)
+        public async Task<ActionResult<StokList>> ProductList(StokList T, int KAYITSAYISI, int SAYFA)
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
@@ -62,15 +62,15 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
             DynamicParameters prm = new DynamicParameters();
-            var list = await _stock.ProductList(T, CompanyId, KAYITSAYISI, SAYFA);
-            var count = await _stock.ProductCount(T, CompanyId);
+            var list = await _stock.ProductList(T, KAYITSAYISI, SAYFA);
+            var count = list.Count();
             return Ok(new { list, count });
 
         }
 
         [Route("AllItemsList")]
         [HttpPost, Authorize]
-        public async Task<ActionResult<StockListAll>> AllItemsList(StockListAll T, int KAYITSAYISI, int SAYFA)
+        public async Task<ActionResult<StokList>> AllItemsList(StokList T, int KAYITSAYISI, int SAYFA)
         {
             List<int> user = _user.CompanyId();
             int CompanyId = user[0];
@@ -83,8 +83,8 @@ namespace Api.Controllers
                 return BadRequest(izinhatasi);
             }
             DynamicParameters prm = new DynamicParameters();
-            var list = await _stock.AllItemsList(T, CompanyId, KAYITSAYISI, SAYFA);
-            var count = await _stock.AllItemsCount(T);
+            var list = await _stock.AllItemsList(T, KAYITSAYISI, SAYFA);
+            var count = list.Count();
             return Ok(new { list, count });
 
         }

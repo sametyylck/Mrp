@@ -163,6 +163,15 @@ namespace Api.Controllers
                 var hata = await _control.InsertItem(T);
                 if (hata.Count()==0)
                 {
+                    string sqlf1 = $@"select sa.BaslangicDepo,sa.HedefDepo,Urunler.Tip from StokAktarim  sa
+                    left join Urunler on Urunler.id={T.StokId}
+                     where sa.id={T.StokAktarimId} ";
+                    var sorgu1 = await _db.QueryAsync<StockTransferDetailsResponse>(sqlf1);
+                    var baslangicdepo = sorgu1.First().BaslangicDepo;
+                    var hedefdepo = sorgu1.First().HedefDepo;
+                    var Tip = sorgu1.First().Tip;
+                    await _locstokkontrol.Kontrol(T.StokId, baslangicdepo, Tip);
+                    await _locstokkontrol.Kontrol(T.StokId, hedefdepo, Tip);
                     int id = await _transfer.InsertStockTransferItem(T,T.StokAktarimId,UserId);
                     DynamicParameters param2 = new DynamicParameters();
                     param2.Add("@id", T.StokAktarimId);

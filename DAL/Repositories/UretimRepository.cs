@@ -1,7 +1,9 @@
 ﻿using DAL.Contracts;
 using DAL.DTO;
+using DAL.Hareket;
 using DAL.Models;
 using DAL.StockControl;
+using DAL.StokHareket;
 using Dapper;
 using System;
 using System.Collections;
@@ -12,6 +14,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using static DAL.DTO.BomDTO;
+using static DAL.DTO.ItemDTO;
 using static DAL.DTO.ManufacturingOrderDTO;
 using static DAL.DTO.ManufacturingOrderItemDTO;
 using static DAL.DTO.ProductOperationsBomDTO;
@@ -25,12 +28,16 @@ namespace DAL.Repositories
     {
         private readonly IDbConnection _db;
         private readonly IStockControl _control;
+        private readonly IStokHareket _stokhareket;
+        private readonly IEvrakNumarasıOLusturucu _evrakolustur;
 
 
-        public UretimRepository(IDbConnection db, IStockControl control)
+        public UretimRepository(IDbConnection db, IStockControl control, IStokHareket stokhareket, IEvrakNumarasıOLusturucu evrakolustur)
         {
             _db = db;
             _control = control;
+            _stokhareket = stokhareket;
+            _evrakolustur = evrakolustur;
         }
 
         public async Task<int> Insert(UretimDTO T, int CompanyId)
@@ -55,18 +62,20 @@ namespace DAL.Repositories
             param.Add("@Aktif", true);
             param.Add("@Private", T.Ozel);
             param.Add("@Tip", T.Tip);
+            param.Add("@SubeId", T.SubeId);
+
             param.Add("@ParentId", T.ParentId);
 
             param.Add("@BeklenenTarih", T.BeklenenTarih);
             string sql = string.Empty;
             if (T.Ozel == true)
             {
-                sql = $@"Insert into Uretim (ParentId,Tip,Ozel,Isim,Aktif,StokId,PlanlananMiktar,BeklenenTarih,UretimTarihi,OlusturmaTarihi,DepoId,Bilgi,Durum)  OUTPUT INSERTED.[id] values (@ParentId,@Tip,@Private,@Isim,@Aktif,@StokId,@PlanlananMiktar,@BeklenenTarih,@UretimTarihi,@OlusturmaTarihi,@DepoId,@Bilgi,@Durum)";
+                sql = $@"Insert into Uretim (SubeId,ParentId,Tip,Ozel,Isim,Aktif,StokId,PlanlananMiktar,BeklenenTarih,UretimTarihi,OlusturmaTarihi,DepoId,Bilgi,Durum)  OUTPUT INSERTED.[id] values (@SubeId,@ParentId,@Tip,@Private,@Isim,@Aktif,@StokId,@PlanlananMiktar,@BeklenenTarih,@UretimTarihi,@OlusturmaTarihi,@DepoId,@Bilgi,@Durum)";
             }
             else
             {
                 param.Add("@Private", false);
-                sql = $@"Insert into Uretim (ParentId,Tip,Ozel,Isim,Aktif,StokId,PlanlananMiktar,BeklenenTarih,UretimTarihi,OlusturmaTarihi,DepoId,Bilgi,Durum)  OUTPUT INSERTED.[id] values (@ParentId,@Tip,@Private,@Isim,@Aktif,@StokId,@PlanlananMiktar,@BeklenenTarih,@UretimTarihi,@OlusturmaTarihi,@DepoId,@Bilgi,@Durum)";
+                sql = $@"Insert into Uretim (SubeId,ParentId,Tip,Ozel,Isim,Aktif,StokId,PlanlananMiktar,BeklenenTarih,UretimTarihi,OlusturmaTarihi,DepoId,Bilgi,Durum)  OUTPUT INSERTED.[id] values (@SubeId,@ParentId,@Tip,@Private,@Isim,@Aktif,@StokId,@PlanlananMiktar,@BeklenenTarih,@UretimTarihi,@OlusturmaTarihi,@DepoId,@Bilgi,@Durum)";
             }
 
 
@@ -96,7 +105,8 @@ namespace DAL.Repositories
                 param.Add("@DepoId", DepoId);
                 // materyalin VarsayilanFiyat,stockıd,locatinstock,locationstockId,RezerveCount
                 // Bul
-                List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($@" select (select ISNULL(VarsayilanFiyat, 0) From Urunler where id = @StokId)as  VarsayilanFiyat,(Select ISNULL(id, 0) from DepoStoklar where StokId=@StokId and DepoId = @DepoId )   as DepoStokId,(select Tip from Urunler where id=@StokId)as Tip", param)).ToList();
+                List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($@" select (select ISNULL(VarsayilanFiyat, 0) From Urunler where id = @StokId)as  VarsayilanFiyat,(Select ISNULL(id, 0) from DepoStoklar where StokId=@StokId and DepoId = @DepoId )   as DepoStokId,(select Tip from Urunler where id=@StokId)as Tip,(select OlcuId from Urunler where id=@StokId)as OlcuId", param)).ToList();
+                param.Add("@OlcuId", sorgu.First().OlcuId);
 
                 param.Add("@PlanlananMiktar", item.Miktar * adet);
                 float VarsayilanFiyat = sorgu.First().VarsayilanFiyat;
@@ -227,7 +237,7 @@ namespace DAL.Repositories
 
 
 
-                string sql = $@"Insert into UretimDetay (Tip,UretimId,StokId,Bilgi,PlanlananMiktar,Tutar,MalzemeDurum) values (@Tip,@OrderId,@StokId,@Bilgi,@PlanlananMiktar,@Tutar,@MalzemeDurum)";
+                string sql = $@"Insert into UretimDetay (OlcuId,Tip,UretimId,StokId,Bilgi,PlanlananMiktar,Tutar,MalzemeDurum) values (@OlcuId,@Tip,@OrderId,@StokId,@Bilgi,@PlanlananMiktar,@Tutar,@MalzemeDurum)";
                 await _db.ExecuteAsync(sql, param);
                 string sqlf = $@"(select UretimDetay.id from UretimDetay where StokId=@StokId and UretimId=@OrderId)";
                 var ManuItemId = await _db.QueryFirstAsync<int>(sqlf, param);
@@ -520,9 +530,11 @@ namespace DAL.Repositories
             int rezerveid = 0;
             //param.Add("@Tutar", T.Tutar);
             //param.Add("@MalzemeDurum", T.MalzemeDurum);
-            List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select  (Select ISNULL(id, 0) from DepoStoklar where StokId = @StokId  and DepoId = (Select DepoId From Uretim where  id = @OrderId)) as DepoStokId, (select ISNULL(VarsayilanFiyat, 0) From Urunler where id = @StokId)as  VarsayilanFiyat", param)).ToList();
+            List<LocaVarmı> sorgu = (await _db.QueryAsync<LocaVarmı>($"   select  (Select ISNULL(id, 0) from DepoStoklar where StokId = @StokId  and DepoId = (Select DepoId From Uretim where  id = @OrderId)) as DepoStokId, (select ISNULL(VarsayilanFiyat, 0) From Urunler where id = @StokId)as  VarsayilanFiyat," +
+                $"(select ISNULL(OlcuId, 0) From Urunler where id = @StokId)as  OlcuId", param)).ToList();
 
             param.Add("@LocationStockId", sorgu.First().DepoStokId);
+            param.Add("@OlcuId", sorgu.First().OlcuId);
 
             //yeni costu buluyoruz.
             float VarsayilanFiyat = sorgu.First().VarsayilanFiyat;
@@ -563,7 +575,7 @@ namespace DAL.Repositories
                 rezerveid = await _db.QuerySingleAsync<int>($"Insert into Rezerve  (Tip,UretimId,StokId,RezerveDeger,DepoId,Durum) OUTPUT INSERTED.[id] values (@Tip,@OrderId,@StokId,@RezerveCount,@DepoId,@Durum)", param);
             }
 
-            string sql = $@"Insert into UretimDetay (Tip,UretimId,StokId,Bilgi,PlanlananMiktar,Tutar,MalzemeDurum) OUTPUT INSERTED.[id] values (@Tip,@OrderId,@StokId,@Bilgi,@PlanlananMiktar,@Tutar,@MalzemeDurum)";
+            string sql = $@"Insert into UretimDetay (OlcuId,Tip,UretimId,StokId,Bilgi,PlanlananMiktar,Tutar,MalzemeDurum) OUTPUT INSERTED.[id] values (@OlcuId,@Tip,@OrderId,@StokId,@Bilgi,@PlanlananMiktar,@Tutar,@MalzemeDurum)";
             int ManuId = await _db.QuerySingleAsync<int>(sql, param);
             param.Add("@UretimDetayId", ManuId);
 
@@ -748,10 +760,12 @@ namespace DAL.Repositories
         }
         public async Task DoneStock(UretimTamamlama T , int UserId)
         {
+            var evrakno = await _evrakolustur.Olustur(T.id);
             DynamicParameters param = new DynamicParameters();
             param.Add("@id", T.id);
-            var BomList = await _db.QueryAsync<DoneStock>($@"Select moi.id,moi.StokId,moi.PlanlananMiktar,moi.Tip,Rezerve.id as RezerveId,Uretim.Durum,Uretim.DepoId,Uretim.SatisId,Uretim.SatisDetayId,Uretim.ParentId    from UretimDetay moi 
-            left join Uretim on Uretim.id=moi.UretimId 
+            var BomList = await _db.QueryAsync<DoneStock>($@"Select moi.id,moi.StokId,moi.OlcuId,Urunler.VarsayilanFiyat,Urunler.StokKodu,Urunler.Isim as UrunIsmi,moi.PlanlananMiktar,moi.Tip,Rezerve.id as RezerveId,Uretim.Durum,Uretim.DepoId,Uretim.SubeId,Uretim.SatisId,Uretim.SatisDetayId,Uretim.ParentId    from UretimDetay moi 
+            left join Urunler on Urunler.id=moi.StokId
+			left join Uretim on Uretim.id=moi.UretimId 
             left join Rezerve on Rezerve.UretimDetayId=moi.id 
             where moi.UretimId=@id and Uretim.Aktif=1", param);
             param.Add("@Durum", T.Durum);
@@ -772,15 +786,33 @@ namespace DAL.Repositories
                           DepoId = (Select ISNULL(DepoId,0) From Uretim where  id =@id))   as    DepoStokId";
                         param.Add("@OrderItemId", item.id);
                         var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sqla, param);//
+
                         float? stockQuantity = sorgu.First().Miktar;
+                    
 
 
-                        float? stockCount = sorgu.First().StokAdeti;
-                        float? NewStockCount = stockCount - item.PlanlananMiktar;
+                        float stockCount = sorgu.First().StokAdeti;
+                        float NewStockCount = stockCount - item.PlanlananMiktar;
                         var stocklocationId = sorgu.First().DepoStokId;
                         param.Add("@ManufacturingOrderItemsId", item.id);
                         param.Add("@stocklocationId", stocklocationId);
                         param.Add("@NewStockCount", NewStockCount);
+
+                        StokHareketDTO harekettablo = new();
+                        harekettablo.Miktar = item.PlanlananMiktar;
+                        harekettablo.EvrakNo = evrakno;
+                        harekettablo.DepoId = item.DepoId;
+                        harekettablo.SubeId = item.SubeId;
+                        harekettablo.StokId = item.StokId;
+                        harekettablo.StokAd = item.UrunIsmi;
+                        harekettablo.StokKodu = item.StokKodu;
+                        harekettablo.OlcuId = item.OlcuId;
+                        harekettablo.BirimFiyat = item.VarsayilanFiyat;
+                        harekettablo.Tutar = item.VarsayilanFiyat * item.PlanlananMiktar;
+                        harekettablo.Giris = false;
+                        harekettablo.EvrakTipi = 7;
+                        harekettablo.OlcuId = item.OlcuId;
+                        await _stokhareket.StokHareketInsert(harekettablo, UserId);
 
 
                         //Yeni count değerini tabloya güncelleştiriyoruz.
@@ -812,6 +844,11 @@ namespace DAL.Repositories
                 var sorgu4 = await _db.QueryAsync<StockAdjusmentSql>(sqlc, param);
                 var ManufacturingQuantity = sorgu4.First().PlanlananMiktar;
                 param.Add("@StokId", sorgu4.First().StokId);
+
+                string sqlquery3 = $@"Select StokId,Urunler.Isim as UrunIsmi,Urunler.StokKodu,Urunler.VarsayilanFiyat,Urunler.OlcuId from Uretim 
+                left join Urunler on Urunler.id=Uretim.StokId
+                where Uretim.id=@id ";
+                var sorgu5 = await _db.QueryAsync<DoneStock>(sqlquery3, param);
 
                 if (BomList.First().SatisId!=0)
                 {
@@ -896,6 +933,22 @@ namespace DAL.Repositories
                 }
                 var DepoStoklar = sorgu4.First().StokAdeti;
                 var newlocationstock = ManufacturingQuantity + DepoStoklar;
+
+                StokHareketDTO harekettablo2 = new();
+                harekettablo2.Miktar = ManufacturingQuantity;
+                harekettablo2.EvrakNo = evrakno;
+                harekettablo2.DepoId = BomList.First().DepoId;
+                harekettablo2.SubeId = BomList.First().SubeId;
+                harekettablo2.StokId = sorgu4.First().StokId;
+                harekettablo2.StokAd = sorgu5.First().UrunIsmi;
+                harekettablo2.StokKodu = sorgu5.First().StokKodu;
+                harekettablo2.OlcuId = sorgu5.First().OlcuId;
+                harekettablo2.BirimFiyat = sorgu5.First().VarsayilanFiyat;
+                harekettablo2.Tutar = sorgu5.First().VarsayilanFiyat * ManufacturingQuantity;
+                harekettablo2.Giris = true;
+                harekettablo2.EvrakTipi = 6;
+                await _stokhareket.StokHareketInsert(harekettablo2, UserId);
+
                 param.Add("@StockCount", newlocationstock);
                 if (BomList.First().ParentId!=null)
                 {

@@ -14,6 +14,7 @@ namespace DAL.DTO
         public string? Tip { get; set; }
         public string? Isim { get; set; }
         public int? StokId { get; set; }
+        public int SubeId { get; set; }
         public DateTime? UretimTarihi { get; set; }
         public DateTime? OlusturmTarihi { get; set; }
         public DateTime? BeklenenTarih { get; set; }

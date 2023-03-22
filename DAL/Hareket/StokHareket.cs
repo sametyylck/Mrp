@@ -37,11 +37,19 @@ namespace DAL.StokHareket
             prm.Add("@StokKodu", T.StokKodu);
             prm.Add("@SubeId", T.SubeId);
             prm.Add("@Tutar", T.Tutar);
+            prm.Add("@KDVTutari", T.KDVTutari);
+            prm.Add("@Tarih", DateTime.Now);
+
             prm.Add("@KullaniciId", KullanıcıId);
 
 
-            await _db.ExecuteAsync("Insert into StokHareket (Giris,EvrakNo,EvrakTipi,DepoId,AraToplam,BirimFiyat,BirimId,KDVOrani,Kur,Miktar,ParaBirimiId,StokAd,StokId,StokKodu,SubeId,Tutar,KullaniciId) values (@Giris,@EvrakNo,@EvrakTipi,@DepoId,@AraToplam,@BirimFiyat,@OlcuId,@KDVOrani,@Kur,@Miktar,@ParaBirimiId,@StokAd,@StokId,@StokKodu,@SubeId,@Tutar,@KullaniciId)",prm);
+            await _db.ExecuteAsync("Insert into StokHareket (Tarih,Giris,EvrakNo,EvrakTipi,DepoId,AraToplam,BirimFiyat,BirimId,KDVOrani,KDVTutari,Kur,Miktar,ParaBirimiId,StokAd,StokId,StokKodu,SubeId,Tutar,KullaniciId) values (@Tarih,@Giris,@EvrakNo,@EvrakTipi,@DepoId,@AraToplam,@BirimFiyat,@OlcuId,@KDVOrani,@KDVTutari,@Kur,@Miktar,@ParaBirimiId,@StokAd,@StokId,@StokKodu,@SubeId,@Tutar,@KullaniciId)", prm);
             
+        }
+
+        public Task StokHareketUpdate(StokHareketDTO T, int KullanıcıId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

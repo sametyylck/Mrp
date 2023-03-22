@@ -1,7 +1,9 @@
 ﻿using DAL.Contracts;
 using DAL.DTO;
+using DAL.Hareket;
 using DAL.Models;
 using DAL.StockControl;
+using DAL.StokHareket;
 using Dapper;
 using System;
 using System.Collections.Generic;
@@ -9,6 +11,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static DAL.DTO.ItemDTO;
 using static DAL.DTO.StockAdjusmentDTO;
 
 namespace DAL.Repositories
@@ -19,13 +22,17 @@ namespace DAL.Repositories
         ILocationStockRepository _locationStockRepository;
         IItemsRepository _itemsRepository;
         private readonly IStockControl _control;
+        private readonly IEvrakNumarasıOLusturucu _evrakolustur;
+        private readonly IStokHareket _stokhareket;
 
-        public StockAdjusmentRepository(IDbConnection db, ILocationStockRepository locationStockRepository, IItemsRepository itemsRepository, IStockControl control)
+        public StockAdjusmentRepository(IDbConnection db, ILocationStockRepository locationStockRepository, IItemsRepository itemsRepository, IStockControl control, IEvrakNumarasıOLusturucu evrakolustur, IStokHareket stokhareket)
         {
             _db = db;
             _locationStockRepository = locationStockRepository;
             _itemsRepository = itemsRepository;
             _control = control;
+            _evrakolustur = evrakolustur;
+            _stokhareket = stokhareket;
         }
 
 
@@ -141,9 +148,11 @@ namespace DAL.Repositories
             prm.Add("@Tarih", T.Tarih);
             prm.Add("@DepoId", T.DepoId);
             prm.Add("@Bilgi", T.Bilgi);
+            prm.Add("@SubeId", T.SubeId);
+
             prm.Add("@StokSayimId", T.StokSayimId);
             prm.Add("@Aktif", true);
-            int id= await _db.QuerySingleAsync<int>($"Insert into StokDuzenleme (Isim,StokSayimId,Sebeb,Tarih,DepoId,Bilgi,Aktif) OUTPUT INSERTED.[id] values (@Isim,@StokSayimId,@Sebeb,@Tarih,@DepoId,@Bilgi,@Aktif)", prm);
+            int id= await _db.QuerySingleAsync<int>($"Insert into StokDuzenleme (SubeId,Isim,StokSayimId,Sebeb,Tarih,DepoId,Bilgi,Aktif) OUTPUT INSERTED.[id] values (@SubeId,@Isim,@StokSayimId,@Sebeb,@Tarih,@DepoId,@Bilgi,@Aktif)", prm);
             //var model = new StockAdjusmentAll
             //{
             //    id = id,
@@ -164,74 +173,74 @@ namespace DAL.Repositories
             DynamicParameters prm = new DynamicParameters();
             prm.Add("@StokId", T.StokId);
             prm.Add("@DepoId", T.DepoId);
+            prm.Add("@StokDuzenlemeId", T.StokDuzenlemeId);
 
-            string sqlh = $@" 
-            select 
-			(Select StokAdeti from DepoStoklar where StokId = @StokId   and DepoId = @DepoId) as DepoStoklar,
-            (Select id from DepoStoklar where StokId = @StokId   and DepoId = @DepoId) as DepoStokId,
-            (Select Tip from Urunler where id=@StokId)as Tip";
+            var evrakno = await _evrakolustur.Olustur(T.StokDuzenlemeId);
+            prm.Add("@EvrakNo", evrakno);
+
+            string sqlh = $@"select ur.VarsayilanFiyat,ur.Tip,DepoStoklar.StokAdeti,DepoStoklar.id as DepoStokId,ur.StokKodu,ur.Isim as UrunIsmi,st.SubeId,Ur.OlcuId from StokDuzenleme st
+            left join StokDuzenlemeDetay sd on sd.StokDuzenlemeId=st.id
+            left join Urunler ur on ur.id=@StokId
+            left join DepoStoklar on DepoStoklar.StokId=ur.id and DepoStoklar.DepoId=@DepoId
+            where st.id=@StokDuzenlemeId";
             var locationStockVarmı =await _db.QueryAsync<LocaVarmı>(sqlh, prm);
-            var tip1 = locationStockVarmı.First().Tip;
-            if (locationStockVarmı.First().DepoStokId == 0)
-            {
-             await   _locationStockRepository.Insert(tip1, T.StokId,T.DepoId);
-            }
+            var tip = locationStockVarmı.First().Tip;
 
-
-            string sqlv = $@"select Tip,VarsayilanFiyat from Urunler where id=@StokId";
-            var itembul =await _db.QueryAsync<LocaVarmı>(sqlv, prm);
-            var tip = itembul.First().Tip;
-            var defaultprice = itembul.First().VarsayilanFiyat;
+            var defaultprice = locationStockVarmı.First().VarsayilanFiyat;
 
             var items =await _itemsRepository.Detail(T.StokId);
             var IngredientCost = items.First().MalzemeTutarı;
-            float? operioncost = items.First().OperasyonTutarı;
-            float? AdjusmentValue = 0;
+            float operioncost = items.First().OperasyonTutarı;
+            float AdjusmentValue = 0;
+            float CostPerUnit = 0;
             if (tip == "Material")
             {
-                var CostPerUnit = defaultprice;
-                AdjusmentValue = T.BirimFiyat * T.Miktar;
+                CostPerUnit = defaultprice;
+                AdjusmentValue = defaultprice* T.Miktar;
             }
             else
             {
-                float? CostPerUnit = IngredientCost + operioncost;
+                CostPerUnit = IngredientCost + operioncost;
                
                 AdjusmentValue = CostPerUnit * T.Miktar;
             }
 
             var Total = AdjusmentValue;
             prm.Add("@Adjusment", T.Miktar);
-            prm.Add("@CostPerUnit", T.BirimFiyat);
+            prm.Add("@CostPerUnit", CostPerUnit);
             prm.Add("@StockAdjusmentId", StockAdjusmentId);
             prm.Add("@AdjusmentValue", AdjusmentValue);
             prm.Add("@Total", Total);
 
-
-
-            string sql = $@"declare @@locationId int 
-            set @@locationId=(Select DepoId From StokDuzenleme where id = @StockAdjusmentId)
-            select 
-            (Select StokAdeti from DepoStoklar where StokId = @StokId   and DepoId = @@locationId)as StokAdeti,
-			(Select Tip from Urunler where id=@StokId ) as Tip,
-            (Select id from DepoStoklar where StokId = @StokId and DepoId = @@locationId)   as    DepoStokId";
-            var sorgu = await _db.QueryAsync<StockAdjusmentStockUpdate>(sql, prm);//
             await _db.ExecuteAsync($"Update StokDuzenleme set Toplam=@Total where id=@StockAdjusmentId", prm);
 
 
-            float? stockCount = sorgu.First().StokAdeti;
-            float? NewStockCount = stockCount + T.Miktar;
-            var stocklocationId = sorgu.First().DepoStokId;
-            if (stocklocationId == 0)
-            {
-              await  _locationStockRepository.Insert(tip, T.StokId,  T.DepoId);
-            }
 
+            float? stockCount = locationStockVarmı.First().StokAdeti;
+            float? NewStockCount = stockCount + T.Miktar;
+            var stocklocationId = locationStockVarmı.First().DepoStokId;
+
+            StokHareketDTO harekettablo = new();
+            harekettablo.Miktar = T.Miktar;
+            harekettablo.EvrakNo = evrakno;
+            harekettablo.DepoId = T.DepoId;
+            harekettablo.SubeId = locationStockVarmı.First().SubeId;
+            harekettablo.StokId = T.StokId;
+            harekettablo.StokAd = locationStockVarmı.First().UrunIsmi;
+            harekettablo.StokKodu = locationStockVarmı.First().StokKodu;
+            harekettablo.OlcuId = locationStockVarmı.First().OlcuId;
+            harekettablo.BirimFiyat = CostPerUnit;
+            harekettablo.Tutar = AdjusmentValue;
+            harekettablo.Giris = true;
+            harekettablo.EvrakTipi = 1;
+            harekettablo.OlcuId = locationStockVarmı.First().OlcuId;
+            await _stokhareket.StokHareketInsert(harekettablo, user);
             prm.Add("@stocklocationId", stocklocationId);
            
             prm.Add("@NewStockCount", NewStockCount); //Yeni count değerini tabloya güncelleştiriyoruz.
             _db.Execute($"Update DepoStoklar SET StokAdeti =@NewStockCount where id = @stocklocationId", prm);
 
-            int id= await _db.QuerySingleAsync<int>($"Insert into StokDuzenlemeDetay (StokId,Miktar,BirimFiyat,StokDuzenlemeId,Toplam) OUTPUT INSERTED.[id] values (@StokId,@Adjusment,@CostPerUnit,@StockAdjusmentId,@AdjusmentValue)", prm);
+            int id= await _db.QuerySingleAsync<int>($"Insert into StokDuzenlemeDetay (StokId,Miktar,BirimFiyat,StokDuzenlemeId,Toplam,EvrakNo) OUTPUT INSERTED.[id] values (@EvrakNo,@StokId,@Adjusment,@CostPerUnit,@StockAdjusmentId,@AdjusmentValue)", prm);
             return id;
         }
 
@@ -284,9 +293,9 @@ ORDER BY StokDuzenleme.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KA
 
             var items =await _itemsRepository.Detail(T.StokId);
             var IngredientCost = items.First().MalzemeTutarı;
-            float? operioncost = items.First().OperasyonTutarı;
-            float? CostPerUnit = IngredientCost + operioncost;
-            float? AdjusmentValue = 0;
+            float operioncost = items.First().OperasyonTutarı;
+            float CostPerUnit = IngredientCost + operioncost;
+            float AdjusmentValue = 0;
             if (tip == "Material")
             {
                
@@ -322,13 +331,15 @@ ORDER BY StokDuzenleme.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KA
             else
             {
                 T.Miktar = T.Miktar - adjusment;
-                string sql = $@"declare @@locationId int 
-            set @@locationId=(Select DepoId From StokDuzenleme where id = @StockAdjusmentId)
-            select 
-            (select @@locationId) as StockId,
-            (Select StokAdeti from DepoStoklar where StokId = @StokId   and DepoId = @@locationId)as StokAdeti,
-            (Select id from DepoStoklar where StokId = @StokId and DepoId = @@locationId) AS DepoStokId";
-                var sorgu =await _db.QueryAsync<StockAdjusmentStockUpdate>(sql, prm);//
+                string sql = $@"select sd.DepoId,sd.SubeId,st.EvrakNo,Urunler.Isim as UrunIsmi,Urunler.StokKodu,Urunler.OlcuId,
+                DepoStoklar.StokAdeti,DepoStoklar.id as DepoStokId
+
+                from StokDuzenleme sd 
+                left join StokDuzenlemeDetay st on st.StokDuzenlemeId=sd.id
+                left join Urunler on Urunler.id=@StokId
+                left join DepoStoklar on DepoStoklar.StokId=@StokId and DepoStoklar.DepoId=sd.DepoId
+                where st.id=@id and sd.id=@StockAdjusmentId";
+                var sorgu =await _db.QueryAsync<LocaVarmı>(sql, prm);//
                 int DepoId = sorgu.First().StokId;
 
 
@@ -336,6 +347,20 @@ ORDER BY StokDuzenleme.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KA
                 float? NewStockCount = stockCount + T.Miktar;
                 var stocklocationId = sorgu.First().DepoStokId;
 
+                StokHareketDTO harekettablo = new();
+                harekettablo.Miktar = T.Miktar;
+                harekettablo.EvrakNo = sorgu.First().EvrakNo;
+                harekettablo.DepoId = sorgu.First().DepoId;
+                harekettablo.SubeId = sorgu.First().SubeId;
+                harekettablo.StokId = T.StokId;
+                harekettablo.StokAd = sorgu.First().UrunIsmi;
+                harekettablo.StokKodu = sorgu.First().StokKodu;
+                harekettablo.OlcuId = sorgu.First().OlcuId;
+                harekettablo.BirimFiyat = CostPerUnit;
+                harekettablo.Tutar = AdjusmentValue;
+                harekettablo.Giris = true;
+                harekettablo.EvrakTipi = 1;
+                await _stokhareket.StokHareketInsert(harekettablo, UserId);
                 prm.Add("@stocklocationId", stocklocationId);
 
                 prm.Add("@NewStockCount", NewStockCount); //Yeni count değerini tabloya güncelleştiriyoruz.

@@ -20,13 +20,13 @@ namespace DAL.Hareket
         public async Task CariHareketInsert(CariHareketDTO T, int KullanıcıId)
         {
             DynamicParameters prm = new();
-            prm.Add("@CariAd", T.CariAd);
+            prm.Add("@CariAd", T.CariAdSoyad);
             prm.Add("@EvrakNo", T.EvrakNo);
             prm.Add("@EvrakTipi", T.EvrakTipi);
             prm.Add("@DepoId", T.DepoId);
             prm.Add("@AraToplam", T.AraToplam);
             prm.Add("@CariKod", T.CariKod);
-            prm.Add("@Tarih", T.Tarih);
+            prm.Add("@BugunTarih", DateTime.Now);
             prm.Add("@KDVTutari", T.KDVTutari);
             prm.Add("@Kur", T.Kur);
             prm.Add("@VadeTarihi", T.VadeTarihi);
@@ -36,7 +36,7 @@ namespace DAL.Hareket
             prm.Add("@KullaniciId", KullanıcıId);
 
 
-            await _db.ExecuteAsync("Inser into StokHareket (CariAd,EvrakNo,EvrakTipi,DepoId,AraToplam,CariKod,Tarih,KDVTutari,Kur,VadeTarihi,ParaBirimiId,SubeId,Tutar,KullaniciId) values (@CariAd,@EvrakNo,@EvrakTipi,@DepoId,@AraToplam,@CariKod,@Tarih,@KDVTutari,@Kur,@VadeTarihi,@ParaBirimiId,@SubeId,@Tutar,@KullaniciId)");
+            await _db.ExecuteAsync("Insert into CariHareket (CariAd,EvrakNo,EvrakTipi,DepoId,AraToplam,CariKod,Tarih,KDVTutari,Kur,VadeTarihi,ParaBirimiId,SubeId,Tutar,KullaniciId) values (@CariAd,@EvrakNo,@EvrakTipi,@DepoId,@AraToplam,@CariKod,@BugunTarih,@KDVTutari,@Kur,@VadeTarihi,@ParaBirimiId,@SubeId,@Tutar,@KullaniciId)",prm);
         }
     }
 }

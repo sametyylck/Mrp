@@ -175,7 +175,7 @@ namespace DAL.DTO
         public class SatinAlmaDetays
         {
             public int id { get; set; }
-            public int? StokId { get; set; }
+            public int StokId { get; set; }
             public int? VergiId { get; set; }
             public float VergiDegeri { get; set; }
             public float VergiMiktari { get; set; }

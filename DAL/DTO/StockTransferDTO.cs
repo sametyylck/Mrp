@@ -11,8 +11,8 @@ namespace DAL.DTO
         public class StokAktarimDetay
         {
             public int id { get; set; }
-            public int? StokId { get; set; }
-            public float? Miktar { get; set; }
+            public int StokId { get; set; }
+            public float Miktar { get; set; }
             public int StokAktarimId { get; set; }
         }
         public class StockTransferAll
@@ -34,15 +34,16 @@ namespace DAL.DTO
             public int BaslangicDepo { get; set; }
             public int HedefDepo { get; set; }
             public string Bilgi { get; set; } = string.Empty;
-            public int? StokId { get; set; }
-            public float? Miktar { get; set; }
+            public int StokId { get; set; }
+            public float Miktar { get; set; }
+            public int SubeId { get; set; }
 
         }
         public class StockTransferInsertItem
         {
-            public int? StokId { get; set; }
-            public float? Miktar { get; set; }
-            public int? StokAktarimId { get; set; }
+            public int StokId { get; set; }
+            public float Miktar { get; set; }
+            public int StokAktarimId { get; set; }
         }
         public class StockUpdate
         {
@@ -127,6 +128,25 @@ namespace DAL.DTO
 
             public float TransferUcreti { get; set; }
         }
+        public class StockTransferDetailsResponse
+        {
+            public int id { get; set; }
+            public int StokId { get; set; }
+            public string UrunIsmi { get; set; } = string.Empty;
+            public float Miktar { get; set; }
+            public int BaslangicDepo { get; set; }
+            public int HedefDepo { get; set; }
+            public float VarsayilanFiyat { get; set; }
+            public string StokKodu { get; set; }
+            public string Tip { get; set; }
+            public int BaslangicStokAdeti { get; set; }
+            public int HedefStokAdeti { get; set; }
+            public int OlcuId { get; set; }
+            public int SubeId { get; set; }
+            public string EvrakNo { get; set; }
+
+        }
+
 
         public class StockTransferItems
         {

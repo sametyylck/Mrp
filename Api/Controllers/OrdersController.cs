@@ -149,7 +149,7 @@ namespace Api.Controllers
                     DynamicParameters param2 = new DynamicParameters();
                     param2.Add("@OrderId", T.SatinAlmaId);
                     param2.Add("@id", id);
-                    var list = await _db.QueryAsync<OrdersResponse>($"Select sad.id,SatinAlma.id as SatinAlmaId,sad.StokId,u.Isim as UrunIsmi, sad.Miktar, sad.OlcuId,Olcu.Isim as OlcuIsmi, sad.ToplmaTutar, sad.BirimFiyat, sad.TumTutar, sad.VergiId, Vergi.VergiIsmi,sad.VergiDegeri from SatinAlma left join SatinAlmaDetay sad on sad.SatinAlmaId = SatinAlma.id left  join Urunler u on u.id = sad.StokId left join Olcu on Olcu.id = sad.OlcuId left    join Vergi on Vergi.id = sad.VergiId where  SatinAlma.id = @OrderId and sad.id = @id ", param2);
+                    var list = await _db.QueryAsync<OrdersResponse>($"Select sad.id,SatinAlma.id as SatinAlmaId,sad.StokId,u.Isim as UrunIsmi, sad.Miktar, sad.OlcuId,Olcu.Isim as OlcuIsmi, sad.ToplmaTutar, sad.BirimFiyat, sad.TumToplam, sad.VergiId, Vergi.VergiIsmi,sad.VergiDegeri from SatinAlma left join SatinAlmaDetay sad on sad.SatinAlmaId = SatinAlma.id left  join Urunler u on u.id = sad.StokId left join Olcu on Olcu.id = sad.OlcuId left    join Vergi on Vergi.id = sad.VergiId where  SatinAlma.id = @OrderId and sad.id = @id ", param2);
 
                     return Ok(list);
                 }

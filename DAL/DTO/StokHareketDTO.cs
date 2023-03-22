@@ -23,6 +23,7 @@ namespace DAL.DTO
         public bool Giris { get; set; }
         public int EvrakTipi { get; set; }
         public float KDVOrani { get; set; }
+        public float KDVTutari { get; set; }
         public float AraToplam { get; set; }
     }
 }

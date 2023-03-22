@@ -73,14 +73,14 @@ namespace DAL.DTO
             public DateTime Tarih { get; set; }
             public int? DepoId { get; set; }
             public string Bilgi { get; set; } = string.Empty;
+            public int SubeId { get; set; }
 
         }
         public class StockAdjusmentInsertItem
         {
-            public int? DepoId { get; set; }
+            public int DepoId { get; set; }
             public int StokId { get; set; }
-            public float? Miktar { get; set; }
-            public float? BirimFiyat { get; set; }
+            public float Miktar { get; set; }
             public int StokDuzenlemeId { get; set; }
 
         }
@@ -144,6 +144,7 @@ namespace DAL.DTO
             public float DepoStokId { get; set; }
             public string Tip { get; set; } = string.Empty;
             public float VarsayilanFiyat { get; set; }
+            public int OlcuId { get; set; }
             public int? RezerveStockCount { get; set; }
             public float? RezerveDeger { get; set; }
             public float OrdersItemCount { get; set; }
@@ -157,6 +158,11 @@ namespace DAL.DTO
             public int VergiDeger { get; set; }
             public int Durum { get; set; }
             public float Kayıp { get; set; }
+            public int StokAdeti { get; set; }
+            public int SubeId { get; set; }
+            public string StokKodu { get; set; }
+            public string UrunIsmi { get; set; }
+            public string EvrakNo { get; set; }
 
 
 

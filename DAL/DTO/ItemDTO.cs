@@ -102,8 +102,8 @@ namespace DAL.DTO
             public string? TedarikciIsmi { get; set; } 
             public string? StokKodu { get; set; }
             public float? VarsayilanFiyat { get; set; }
-            public float? MalzemeTutarı { get; set; }
-            public float? OperasyonTutarı { get; set; }
+            public float MalzemeTutarı { get; set; }
+            public float OperasyonTutarı { get; set; }
             public float? StokAdet { get; set; }
             public string? Bilgi { get; set; } 
             public bool? Aktif { get; set; }

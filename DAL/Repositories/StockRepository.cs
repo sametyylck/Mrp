@@ -21,230 +21,130 @@ namespace DAL.Repositories
         }
 
 
-        public async Task<IEnumerable<StockListAll>> AllItemsList(StockListAll T, int CompanyId, int KAYITSAYISI, int SAYFA)
+        public async Task<IEnumerable<StokListResponse>> AllItemsList(StokList T, int KAYITSAYISI, int SAYFA)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@location", T.locationId);
+            prm.Add("@LocationId", T.DepoId);
             string sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI} SET @SAYFA = {SAYFA}
-            Select x.*FROM
-            ( Select Items.id,
-            ISNULL((select StockCount from LocationStock where ItemId=Items.id and LocationStock.LocationId = @location),0) as InStock,
-            Items.Tip,Items.Name as ItemName,Items.CategoryId as CategoryId,ISNULL(Categories.Name, '') as CategoryName,
-            Items.ContactId as ContactId ,ISNULL(Contacts.DisplayName, '') as SupplierName,ISNULL(Items.VariantCode, '') as VariantCode,
+select x.* From(select  ur.id,ur.Isim,ur.Tip,ur.StokKodu,ur.KategoriId,Kategoriler.Isim as KategoriIsmi,ur.TedarikciId,ISNULL(Cari.AdSoyad,'') as Tedarikci,
+(select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId )as StokMiktari,ur.VarsayilanFiyat,
+(ur.VarsayilanFiyat*(select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId ))as StokDegeri,
+ISNULL((Select SUM(RezerveDeger) from Rezerve  where Rezerve.StokId=ur.id and Rezerve.Durum=1 and Rezerve.DepoId=@LocationId),0) AS RezerveMiktari,
+(ISNULL((select SUM(Miktar) from SatinAlmaDetay st 
+left join SatinAlma on SatinAlma.id=st.SatinAlmaId
+where st.StokId=ur.id and SatinAlma.DurumBelirteci=1 and SatinAlma.DepoId=@LocationId ),0)+
 
-             ISNULL(((NULLIF(Items.DefaultPrice * ((select StockCount from LocationStock where ItemId = Items.id and
-              LocationStock.LocationId = @location)),0)/NULLIF(( (select StockCount from LocationStock
-               where ItemId = Items.id and LocationStock.LocationId = @location)),0)
-              )),0) AS AverageCost,
-			
-			
-			ISNULL((Items.DefaultPrice * ((select StockCount from LocationStock
-            where 
-            ItemId = Items.id and LocationStock.LocationId = @location))),0) as ValueInStock,
-			 ISNULL(( Select SUM(ISNULL(ManufacturingOrderItems.PlannedQuantity,0)) as [Committed]from ManufacturingOrder
-                left join ManufacturingOrderItems on ManufacturingOrderItems.OrderId=ManufacturingOrder.id
-				
-				where and ManufacturingOrder.LocationId=@location
-                 and ManufacturingOrder.[Status]!=3 and ManufacturingOrderItems.Tip='Ingredients' 
-				 and ManufacturingOrder.id=ManufacturingOrderItems.OrderId AND ManufacturingOrderItems.ItemId=Items.id and ManufacturingOrder.IsActive=1 
-				   ),0) as MaterialCommitted,
+ISNULL((select SUM(PlanlananMiktar) from Uretim where
+Uretim.StokId=ur.id and Uretim.DepoId=@LocationId and Uretim.Durum!=3),0)) as BeklenenStok,
 
+(select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId )-(ISNULL((Select SUM(RezerveDeger) from Rezerve  where Rezerve.StokId=ur.id and Rezerve.Durum=1 and Rezerve.DepoId=@LocationId),0)) as KullanılabilirStok,
+(Select Isim from DepoVeAdresler where id=@LocationId)as DepoIsmi,@LocationId as DepoId
 
-                (select ISNULL(SUM(Quantity),0) from Orders
-                left join  OrdersItem on OrdersItem.OrdersId = Orders.id and OrdersItem.ItemId = Items.id
-                    where 
-            Orders.DeliveryId = 1 and Orders.LocationId=@location and Orders.IsActive=1)as MaterialExpected,
-			
-			       (select ISNULL(SUM( ManufacturingOrder.PlannedQuantity),0) as Expected from ManufacturingOrder
-		   		left join Items on Items.id=ManufacturingOrder.ItemId and Items.CategoryId=Categories.id 
-				left join Locations on Locations.id=ManufacturingOrder.LocationId
-          where  ManufacturingOrder.ItemId=Items.id 
-           and ManufacturingOrder.LocationId=@location and
-          ManufacturingOrder.Status!=3 and ManufacturingOrder.IsActive=1) as ProductExpected,Items.IsActive  From Items
-            left join Categories on   Categories.id = Items.CategoryId and Items.Tip='Product' 
-            left join Contacts on   Contacts.id = Items.ContactId)x
-            where 
-            x.IsActive=1 AND ISNULL(x.ItemName,'') LIKE '%{T.ItemName}%' AND ISNULL(x.VariantCode,'') LIKE '%{T.VariantCode}%' AND 
-            ISNULL(x.CategoryName,'') LIKE '%{T.CategoryName}%' AND ISNULL(x.SupplierName,'') LIKE '%{T.SupplierName}%' AND ISNULL(x.AverageCost,0) LIKE '%{T.AverageCost}%'   AND
-            ISNULL(x.ValueInStock,0) LIKE '%{T.ValueInStock}%' AND ISNULL(x.InStock,0) LIKE '%{T.InStock}%' AND ISNULL(x.MaterialExpected,0) LIKE '%{T.MaterialExpected}%' AND ISNULL(x.ProductExpected,0) LIKE '%{T.ProductExpected}%'
-			AND ISNULL(x.MaterialCommitted,0) LIKE '%{T.MaterailCommitted}%'
-            Group By
-                      x.id,x.Tip,x.ItemName,x.CategoryId,x.ContactId ,x.SupplierName,x.VariantCode,x.IsActive,
-                    x.AverageCost,x.InStock,x.CategoryName,x.ValueInStock,x.MaterialExpected
-                        ,x.ProductExpected,x.MaterialCommitted
-            ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY; ";
-            var list =await _db.QueryAsync<StockListAll>(sql, prm);
+from Urunler ur
+left join Kategoriler on Kategoriler.id=ur.KategoriId
+left join Cari on Cari.CariKod=ur.TedarikciId
+left join Rezerve on Rezerve.StokId=ur.id)x
+where ISNULL(x.Isim,'') like '%{T.Isim}%' and ISNULL(x.KategoriIsmi,'') like '%{T.KategoriIsmi}%' and  ISNULL(x.Tedarikci,'') like '%{T.Tedarikci}%' 
+and ISNULL(x.StokKodu,'') like '%{T.StokKodu}%' and ISNULL(x.StokDegeri,'') like '%{T.StokDegeri}%' and ISNULL(x.VarsayilanFiyat,'') like '%{T.VarsayilanFiyat}%' 
+and ISNULL(x.RezerveMiktari,'') like '%{T.RezerveMiktari}%' and ISNULL(x.BeklenenStok,'') like '%{T.BeklenenStok}%' and ISNULL(x.KullanılabilirStok,'') like '%{T.KullanabilirStok}%'
+
+Group by x.id,x.Isim,x.StokKodu,x.KategoriId,x.DepoIsmi,x.DepoId,x.KategoriIsmi,x.TedarikciId,x.Tedarikci,x.VarsayilanFiyat,x.Tip,x.StokMiktari,x.RezerveMiktari,x.KullanılabilirStok,x.StokDegeri,x.BeklenenStok
+ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY  ";
+            var list =await _db.QueryAsync<StokListResponse>(sql, prm);
             return list.ToList();
         }
 
 
-        public async Task<IEnumerable<StockList>> MaterialList(StockList T, int CompanyId, int KAYITSAYISI, int SAYFA)
+        public async Task<IEnumerable<StokListResponse>> MaterialList(StokList T, int KAYITSAYISI, int SAYFA)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@location", T.locationId);
-            string sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI} SET @SAYFA = {SAYFA}
-                Select x.* FROM
-                (Select Items.id,
-               ISNULL((select StockCount from LocationStock 
-                where ItemId = Items.id and LocationStock.LocationId = @location),0) as   InStock,
-                Items.Tip,Items.Name as ItemName,Items.CategoryId as CategoryId,ISNULL(Categories.Name, '') as CategoryName,
-                Items.ContactId as ContactId ,ISNULL(Contacts.DisplayName, '') as SupplierName,ISNULL(Items.VariantCode, '') as VariantCode,
-                    
-							 ISNULL(((NULLIF(Items.DefaultPrice * ((select StockCount from LocationStock where ItemId =Items.id
-             and
-              LocationStock.LocationId = @location)),0)/NULLIF(( (select StockCount from LocationStock
-               where ItemId = Items.id and   LocationStock.LocationId = @location)),0)
-              )),0) AS AverageCost,
-                ISNULL((Items.DefaultPrice * 
-                ((select ISNULL(StockCount,0) from LocationStock where 
-                ItemId = Items.id and LocationStock.LocationId = @location))),0) as  ValueInStock,
-       
-			 ISNULL(( Select SUM(ISNULL(ManufacturingOrderItems.PlannedQuantity,0)) as [Committed]from ManufacturingOrder
-                left join ManufacturingOrderItems on ManufacturingOrderItems.OrderId=ManufacturingOrder.id
-				
-				where ManufacturingOrder.LocationId=@location
-                 and ManufacturingOrder.[Status]!=3 and ManufacturingOrderItems.Tip='Ingredients' 
-				 and ManufacturingOrder.id=ManufacturingOrderItems.OrderId AND ManufacturingOrderItems.ItemId=Items.id and ManufacturingOrder.IsActive=1 
-				   ),0) as Committed,
-            
-                ISNULL((Select 
-                (select ISNULL(StockCount,0) from LocationStock where ItemId = Items.id
-                and LocationStock.LocationId = @location) - ISNULL(( Select SUM(ISNULL(ManufacturingOrderItems.PlannedQuantity,0)) as [Committed]from ManufacturingOrder
-                left join ManufacturingOrderItems on ManufacturingOrderItems.OrderId=ManufacturingOrder.id
-				
-				where  ManufacturingOrder.LocationId=@location
-                 and ManufacturingOrder.[Status]!=3 and ManufacturingOrderItems.Tip='Ingredients' 
-				 and ManufacturingOrder.id=ManufacturingOrderItems.OrderId AND ManufacturingOrderItems.ItemId=Items.id and ManufacturingOrder.IsActive=1
-				   ),0)
-                +(select ISNULL(SUM(Quantity),0) from Orders left join OrdersItem on OrdersItem.OrdersId = Orders.id and 
-                OrdersItem.ItemId = Items.id  where  Orders.DeliveryId = 1 and Orders.IsActive=1)),0) as Missing,Items.IsActive,
-                (select ISNULL(SUM(Quantity),0) from Orders 
-                left join OrdersItem on OrdersItem.OrdersId = Orders.id
-                and OrdersItem.ItemId = Items.id where  Orders.LocationId=@location
-                and Orders.DeliveryId = 1 and Orders.IsActive=1)as Expected
-				
-				 From Items 
-				left join ManufacturingOrderItems on ManufacturingOrderItems.ItemId=Items.id
-				left join ManufacturingOrder on  ManufacturingOrderItems.OrderId=ManufacturingOrder.id
-                left join Categories on   Categories.id = Items.CategoryId
-                left join Contacts on   Contacts.id = Items.ContactId)x where  x.Tip = 'Material' AND x.IsActive=1 and ISNULL(x.ItemName,'')  
-                LIKE '%{T.ItemName}%' AND ISNULL(x.VariantCode,'') LIKE '%{T.VariantCode}%' AND ISNULL(x.CategoryName, '') LIKE
-                '%{T.CategoryName}%' AND ISNULL(x.SupplierName,'') LIKE '%{T.SupplierName}%' AND ISNULL(x.AverageCost,0) LIKE 
-                '{T.AverageCost}%%' AND ISNULL(x.ValueInStock, 0) LIKE '%{T.ValueInStock}%' AND ISNULL(x.InStock,0) LIKE
-                '%{T.InStock}%' AND ISNULL(x.Expected,0) LIKE '%{T.Expected}%' AND ISNULL(x.Committed,0) LIKE '%{T.Committed}%'  
-                AND ISNULL(x.Missing,0) LIKE '%{T.Missing}%' Group By x.id,x.Tip,x.ItemName,x.CategoryId,x.ContactId ,
-                x.SupplierName,x.VariantCode, x.AverageCost,x.InStock,x.CategoryName,x.ValueInStock,x.Committed,
-                x.Expected,x.Missing,x.IsActive ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY";
-            var list =await _db.QueryAsync<StockList>(sql, prm);
+            prm.Add("@LocationId", T.DepoId);
+            string sql = @$"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI} SET @SAYFA = {SAYFA}
+select x.* From(select  ur.id,ur.Isim,ur.Tip,ur.StokKodu,ur.KategoriId,Kategoriler.Isim as KategoriIsmi,ur.TedarikciId,ISNULL(Cari.AdSoyad,'') as Tedarikci,
+(select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId )as StokMiktari,ur.VarsayilanFiyat,
+(ur.VarsayilanFiyat*(select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId ))as StokDegeri,
+ISNULL((Select SUM(RezerveDeger) from Rezerve  where Rezerve.StokId=ur.id and Rezerve.Durum=1 and Rezerve.DepoId=@LocationId),0) AS RezerveMiktari,
+ISNULL((select SUM(Miktar) from SatinAlmaDetay st 
+left join SatinAlma on SatinAlma.id=st.SatinAlmaId
+where st.StokId=ur.id and SatinAlma.DurumBelirteci=1 and SatinAlma.DepoId=@LocationId ),0) as BeklenenStok,
+(select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId )-(ISNULL((Select SUM(RezerveDeger) from Rezerve  where Rezerve.StokId=ur.id and Rezerve.Durum=1 and Rezerve.DepoId=@LocationId),0)) as KullanılabilirStok ,
+(Select Isim from DepoVeAdresler where id=@LocationId)as DepoIsmi,@LocationId as DepoId
+
+from Urunler ur
+left join Kategoriler on Kategoriler.id=ur.KategoriId
+left join Cari on Cari.CariKod=ur.TedarikciId
+left join Rezerve on Rezerve.StokId=ur.id)x
+where x.Tip='Material' and  ISNULL(x.Isim,'') like '%{T.Isim}%' and ISNULL(x.KategoriIsmi,'') like '%{T.KategoriIsmi}%' and  ISNULL(x.Tedarikci,'') like '%{T.Tedarikci}%' 
+and ISNULL(x.StokKodu,'') like '%{T.StokKodu}%' and ISNULL(x.StokDegeri,'') like '%{T.StokDegeri}%' and ISNULL(x.VarsayilanFiyat,'') like '%{T.VarsayilanFiyat}%' 
+and ISNULL(x.RezerveMiktari,'') like '%{T.RezerveMiktari}%' and ISNULL(x.BeklenenStok,'') like '%{T.BeklenenStok}%' and ISNULL(x.KullanılabilirStok,'') like '%{T.KullanabilirStok}%'
+
+Group by x.id,x.Isim,x.StokKodu,x.KategoriId,x.DepoIsmi,x.DepoId,x.KategoriIsmi,x.TedarikciId,x.Tedarikci,x.VarsayilanFiyat,x.Tip,x.StokMiktari,x.RezerveMiktari,x.KullanılabilirStok,x.StokDegeri,x.BeklenenStok
+ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ";
+            var list =await _db.QueryAsync<StokListResponse>(sql, prm);
             return list.ToList();
         }
 
 
-        public async Task<IEnumerable<StockList>> ProductList(StockList T, int CompanyId, int KAYITSAYISI, int SAYFA)
+        public async Task<IEnumerable<StokListResponse>> ProductList(StokList T, int KAYITSAYISI, int SAYFA)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@location", T.locationId);
+            prm.Add("@LocationId", T.DepoId);
 
             string sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI} SET @SAYFA = {SAYFA}
-			Select  x.*FROM(
-            Select Items.id,Items.[Name] as ItemName,Items.Tip,ISNULL(Items.VariantCode,'') as      VariantCode,Items.CategoryId,ISNULL  (Categories.[Name],'') as CategoryName
-            ,Items.ContactId,ISNULL(Contacts.DisplayName,'')as SupplierName,
-               ISNULL(Items.DefaultPrice * ((select StockCount from LocationStock where ItemId=Items.id and
-              LocationStock.LocationId = @location)),0) as ValueInStock,
-              ISNULL(((NULLIF(Items.DefaultPrice * ((select StockCount from LocationStock where ItemId =Items.id and
-              LocationStock.LocationId = @location)),0)/NULLIF(( (select StockCount from LocationStock
-               where ItemId =Items.id  and LocationStock.LocationId = @location)),0)
-              )),0) AS AverageCost,
-            
-              ISNULL((select StockCount from LocationStock
-               where ItemId =Items.id  and LocationStock.LocationId = @location),0) as InStock,
-                (select ISNULL(SUM( ManufacturingOrder.PlannedQuantity),0) as Expected from ManufacturingOrder
-              left join Items on Items.id=ManufacturingOrder.ItemId and Items.CategoryId=Categories.id
-              where  ManufacturingOrder.ItemId=Items.id and  ManufacturingOrder.LocationId=@location and
-              ManufacturingOrder.Status!=3 and ManufacturingOrder.IsActive=1)as Expected,Items.IsActive
-            
+select x.* From(select  ur.id,ur.Isim,ur.Tip,ur.StokKodu,ur.KategoriId,Kategoriler.Isim as KategoriIsmi,ur.TedarikciId,ISNULL(Cari.AdSoyad,'') as Tedarikci,
+(select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId )as StokMiktari,ur.VarsayilanFiyat,
+(ur.VarsayilanFiyat*(select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId ))as StokDegeri,
+ISNULL((Select SUM(RezerveDeger) from Rezerve  where Rezerve.StokId=ur.id and Rezerve.Durum=1 and Rezerve.DepoId=@LocationId),0) AS RezerveMiktari,
+ISNULL((select SUM(PlanlananMiktar) from Uretim where
+Uretim.StokId=ur.id and Uretim.DepoId=@LocationId and Uretim.Durum!=3),0) as BeklenenStok,
+(select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId )-(ISNULL((Select SUM(RezerveDeger) from Rezerve  where Rezerve.StokId=ur.id and Rezerve.Durum=1 and Rezerve.DepoId=@LocationId),0)) as KullanılabilirStok ,
+(Select Isim from DepoVeAdresler where id=@LocationId)as DepoIsmi,@LocationId as DepoId
 
-            from Items 
-            left join Contacts on Contacts.id=Items.ContactId
-            left join Categories on Categories.id=Items.CategoryId )x
-            where x.Tip='Product' and x.IsActive=1  and ISNULL(x.ItemName,'') LIKE '%{T.ItemName}%' AND  ISNULL    (x.VariantCode,'') LIKE '%%' AND 
-            ISNULL(x.CategoryName,'') LIKE '%{T.CategoryName}%' AND ISNULL(x.SupplierName,'') LIKE '%{T.SupplierName}%' AND ISNULL(x.AverageCost,0) LIKE '%{T.AverageCost}%'   AND
-            ISNULL(x.ValueInStock,0) LIKE '%{T.ValueInStock}%' AND ISNULL(x.InStock,0) LIKE '%{T.InStock}%' and ISNULL(x.Expected,0) LIKE '%{T.Expected}%'
-            Group By  x.Tip,x.ItemName,x.CategoryId,x.ContactId ,x.id,X.InStock,x.CategoryName,x.ValueInStock,x.Expected,
-            x.SupplierName,x.VariantCode,x.AverageCost,x.IsActive
-			ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ";
-            var list =await _db.QueryAsync<StockList>(sql, prm);
+from Urunler ur
+left join Kategoriler on Kategoriler.id=ur.KategoriId
+left join Cari on Cari.CariKod=ur.TedarikciId
+left join Rezerve on Rezerve.StokId=ur.id)x
+where x.Tip='Product' and  ISNULL(x.Isim,'') like '%{T.Isim}%' and ISNULL(x.KategoriIsmi,'') like '%{T.KategoriIsmi}%' and  ISNULL(x.Tedarikci,'') like '%{T.Tedarikci}%' 
+and ISNULL(x.StokKodu,'') like '%{T.StokKodu}%' and ISNULL(x.StokDegeri,'') like '%{T.StokDegeri}%' and ISNULL(x.VarsayilanFiyat,'') like '%{T.VarsayilanFiyat}%' 
+and ISNULL(x.RezerveMiktari,'') like '%{T.RezerveMiktari}%' and ISNULL(x.BeklenenStok,'') like '%{T.BeklenenStok}%' and ISNULL(x.KullanılabilirStok,'') like '%{T.KullanabilirStok}%'
+
+Group by x.id,x.Isim,x.StokKodu,x.KategoriId,x.DepoIsmi,x.DepoId,x.KategoriIsmi,x.TedarikciId,x.Tedarikci,x.VarsayilanFiyat,x.Tip,x.StokMiktari,x.RezerveMiktari,x.KullanılabilirStok,x.StokDegeri,x.BeklenenStok
+ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY  ";
+            var list =await _db.QueryAsync<StokListResponse>(sql, prm);
       
             return list.ToList();
         }
 
-        public async Task<int> SemiProductCount(StockList T, int CompanyId)
+        public async Task<IEnumerable<StokListResponse>> SemiProductList(StokList T, int KAYITSAYISI, int SAYFA)
         {
             DynamicParameters prm = new DynamicParameters();
-            prm.Add("@location", T.locationId);
-            var kayitsayisi = await _db.QueryAsync<int>($@"select COUNT(*) as kayitsayisi from(
-			Select  x.*FROM(
-            Select Items.id,Items.[Name] as ItemName,Items.Tip,ISNULL(Items.VariantCode,'') as      VariantCode,Items.CategoryId,ISNULL  (Categories.[Name],'') as CategoryName
-            ,Items.ContactId,ISNULL(Contacts.DisplayName,'')as SupplierName,
-               ISNULL(Items.DefaultPrice * ((select StockCount from LocationStock where ItemId=Items.id and
-              LocationStock.LocationId = @location)),0) as ValueInStock,
-              ISNULL(((NULLIF(Items.DefaultPrice * ((select StockCount from LocationStock where ItemId =Items.id and
-              LocationStock.LocationId = @location)),0)/NULLIF(( (select StockCount from LocationStock
-               where ItemId =Items.id  and LocationStock.LocationId = @location)),0)
-              )),0) AS AverageCost,
-            
-              ISNULL((select StockCount from LocationStock
-               where ItemId =Items.id  and LocationStock.LocationId = @location),0) as InStock,
-                (select ISNULL(SUM( ManufacturingOrder.PlannedQuantity),0) as Expected from ManufacturingOrder
-              left join Items on Items.id=ManufacturingOrder.ItemId and Items.CategoryId=Categories.id
-              where  ManufacturingOrder.ItemId=Items.id and  ManufacturingOrder.LocationId=@location and
-              ManufacturingOrder.Status!=3 and ManufacturingOrder.IsActive=1)as Expected,Items.IsActive
-
-            from Items 
-            left join Contacts on Contacts.id=Items.ContactId
-            left join Categories on Categories.id=Items.CategoryId )x
-            where  x.Tip='SemiProduct' and x.IsActive=1  and ISNULL(x.ItemName,'') LIKE '%{T.ItemName}%' AND  ISNULL    (x.VariantCode,'') LIKE '%%' AND 
-            ISNULL(x.CategoryName,'') LIKE '%{T.CategoryName}%' AND ISNULL(x.SupplierName,'') LIKE '%{T.SupplierName}%' AND ISNULL(x.AverageCost,0) LIKE '%{T.AverageCost}%'   AND
-            ISNULL(x.ValueInStock,0) LIKE '%{T.ValueInStock}%' AND ISNULL(x.InStock,0) LIKE '%{T.InStock}%' and ISNULL(x.Expected,0) LIKE '%{T.Expected}%'
-            Group By  x.Tip,x.ItemName,x.CategoryId,x.ContactId ,x.id,X.InStock,x.CategoryName,x.ValueInStock,x.Expected,
-            x.SupplierName,x.VariantCode,x.AverageCost,x.IsActive)a", prm);
-            return kayitsayisi.First();
-        }
-
-        public async Task<IEnumerable<StockList>> SemiProductList(StockList T, int CompanyId, int KAYITSAYISI, int SAYFA)
-        {
-            DynamicParameters prm = new DynamicParameters();
-            prm.Add("@location", T.locationId);
+            prm.Add("@location", T.DepoId);
 
             string sql = $@"DECLARE @KAYITSAYISI int DECLARE @SAYFA int SET @KAYITSAYISI ={KAYITSAYISI} SET @SAYFA = {SAYFA}
-			Select  x.*FROM(
-            Select Items.id,Items.[Name] as ItemName,Items.Tip,ISNULL(Items.VariantCode,'') as      VariantCode,Items.CategoryId,ISNULL  (Categories.[Name],'') as CategoryName
-            ,Items.ContactId,ISNULL(Contacts.DisplayName,'')as SupplierName,
-               ISNULL(Items.DefaultPrice * ((select StockCount from LocationStock where ItemId=Items.id and
-              LocationStock.LocationId = @location)),0) as ValueInStock,
-              ISNULL(((NULLIF(Items.DefaultPrice * ((select StockCount from LocationStock where ItemId =Items.id and
-              LocationStock.LocationId = @location)),0)/NULLIF(( (select StockCount from LocationStock
-               where ItemId =Items.id  and LocationStock.LocationId = @location)),0)
-              )),0) AS AverageCost,
-            
-              ISNULL((select StockCount from LocationStock
-               where ItemId =Items.id  and LocationStock.LocationId = @location),0) as InStock,
-                (select ISNULL(SUM( ManufacturingOrder.PlannedQuantity),0) as Expected from ManufacturingOrder
-              left join Items on Items.id=ManufacturingOrder.ItemId and Items.CategoryId=Categories.id
-              where  ManufacturingOrder.ItemId=Items.id and  ManufacturingOrder.LocationId=@location and
-              ManufacturingOrder.Status!=3 and ManufacturingOrder.IsActive=1)as Expected,Items.IsActive
-           
+            select x.* From(select  ur.id,ur.Isim,ur.Tip,ur.StokKodu,ur.KategoriId,Kategoriler.Isim as KategoriIsmi,ur.TedarikciId,ISNULL(Cari.AdSoyad,'') as Tedarikci,
+            (select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId )as StokMiktari,ur.VarsayilanFiyat,
+            (ur.VarsayilanFiyat*(select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId ))as StokDegeri,
+            ISNULL((Select SUM(RezerveDeger) from Rezerve  where Rezerve.StokId=ur.id and Rezerve.Durum=1 and Rezerve.DepoId=@LocationId),0) AS RezerveMiktari,
+            (ISNULL((select SUM(Miktar) from SatinAlmaDetay st 
+            left join SatinAlma on SatinAlma.id=st.SatinAlmaId
+            where st.StokId=ur.id and SatinAlma.DurumBelirteci=1 and SatinAlma.DepoId=@LocationId ),0)+
 
-            from Items 
-            left join Contacts on Contacts.id=Items.ContactId
-            left join Categories on Categories.id=Items.CategoryId )x
-            where  x.Tip='SemiProduct' and x.IsActive=1  and ISNULL(x.ItemName,'') LIKE '%{T.ItemName}%' AND  ISNULL    (x.VariantCode,'') LIKE '%%' AND 
-            ISNULL(x.CategoryName,'') LIKE '%{T.CategoryName}%' AND ISNULL(x.SupplierName,'') LIKE '%{T.SupplierName}%' AND ISNULL(x.AverageCost,0) LIKE '%{T.AverageCost}%'   AND
-            ISNULL(x.ValueInStock,0) LIKE '%{T.ValueInStock}%' AND ISNULL(x.InStock,0) LIKE '%{T.InStock}%' and ISNULL(x.Expected,0) LIKE '%{T.Expected}%'
-            Group By  x.Tip,x.ItemName,x.CategoryId,x.ContactId ,x.id,X.InStock,x.CategoryName,x.ValueInStock,x.Expected,
-            x.SupplierName,x.VariantCode,x.AverageCost,x.IsActive
-			ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ";
-            var list = await _db.QueryAsync<StockList>(sql, prm);
+            ISNULL((select SUM(PlanlananMiktar) from Uretim where
+            Uretim.StokId=ur.id and Uretim.DepoId=@LocationId and Uretim.Durum!=3),0)) as BeklenenStok,
+            (select StokAdeti from DepoStoklar where ur.id=DepoStoklar.StokId and DepoStoklar.DepoId=@LocationId )-(ISNULL((Select SUM(RezerveDeger) from Rezerve  where Rezerve.StokId=ur.id and Rezerve.Durum=1 and Rezerve.DepoId=@LocationId),0)) as KullanılabilirStok,
+            (Select Isim from DepoVeAdresler where id=@LocationId)as DepoIsmi,4 as DepoId
+
+            from Urunler ur
+            left join Kategoriler on Kategoriler.id=ur.KategoriId
+            left join Cari on Cari.CariKod=ur.TedarikciId
+            left join Rezerve on Rezerve.StokId=ur.id)x
+            where x.Tip='SemiProduct' and  ISNULL(x.Isim,'') like '%{T.Isim}%' and ISNULL(x.KategoriIsmi,'') like '%{T.KategoriIsmi}%' and  ISNULL(x.Tedarikci,'') like '%{T.Tedarikci}%' 
+            and ISNULL(x.StokKodu,'') like '%{T.StokKodu}%' and ISNULL(x.StokDegeri,'') like '%{T.StokDegeri}%' and ISNULL(x.VarsayilanFiyat,'') like '%{T.VarsayilanFiyat}%' 
+            and ISNULL(x.RezerveMiktari,'') like '%{T.RezerveMiktari}%' and ISNULL(x.BeklenenStok,'') like '%{T.BeklenenStok}%' and ISNULL(x.KullanılabilirStok,'') like '%{T.KullanabilirStok}%'
+
+            Group by x.id,x.Isim,x.StokKodu,x.KategoriId,x.DepoIsmi,x.DepoId,x.KategoriIsmi,x.TedarikciId,x.Tedarikci,x.VarsayilanFiyat,x.Tip,x.StokMiktari,x.RezerveMiktari,x.KullanılabilirStok,x.StokDegeri,x.BeklenenStok
+            ORDER BY x.id OFFSET @KAYITSAYISI * (@SAYFA - 1) ROWS FETCH NEXT @KAYITSAYISI ROWS ONLY ";
+            var list = await _db.QueryAsync<StokListResponse>(sql, prm);
 
             return list.ToList();
         }

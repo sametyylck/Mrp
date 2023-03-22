@@ -17,7 +17,7 @@ namespace DAL.DTO
             [Required]
             public int? KaynakId { get; set; }
             [Required]
-            public float? SaatlikUcret { get; set; }
+            public float SaatlikUcret { get; set; }
             [Required]
             public float OperasyonZamani { get; set; }
             [Required]

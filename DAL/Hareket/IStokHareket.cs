@@ -10,5 +10,7 @@ namespace DAL.StokHareket
     public interface IStokHareket
     {
         Task StokHareketInsert(StokHareketDTO T,int KullanıcıId);
+        Task StokHareketUpdate(StokHareketDTO T, int KullanıcıId);
+
     }
 }

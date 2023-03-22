@@ -48,7 +48,7 @@ namespace DAL.Repositories
             var Costbul =await _db.QueryAsync<costbul>($@"Select urc.id,urc.MalzemeId,urc.Miktar , Urunler.id as itemid, Urunler.VarsayilanFiyat From UrunRecetesi urc
                                                          inner join Urunler on Urunler.id = urc.MalzemeId
                                                          where urc.Aktif = 1 and urc.MamulId = {id}");
-            float? IngredientsCost = 0;
+            float IngredientsCost = 0;
             if (itemDetail.Count() == 0)
             {
                 return itemDetail;
@@ -89,7 +89,7 @@ namespace DAL.Repositories
             var OperationCostBul =await _db.QueryAsync<ProductOperationsBOM>($"Select id From UrunKaynakRecetesi where  StokId = {id}  and Aktif = 1");
 
 
-            float? OperationsCost = 0;
+            float OperationsCost = 0;
 
 
             if (OperationCostBul.Count() == 0)
@@ -101,8 +101,8 @@ namespace DAL.Repositories
                 foreach (var item in OperationCostBul)
                 {
                     var a =await _db.QueryAsync<ProductOperationsBOM>($"Select SaatlikUcret,OperasyonZamani From UrunKaynakRecetesi where id = {item.id}  and Aktif = 1");
-                    float? CostHour = a.First().SaatlikUcret;
-                    float? time = a.First().OperasyonZamani;
+                    float CostHour = a.First().SaatlikUcret;
+                    float time = a.First().OperasyonZamani;
 
                     OperationsCost += (CostHour / 60 / 60) * time;
                 }

@@ -21,7 +21,6 @@ namespace Validation.StockAdjusment
     {
         public StockAdjusmentInsertItemValidations()
         {
-            RuleFor(x => x.BirimFiyat).NotEmpty().WithMessage("CostPerUnit boş gecilmez").NotNull().WithMessage("CostPerUnit zorunlu alan");
             RuleFor(x => x.DepoId).NotEmpty().WithMessage("LocationId boş gecilmez").NotNull().WithMessage("LocationId zorunlu alan");
             RuleFor(x => x.StokId).NotEmpty().WithMessage("ItemId boş gecilmez").NotNull().WithMessage("ItemId zorunlu alan");
             RuleFor(x => x.Miktar).NotEmpty().WithMessage("Adjusment boş gecilmez").NotNull().WithMessage("Adjusment zorunlu alan");

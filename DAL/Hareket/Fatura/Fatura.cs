@@ -21,7 +21,7 @@ namespace DAL.Hareket.Fatura
         public async Task FaturaOlustur(FaturaDTO T,int KullanıcıId)
         {
             DynamicParameters prm = new();
-            prm.Add("@CariAd", T.CariAd);
+            prm.Add("@CariAd", T.CariAdSoyad);
             prm.Add("@EvrakNo", T.EvrakNo);
             prm.Add("@EvrakTipi", T.EvrakTipi);
             prm.Add("@DepoId", T.DepoId);

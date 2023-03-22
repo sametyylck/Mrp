@@ -9,9 +9,9 @@ namespace DAL.Contracts
 {
     public interface IStockRepository
     {
-        Task<IEnumerable<StockList>> MaterialList(StockList T, int CompanyId, int KAYITSAYISI, int SAYFA);
-         Task<IEnumerable<StockList>> ProductList(StockList T, int CompanyId, int KAYITSAYISI, int SAYFA);
-        Task<IEnumerable<StockList>> SemiProductList(StockList T, int CompanyId, int KAYITSAYISI, int SAYFA);
-        Task<IEnumerable<StockListAll>> AllItemsList(StockListAll T, int CompanyId, int KAYITSAYISI, int SAYFA);
+        Task<IEnumerable<StokListResponse>> MaterialList(StokList T, int KAYITSAYISI, int SAYFA);
+         Task<IEnumerable<StokListResponse>> ProductList(StokList T, int KAYITSAYISI, int SAYFA);
+        Task<IEnumerable<StokListResponse>> SemiProductList(StokList T, int KAYITSAYISI, int SAYFA);
+        Task<IEnumerable<StokListResponse>> AllItemsList(StokList T, int KAYITSAYISI, int SAYFA);
     }
 }

@@ -57,9 +57,9 @@ namespace BL.Services.StockAdjusment
         {
             List<string> hatalar = new();
 
-            var list = await _db.QueryAsync<StockAdjusmentInsert>($@"select
-             (Select id  From StokSayim where id={T.StokSayimId})as StokSayimId,
-            (Select id as varmi From DepoVeAdresler where id = {T.DepoId})as DepoId
+            var list = await _db.QueryAsync<StockAdjusmentInsert>(@$"select
+             (Select id  From StokSayim where id={T.StokSayimId} )as StokSayimId,
+            (Select id  From DepoVeAdresler where id = {T.DepoId} )as DepoId
             ");
             if (T.StokSayimId!=0)
             {

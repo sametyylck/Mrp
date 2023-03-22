@@ -19,6 +19,9 @@ namespace DAL.DTO
             [Required]
             public int StokId { get; set; }
             [Required]
+            public int SubeId { get; set; }
+            public int OlcuId { get; set; }
+            public float VarsayilanFiyat { get; set; }
             public int? ParentId { get; set; }
             public float PlanlananMiktar { get; set; }
             [RegularExpression(RegularExpression, ErrorMessage = "Özel karekter giremezsiniz")]
@@ -30,6 +33,9 @@ namespace DAL.DTO
             public int DepoId { get; set; }
             public int SatisId { get; set; }
             public int SatisDetayId { get; set; }
+            public string UrunIsmi { get; set; }
+            public string StokKodu { get; set; }
+
         }
 
         public class ManufacturingOrderItems

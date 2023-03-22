@@ -12,27 +12,44 @@ namespace DAL.DTO
 {
     public class StockListDTO
     {
-        public class StockList
+        public class StokList
         {
-            public int id { get; set; }
-            public string ItemName { get; set; } = string.Empty;
-            public int? InStock { get; set; }
-            public string Tip { get; set; } = string.Empty;
-            public int CategoryId { get; set; }
-            public string CategoryName { get; set; } = string.Empty;
-            public int ContactId { get; set; }
-            public string SupplierName { get; set; } = string.Empty;
-            public int locationId { get; set; }
-            public string LocationName { get; set; } = string.Empty;
-            public string VariantCode { get; set; } = string.Empty;
-            public float? AverageCost { get; set; }
-            public float? Expected { get; set; }
-            public float? ValueInStock { get; set; }
-            public float? Committed { get; set; }
-            public float? Missing { get; set; }
+            public string? Isim { get; set; }
+            public int? StokMiktari { get; set; }
+            public string? KategoriIsmi { get; set; }
+            public string ?Tedarikci { get; set; } 
+            public int DepoId { get; set; }
+            public string? StokKodu { get; set; }
+            public float? RezerveMiktari { get; set; }
+            public float? BeklenenStok { get; set; }
+            public float? KullanabilirStok { get; set; }
+            public float? StokDegeri { get; set; }
+            public float? VarsayilanFiyat { get; set; }
 
 
         }
+        public class StokListResponse
+        {
+            public int id { get; set; }
+            public string? Isim { get; set; }
+            public int? StokMiktari { get; set; }
+            public string? Tip { get; set; }
+            public int? KategoriId { get; set; }
+            public string? KategoriIsmi { get; set; }
+            public int? TedarikciId { get; set; }
+            public string? Tedarikci { get; set; }
+            public int? DepoId { get; set; }
+            public string? DepoIsmi { get; set; }
+            public string? StokKodu { get; set; }
+            public float? RezerveMiktari { get; set; }
+            public float? BeklenenStok { get; set; }
+            public float? KullanılabilirStok { get; set; }
+            public float? StokDegeri { get; set; }
+            public float? VarsayilanFiyat { get; set; }
+
+
+        }
+
         public class StockListAll
         {
             public int id { get; set; }
